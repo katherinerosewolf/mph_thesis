@@ -103,6 +103,7 @@ save(ks_API_dup_counts,file="ks_dup_API_count.rdata")
 
 # count unique KIDs
 unique_KID_count<-length(unique(ks_clean$KID))
+unique_KID_count
 save(unique_KID_count,file="unique_KID_count.rdata")
 
 # counts by well status for rows without APIs
@@ -111,8 +112,6 @@ save(ks_wells_no_API,file="ks_wells_no_API.rdata")
 
 ks_wells_no_API_by_status<-table(ks_wells_no_API$STATUS)
 save(ks_wells_no_API_by_status,file="ks_wells_no_API_by_status.rdata")
-
-
 
 
 ##### checking ambiguous wells for inclusion or exclusion #####
@@ -134,7 +133,7 @@ write.csv(ks_well_counts_by_status_2, file="ks_well_counts_by_status_2.csv")
 # broad inclusion criteria
 ks_included_status1s<-c("INJ","INJ-P&A","INTENT","OTHER()","OTHER(1O&1SWD)","OTHER(CBM/SWD)","OTHER(CLASS ONE (OLD))","OTHER(CLASS1)","OTHER(INJ or EOR)","OTHER(NHDW)","OTHER(NULL)","OTHER(OIL,SWD)","OTHER(OTHER)","OTHER(SWD-P&A)","OTHER(TA)","OTHER(TEMP ABD)","OTHER-P&A()","OTHER-P&A(CLASS ONE (OLD))","OTHER-P&A(INJ OR )","OTHER-P&A(INJ or EOR)","OTHER-P&A(OIL-SWD)","OTHER-P&A(TA)","SWD","SWD-P&A")
 
-# make table of included wells statuses for PowerPoint
+# make table of included well statuses for PowerPoint
 ks_included_status1_well_table<-ks_well_counts_by_status[
   which(ks_well_counts_by_status$Var1 
         %in% ks_included_status1s),] # make table of included well statuses
@@ -145,14 +144,13 @@ write.csv(ks_included_status1_well_table,file="ks_included_status1_well_table.cs
 ks_excluded_status1_well_table<-ks_well_counts_by_status[
   which(ks_well_counts_by_status$Var1 
         %notin% ks_included_status1s),] # make table of excluded wells
+# View(ks_excluded_status1_well_table)
 save(ks_excluded_status1_well_table,file="ks_excluded_status1_well_table.rdata")
 write.csv(ks_excluded_status1_well_table,file="ks_excluded_status1_well_table.csv")
 
 # make dataframe of only included wells
 ks_select_wells<-ks_clean[which(ks_clean$STATUS %in% ks_included_status1s),]
 # View(ks_select_wells)
-
-
 
 #### figuring out which others I should keep ####
 
@@ -168,6 +166,7 @@ wells_to_keep_based_on_STATUS_alone<-ks_select_wells[which(ks_select_wells$STATU
 kids_of_wells_to_keep_based_on_STATUS_alone<-as.integer(wells_to_keep_based_on_STATUS_alone$KID)
 save(kids_of_wells_to_keep_based_on_STATUS_alone,file="kids_of_wells_to_keep_based_on_STATUS_alone.rdata")
 
+#### GOT TO HERE 2018-10-26 ####
 
 
 
