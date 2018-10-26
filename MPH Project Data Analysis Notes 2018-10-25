@@ -1,0 +1,17 @@
+Data Analysis Notes MPH Project Starting June 23rd
+
+File sources:
+
+ks_wells.zip files last updated 2018-09-28 from http://www.kgs.ku.edu/PRS/petroDB.html (actually from http://www.kgs.ku.edu/PRS/Ora_Archive/ks_wells.zip) and downloaded October 25th, 2018
+
+KS_UIC_archive.zip files last updated September 8th from http://www.kgs.ku.edu/Magellan/Qualified/fluid.html (actually from http://www.kgs.ku.edu/PRS/Ora_Archive/KS_UIC_archive.zip) and downloaded October 25th, 2018
+
+OTHER(GAS SHUT-IN) and OTHER(SWD-P&A) is new in ks_well_counts_by_status
+
+STARTING OCTOBER 25TH 2018
+all geography files re-downloaded 2018-10-25
+wells projected to NAD 1983, then joined via INTERSECT
+
+ > sum(colSums(ks_well_counts[2:16],na.rm = TRUE))
+[1] 19959
+
