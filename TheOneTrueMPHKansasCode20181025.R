@@ -46,7 +46,6 @@ load(file="ks_uic_2018_09_04.rdata")
 
 # isolate individual well IDs present in UIC data
 kids<-unique(ks_uic_2018_09_04$KGS_ID)
-kids
 
 # make table of KS wells in UIC data
 ks_wells_in_uic_data_only <- subset(ks_clean, KID %in% kids)
@@ -74,7 +73,6 @@ unique(ks_clean$STATUS2)
 # view and save results of all these conversions
 # View(ks_clean)
 save(ks_clean,file="ks_clean.rdata")
-
 
 
 
