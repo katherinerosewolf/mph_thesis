@@ -130,11 +130,61 @@ ks_well_counts_by_status_2 <- as.data.frame(ks_well_counts_by_status_2) # conver
 save(ks_well_counts_by_status_2,file="ks_well_counts_by_status_2.rdata")
 write.csv(ks_well_counts_by_status_2, file="ks_well_counts_by_status_2.csv")
 
+ks_all_status1s <- sort(unique(ks_clean$STATUS)) # vector of all STATUS values
+ks_all_status2s <- sort(unique(ks_clean$STATUS2)) # vector of all STATUS2 values
+
+ks_all_status2s
+
+# inclusion method one: include all wells with 
+ks_status1_must_include <- c("INJ","INJ-P&A","OTHER(1O&1SWD)","OTHER(CBM/SWD)","OTHER(CLASS ONE (OLD))","OTHER(CLASS1)","OTHER(INJ or EOR)","OTHER(NHDW)","OTHER(OIL,SWD)","OTHER(SWD-P&A)","OTHER-P&A(CLASS ONE (OLD))","OTHER-P&A(INJ OR )","OTHER-P&A(INJ or EOR)","OTHER-P&A(OIL-SWD)","SWD","SWD-P&A")
+
+ks_status1_check_further <- c("INTENT","OTHER()","OTHER(NULL)","OTHER(OTHER)","OTHER(TA)","OTHER(TEMP ABD)","OTHER-P&A()","OTHER-P&A(TA)")
+
+#### THIS SECTION SHALL ONLY INCLUDE SWD WELLS
+ks_small_status1s <- sort(c("OTHER()","OTHER(1O&1SWD)","OTHER(CBM/SWD)","OTHER(CLASS ONE (OLD))","OTHER(CLASS1)","OTHER(NHDW)","OTHER(NULL)","OTHER(OIL,SWD)","OTHER(OTHER)","OTHER(SWD-P&A)","OTHER(TA)","OTHER(TEMP ABD)","OTHER-P&A()","OTHER-P&A(CLASS ONE (OLD))","OTHER-P&A(OIL-SWD)","OTHER-P&A(TA)","SWD","SWD-P&A"))
+
+ks_small_exclude_status1s <- sort(c("INTENT","INJ","INJ-P&A","OTHER(INJ or EOR)","OTHER-P&A(INJ OR )","OTHER-P&A(INJ or EOR)","CBM","CBM-P&A","D&A","EOR","EOR-P&A","GAS","GAS-P&A","LOC","O&G","O&G-P&A","OIL","OIL-P&A","OTHER-P&A(2 OIL)","OTHER-P&A(CATH)","OTHER-P&A(COREHOLE)","OTHER-P&A(GAS-INJ)","OTHER-P&A(GAS-STG)","OTHER-P&A(GSW)","OTHER-P&A(LH)","OTHER-P&A(OBS)","OTHER-P&A(OIL&GAS-INJ)","OTHER-P&A(SHUT-IN)","OTHER-P&A(STRAT)","OTHER-P&A(WATER)","OTHER(2OIL)","OTHER(ABD LOC)","OTHER(CATH)","OTHER(COREHOLE)","OTHER(GAS-INJ)","OTHER(GAS-STG)","OTHER(GAS INJ)","OTHER(GAS SHUT-IN)","OTHER(GSW)","OTHER(HELIUM)","OTHER(LH)","OTHER(Monitor)","OTHER(MONITOR)","OTHER(OBS)","OTHER(OBSERVATION)","OTHER(OIL&GAS-INJ)","OTHER(Oil)","OTHER(OIL/GAS)","OTHER(SHUT-IN)","OTHER(STRAT)","OTHER(WATER)"))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
+                                  
 # broad inclusion criteria
-ks_included_status1s <- c("INJ","INJ-P&A","INTENT","OTHER()","OTHER(1O&1SWD)","OTHER(CBM/SWD)","OTHER(CLASS ONE (OLD))","OTHER(CLASS1)","OTHER(INJ or EOR)","OTHER(NHDW)","OTHER(NULL)","OTHER(OIL,SWD)","OTHER(OTHER)","OTHER(SWD-P&A)","OTHER(TA)","OTHER(TEMP ABD)","OTHER-P&A()","OTHER-P&A(CLASS ONE (OLD))","OTHER-P&A(INJ OR )","OTHER-P&A(INJ or EOR)","OTHER-P&A(OIL-SWD)","OTHER-P&A(TA)","SWD","SWD-P&A")
+ks_included_status1s <- sort(c("INJ","INJ-P&A","INTENT","OTHER()","OTHER(1O&1SWD)","OTHER(CBM/SWD)","OTHER(CLASS ONE (OLD))","OTHER(CLASS1)","OTHER(INJ or EOR)","OTHER(NHDW)","OTHER(NULL)","OTHER(OIL,SWD)","OTHER(OTHER)","OTHER(SWD-P&A)","OTHER(TA)","OTHER(TEMP ABD)","OTHER-P&A()","OTHER-P&A(CLASS ONE (OLD))","OTHER-P&A(INJ OR )","OTHER-P&A(INJ or EOR)","OTHER-P&A(OIL-SWD)","OTHER-P&A(TA)","SWD","SWD-P&A"))
 
 # broad exclusion critera
-ks_excluded_status1s  <-  
+ks_excluded_status1s <- sort(c("CBM","CBM-P&A","D&A","EOR","EOR-P&A","GAS","GAS-P&A","LOC","O&G","O&G-P&A","OIL","OIL-P&A","OTHER-P&A(2 OIL)","OTHER-P&A(CATH)","OTHER-P&A(COREHOLE)","OTHER-P&A(GAS-INJ)","OTHER-P&A(GAS-STG)","OTHER-P&A(GSW)","OTHER-P&A(LH)","OTHER-P&A(OBS)","OTHER-P&A(OIL&GAS-INJ)","OTHER-P&A(SHUT-IN)","OTHER-P&A(STRAT)","OTHER-P&A(WATER)","OTHER(2OIL)","OTHER(ABD LOC)","OTHER(CATH)","OTHER(COREHOLE)","OTHER(GAS-INJ)","OTHER(GAS-STG)","OTHER(GAS INJ)","OTHER(GAS SHUT-IN)","OTHER(GSW)","OTHER(HELIUM)","OTHER(LH)","OTHER(Monitor)","OTHER(MONITOR)","OTHER(OBS)","OTHER(OBSERVATION)","OTHER(OIL&GAS-INJ)","OTHER(Oil)","OTHER(OIL/GAS)","OTHER(SHUT-IN)","OTHER(STRAT)","OTHER(WATER)"))
+
+ks_all_status1s_v2 <- c(ks_included_status1s, ks_excluded_status1s)
+
+setdiff(ks_all_status1s,ks_all_status1s_v2) # check for differences
+setdiff(ks_all_status1s_v2,ks_all_status1s) # check for differences
+
 
 # make table of included well statuses for PowerPoint
 ks_included_status1_well_table <- ks_well_counts_by_status[
