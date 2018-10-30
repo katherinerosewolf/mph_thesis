@@ -170,253 +170,33 @@ write.csv(rows_requiring_comment_investigation_simple, file="rows_requiring_comm
 
 raw_manual_well_assignments <- read.csv(file="manual_well_assignments_comments.csv")
 
-View(raw_manual_well_assignments)
+manual_without_drops <- raw_manual_well_assignments %>%
+  filter(swd_inj_ci != "drop")
+
+View(manual_without_drops)
+
+core_manual <- manual_without_drops[,c("KID","swd_inj_ci","pa")]
+names(core_manual) <- c("KID","man_swd_inj_ci","man_activity")
+View(core_manual)
 
 # final well group
 # pull the KIDs of the wells selected from at least one of the groups
-kids_comments_for_the_final_list <- ks_clean$KID[which(ks_clean$COMMENTS %in% comments_to_review)]
+kids_comments_for_the_final_list <- ks_clean$KID[which(ks_clean$KID %in% manual_without_drops$KID)]
 kids_status1s <- ks_clean$KID[which(ks_clean$STATUS %in% ks_definitely_include_status1s)]
-kids_status2s <- ks_Clean$KID[which(ks_clean$STATUS2 %in% )]
+kids_status2s <- ks_clean$KID[which(ks_clean$STATUS2 %in% ks_potential_disposal_include_status2s)]
 
+length(kids_comments_for_the_final_list)
+length(kids_status1s)
+length(kids_status2s)
 
+kid_list <- c(kids_comments_for_the_final_list, kids_status1s, kids_status2s)
+kids_for_final_list <- unlist(kid_list)
+length(kids_for_final_list)
+kids_for_final_list <- unique(kids_for_final_list)
+length(kids_for_final_list)
 
-
-
-
-
-
-
-
-
-
-
-
-                                  
-                                  
-                                  
-                                  
-                                  
-                                  
-                                  
-                                  
-                                  
-                                  
-                                  
-                                  
-                                  
-                                  
-                                  
-                                  
-# broad inclusion criteria
-ks_included_status1s <- sort(c("INJ","INJ-P&A","INTENT","OTHER()","OTHER(1O&1SWD)","OTHER(CBM/SWD)","OTHER(CLASS ONE (OLD))","OTHER(CLASS1)","OTHER(INJ or EOR)","OTHER(NHDW)","OTHER(NULL)","OTHER(OIL,SWD)","OTHER(OTHER)","OTHER(SWD-P&A)","OTHER(TA)","OTHER(TEMP ABD)","OTHER-P&A()","OTHER-P&A(CLASS ONE (OLD))","OTHER-P&A(INJ OR )","OTHER-P&A(INJ or EOR)","OTHER-P&A(OIL-SWD)","OTHER-P&A(TA)","SWD","SWD-P&A"))
-
-# broad exclusion critera
-ks_excluded_status1s <- sort(c("CBM","CBM-P&A","D&A","EOR","EOR-P&A","GAS","GAS-P&A","LOC","O&G","O&G-P&A","OIL","OIL-P&A","OTHER-P&A(2 OIL)","OTHER-P&A(CATH)","OTHER-P&A(COREHOLE)","OTHER-P&A(GAS-INJ)","OTHER-P&A(GAS-STG)","OTHER-P&A(GSW)","OTHER-P&A(LH)","OTHER-P&A(OBS)","OTHER-P&A(OIL&GAS-INJ)","OTHER-P&A(SHUT-IN)","OTHER-P&A(STRAT)","OTHER-P&A(WATER)","OTHER(2OIL)","OTHER(ABD LOC)","OTHER(CATH)","OTHER(COREHOLE)","OTHER(GAS-INJ)","OTHER(GAS-STG)","OTHER(GAS INJ)","OTHER(GAS SHUT-IN)","OTHER(GSW)","OTHER(HELIUM)","OTHER(LH)","OTHER(Monitor)","OTHER(MONITOR)","OTHER(OBS)","OTHER(OBSERVATION)","OTHER(OIL&GAS-INJ)","OTHER(Oil)","OTHER(OIL/GAS)","OTHER(SHUT-IN)","OTHER(STRAT)","OTHER(WATER)"))
-
-ks_all_status1s_v2 <- c(ks_included_status1s, ks_excluded_status1s)
-
-setdiff(ks_all_status1s,ks_all_status1s_v2) # check for differences
-setdiff(ks_all_status1s_v2,ks_all_status1s) # check for differences
-
-
-# make table of included well statuses for PowerPoint
-ks_included_status1_well_table <- ks_well_counts_by_status[
-  which(ks_well_counts_by_status$Var1 
-        %in% ks_included_status1s),] # make table of included well statuses
-save(ks_included_status1_well_table,file="ks_included_status1_well_table.rdata")
-write.csv(ks_included_status1_well_table,file="ks_included_status1_well_table.csv")
-
-# make table of excluded wells for PowerPoint
-ks_excluded_status1_well_table <- ks_well_counts_by_status[
-  which(ks_well_counts_by_status$Var1 
-        %notin% ks_included_status1s),] # make table of excluded wells
-# View(ks_excluded_status1_well_table)
-save(ks_excluded_status1_well_table,file="ks_excluded_status1_well_table.rdata")
-write.csv(ks_excluded_status1_well_table,file="ks_excluded_status1_well_table.csv")
-
-# make dataframe of only included wells
-ks_select_wells <- ks_clean[which(ks_clean$STATUS %in% ks_included_status1s),]
-# View(ks_select_wells)
-
-#### figuring out which others I should keep ####
-
-#### wells to keep based on STATUS
-
-# character vector of STATUS values that will result in kept wells
-remove  <-  c("INJ", "INJ-P&A", "SWD", "SWD-P&A", "OTHER(CLASS1)", "OTHER(CLASS ONE (OLD))","OTHER-P&A(CLASS ONE (OLD))")
-
-# wells kept based solely based on STATUS
-wells_to_keep_based_on_STATUS_alone <- ks_select_wells[which(ks_select_wells$STATUS %in% remove),]
-
-# KIDs of wells kept solely based on STATUS
-kids_of_wells_to_keep_based_on_STATUS_alone <- as.integer(wells_to_keep_based_on_STATUS_alone$KID)
-save(kids_of_wells_to_keep_based_on_STATUS_alone,file="kids_of_wells_to_keep_based_on_STATUS_alone.rdata")
-
-#### GOT TO HERE 2018-10-26 ####
-
-
-
-#### big category (groups with 20+ wells) well review ####
-
-# make vector of other statuses with little other information (20 or more wells)
-ks_statuses_to_investigate_in_group <- ks_included_status1_well_table[ks_included_status1_well_table$Freq >= 20, "Var1"] # select those statuses with equal to or greater than 20 wells
-ks_statuses_to_investigate_in_group <- as.character(ks_statuses_to_investigate_in_group) # convert result of the above to a character vector
-
-# make a character vector of the statuses to be investigated in a group, as the remainder includes "INTENT", "OTHER-P&A()","OTHER-P&A(INJ or EOR)","OTHER-P&A(TA)","OTHER()","OTHER(TA)"
-ks_statuses_to_investigate_in_group  <-  setdiff(ks_statuses_to_investigate_in_group, remove)
-
-# select those wells with a status in the big group investigation
-ks_wells_to_investigate_in_group <- ks_select_wells[which(ks_select_wells$STATUS %in% ks_statuses_to_investigate_in_group),]
-
-# make frequency table of wells in the big group investigation
-ks_well_counts_by_status_big_group_investigation <- table(ks_wells_to_investigate_in_group$STATUS)
-# View(ks_well_counts_by_status_big_group_investigation)
-
-# table of secondary statuses of ambiguous "other" wells
-ks_big_group_investigation_status2s <- table(ks_wells_to_investigate_in_group$STATUS2)
-# View(ks_big_group_investigation_status2s)
-write.csv(ks_big_group_investigation_status2s,file="ks_big_group_investigation_status2s.csv")
-
-# make data frame of comments on others
-ks_big_group_investigation_comments <- table(ks_wells_to_investigate_in_group$COMMENTS)
-ks_big_group_investigation_comments <- as.data.frame(ks_big_group_investigation_comments)
-write.csv(ks_big_group_investigation_comments,file="ks_big_group_investigation_comments.csv")
-# View(ks_big_group_investigation_comments)
-unique(ks_big_group_investigation_comments$Var1)
-
-# vector of comments that had "swd", "inj", "disposal", "class I" included to keep (out of 1,777 different comments)
-disposal_comments <- c(
-  "elog marked in pencil, Collins SWD 1-BRB10/9/2000  quarter call & KB not on elog thus top card/ACO1 not identifiable for well number-BRB10/9/2000",
-  "believed to be same well as Mid-West Oil and Gas drilled in the twenties-also exact footage as a Stanolind #1 SWD drilled to just over 500 feet-LKS",
-  "ACO-1 also lists well as a water injection well - 1/21/04 ABC",
-  "ACO-1 also lists well as water injection - 1/21/04 ABC",
-  "Ground elevation taken from scout card. Well is also a water injection per ACO-1 - 1/14/04 ABC",
-  "SALT WATER DISPOSAL TEST",
-  "WATER INJ WELL",
-  "Well may match Class I well with KID 1002876875 (DRL 5-4-2012)",
-  "injection into Arbuckle?",
-  "ACO-1 also lists well as a water injection well - 1/21/04 ABC")
-
-# keep these STATUS2s
-ks_status2s_to_keep_from_investigation <- c(
-  "Authorized Injection Well",
-  "Converted to SWD Well",
-  "Injection Authorization Terminated",
-  "Injection Authorization Terminated - INACTIVE CODE",
-  "Injection Well Split to Another Dkt",
-  "Unplugged Former Injection Well")
-
-# select wells to drop based on status 2 and comments
-wells_to_drop  <-  subset(ks_wells_to_investigate_in_group, STATUS2 %notin% ks_status2s_to_keep_from_investigation & COMMENTS %notin% disposal_comments)
-
-# get well KIDs of wells to drop alone
-kids_of_wells_to_drop <- wells_to_drop$KID
-save(kids_of_wells_to_drop,file="kids_of_wells_to_drop.rdata")
-save(ks_select_wells,file="ks_select_wells.rdata")
-
-# get KIDs of wells to keep from big investigation as integer vector
-wells_to_keep_from_big_investigation <- subset(ks_wells_to_investigate_in_group, KID %notin% kids_of_wells_to_drop)
-kids_of_wells_to_keep_from_big_investigation <- as.integer(wells_to_keep_from_big_investigation$KID)
-save(kids_of_wells_to_keep_from_big_investigation,file="kids_of_wells_to_keep_from_big_investigation.rdata")
-
-
-#### little category well review ####
-
-# well categories with <20 wells
-# View(ks_included_status1_well_table)
-ks_little_well_categories <- ks_included_status1_well_table[which(ks_included_status1_well_table$Var1 %notin% ks_statuses_to_investigate_in_group & ks_included_status1_well_table$Var1 %notin% remove),] # remove status1s already addressed in big group investigation as well as clear SWD, INJ, and Class I wells
-# View(ks_little_well_categories)
-
-# AND THE CATEGORIES ARE:
-# OTHER-P&A(INJ OR ) 2
-# OTHER-P&A(OIL-SWD) 1
-# OTHER(1O&1SWD) 2
-# OTHER(CBM/SWD) 1
-# OTHER(INJ or EOR) 1
-# OTHER(NHDW) 1
-# OTHER(NULL) 3
-# OTHER(OIL,SWD) 1
-# OTHER(OTHER) 12
-# OTHER(SWD-P&A) 1
-# OTHER(TEMP ABD) 3
-
-#### OTHER-(P&A(INJ OR )): 2 wells
-# View(ks_select_wells[which(ks_select_wells$STATUS=="OTHER-P&A(INJ OR )"),])
-# KIDs 1033706748 1035942341 assumed to be INJ (2 wells)
-kids_of_wells_to_keep_from_little_investigation <- as.integer(c(1033706748,1035942341)) # add KIDs to a vector to collect them
-
-#### OTHER-P&A(OIL-SWD) (1 well)
-# View(ks_select_wells[which(ks_select_wells$STATUS=="OTHER-P&A(OIL-SWD)"),])
-# KID 1006164600 assumed to be SWD
-kids_of_wells_to_keep_from_little_investigation <- append(kids_of_wells_to_keep_from_little_investigation,1006164600) # add new KIDs to vector
-
-#### OTHER(1O&1SWD) (2 wells)
-# View(ks_select_wells[which(ks_select_wells$STATUS=="OTHER(1O&1SWD)"),])
-# KID 1006162621 assumed to be SWD despite STATUS2 of "Authorized Injection Well"
-# KID 1037043342 assumed to be SWD despite no STATUS2
-kids_of_wells_to_keep_from_little_investigation <- append(kids_of_wells_to_keep_from_little_investigation,c(1006162621,1037043342)) # add new KIDs to vector
-
-#### OTHER(CBM/SWD) (1 well)
-# View(ks_select_wells[which(ks_select_wells$STATUS=="OTHER(CBM/SWD)"),])
-# KID 1028007900 assumed to be SWD despite STATUS2 of "Converted to Producing Well"
-kids_of_wells_to_keep_from_little_investigation <- append(kids_of_wells_to_keep_from_little_investigation,1028007900) # add new KIDs to vector
-
-#### OTHER(INJ or EOR) (1 well) (NO RELEVANT WELLS)
-# View(ks_select_wells[which(ks_select_wells$STATUS=="OTHER(INJ or EOR)"),])
-# KID 1046071032 assumed to be INJ b/c STATUS2 is "Recompleted"
-kids_of_wells_to_keep_from_little_investigation <- append(kids_of_wells_to_keep_from_little_investigation,1046071032) # add new KIDs to vector
-
-#### OTHER(NHDW) (1 well)
-# View(ks_select_wells[which(ks_select_wells$STATUS=="OTHER(NHDW)"),])
-ks_select_wells[which(ks_select_wells$STATUS=="OTHER(NHDW)"),]
-# KID 1043994238 assumed to be Class I due to STATUS2 of "Non Hazardous Class 1 Disposal Well KDHE Permit - KS-01-159-008. MTD, WWSL, 09-06-2011"
-kids_of_wells_to_keep_from_little_investigation <- append(kids_of_wells_to_keep_from_little_investigation,1043994238) # add new KIDs to vector
-
-#### OTHER(NULL) (3 wells) NO RELEVANT WELLS
-# View(ks_select_wells[which(ks_select_wells$STATUS=="OTHER(NULL)"),])
-# 1037651940, 1038098730, 1038098731 all should be excluded
- 
-#### OTHER(OIL,SWD) (1 well)
-# View(ks_select_wells[which(ks_select_wells$STATUS=="OTHER(OIL,SWD)"),])
-# KID 1006137923 assumed to be SWD despite STATUS2 of "Authorized Injection Well
-kids_of_wells_to_keep_from_little_investigation <- append(kids_of_wells_to_keep_from_little_investigation,1006137923) # add new KIDs to vector
-
-#### OTHER(OTHER) (12 wells) NO RELEVANT WELLS
-ks_other <- ks_select_wells[which(ks_select_wells$STATUS=="OTHER(OTHER)"),]
-# View(ks_other)
-# all not injections due to no STATUS2 or comments indicating relevance
-
-#### OTHER(SWD-P&A) (1 well)
-# View(ks_select_wells[which(ks_select_wells$STATUS=="OTHER(SWD-P&A)"),])
-# KID 1046799842 assumed SWD-P&A due to STATUS
-kids_of_wells_to_keep_from_little_investigation <- append(kids_of_wells_to_keep_from_little_investigation,1046799842) # add new KIDs to vector
-
-#### OTHER(TEMP ABD) (3 wells) NO RELEVANT WELLS
-# View(ks_select_wells[which(ks_select_wells$STATUS=="OTHER(TEMP ABD)"),])
-# none included because no STATUS2 or relevant comments
-
-# list of statuses for rows with no relevant wells
-no_relevant_wells <- c("OTHER(INJ or EOR)","OTHER(NULL)","OTHER(OTHER)","OTHER(TEMP ABD)")
-str(no_relevant_wells)
-
-# KIDs of wells to keep from little investigation
-kids_of_wells_to_keep_from_little_investigation <- as.integer(kids_of_wells_to_keep_from_little_investigation)
-save(kids_of_wells_to_keep_from_little_investigation,file="kids_of_wells_to_keep_from_little_investigation.rdata")
-# View(kids_of_wells_to_keep_from_little_investigation)
-
-
-
-#### begin final well list ####
-
-# add kids from 3 investigations into one big vector
-kids_of_wells_to_keep <- c(kids_of_wells_to_keep_based_on_STATUS_alone,kids_of_wells_to_keep_from_big_investigation,kids_of_wells_to_keep_from_little_investigation)
-str(kids_of_wells_to_keep)
-ks_final_wells <- ks_select_wells # make data set for mucking
-
-# make final well list
-ks_final_wells <- ks_final_wells[which(ks_final_wells$KID %in% kids_of_wells_to_keep),]
-# View(ks_select_wells)
-# View(ks_final_wells)
+ks_final_wells <- ks_clean[which(ks_clean$KID %in% kids_for_final_list),]
+View(ks_final_wells)
 
 # add my own categories
 ks_final_wells$swd_inj_ci <- NA # categorizing the well as SWD ('swd'), INJ ('inj'), or Class I ('ci')
@@ -424,183 +204,48 @@ ks_final_wells$activity <- NA # categorizing the well as plugged and abandoned (
 ks_final_wells$has_api <- NA # classifying as having or not having an api ('yes' or 'no')
 ks_final_wells$other <- NA # classifying whether the well had a STATUS of "INJ", "INJ-P&A", "SWD", or "SWD-P&A" ('no') or a STATUS of some other type ('yes')
 
-# assign has api
+
+
+
+
+
+#### category assignments ####
+
+#### assign has api ####
 ks_final_wells$has_api  <-  ifelse(ks_final_wells$API_NUMBER == "", "no", "yes")
-# View(ks_final_wells)
+View(ks_final_wells)
 
-#### updating the little categories ####
-# View(table(ks_final_wells$STATUS))
+#### swd versus not ####
+View(table(ks_final_wells$STATUS))
 
-#### OTHER-P&A(INJ OR ) DONE
-# active or PA
-ks_final_wells  <-  within(ks_final_wells, activity[STATUS == "OTHER-P&A(INJ OR )"]  <-  'pa')
-# swd_inj_ci
-ks_final_wells  <-  within(ks_final_wells, swd_inj_ci[STATUS == "OTHER-P&A(INJ OR )"]  <-  'inj')
-# other flag
-ks_final_wells  <-  within(ks_final_wells, other[STATUS == "OTHER-P&A(INJ OR )"]  <-  'yes')
+ks_definitely_include_status1s <- sort(c("OTHER(1O&1SWD)","OTHER(CBM/SWD)","OTHER(CLASS ONE (OLD))","OTHER(CLASS1)","OTHER(NHDW)","OTHER(OIL,SWD)","OTHER(SWD-P&A)","OTHER-P&A(CLASS ONE (OLD))","OTHER-P&A(OIL-SWD)","SWD","SWD-P&A"))
 
+swd_statii <- sort(c("OTHER(1O&1SWD)","OTHER(CBM/SWD)","OTHER(OIL,SWD)","OTHER(SWD-P&A)","OTHER-P&A(OIL-SWD)","SWD","SWD-P&A"))
+class1_statii <- sort(c("OTHER(CLASS ONE (OLD))","OTHER(CLASS1)","OTHER(NHDW)","OTHER-P&A(CLASS ONE (OLD))"))
+swd_statii2 <- sort(c("Converted to SWD Well"))
 
-#### OTHER-P&A(INJ or EOR) DONE
-# active or PA
-ks_final_wells  <-  within(ks_final_wells, activity[STATUS == "OTHER-P&A(INJ or EOR)"]  <-  'pa')
-# swd_inj_ci
-ks_final_wells <- within(ks_final_wells, swd_inj_ci[STATUS == "OTHER-P&A(INJ or EOR)"]  <-  'inj')
-# other flag
-ks_final_wells  <-  within(ks_final_wells, other[STATUS == "OTHER-P&A(INJ or EOR)"]  <-  'yes')
+ks_final_wells <- within(ks_final_wells, swd_inj_ci[STATUS %in% class1_statii] <-  'class1')
+ks_final_wells <- within(ks_final_wells, swd_inj_ci[STATUS %in% swd_statii | STATUS2 %in% swd_statii2]  <-  'swd')
 
+#### pa versus not ####
+pa_statii <- sort(c("OTHER(SWD-P&A)","OTHER-P&A(CLASS ONE (OLD))","OTHER-P&A(OIL-SWD)","SWD-P&A"))
+ks_final_wells <- within(ks_final_wells, activity[STATUS %in% pa_statii] <-  'pa')
 
-#### OTHER-P&A(OIL-SWD) DONE
-# activity
-ks_final_wells  <-  within(ks_final_wells, activity[STATUS == "OTHER-P&A(OIL-SWD)"]  <-  'pa')
-# swd_inj_ci
-ks_final_wells  <-  within(ks_final_wells, swd_inj_ci[STATUS == "OTHER-P&A(OIL-SWD)"]  <-  'swd')
-# other flag
-ks_final_wells  <-  within(ks_final_wells, other[STATUS == "OTHER-P&A(OIL-SWD)"]  <-  'yes')
+#### deal with comments ####
+ks_final_wells <- merge(ks_final_wells, core_manual, by = "KID", all.x = TRUE, all.y = TRUE)
+ks_final_wells <- within(ks_final_wells, swd_inj_ci[man_swd_inj_ci == 'swd'] <- 'swd')
+ks_final_wells <- within(ks_final_wells, swd_inj_ci[man_swd_inj_ci == 'class1'] <- 'class1')
+ks_final_wells <- within(ks_final_wells, swd_inj_ci[man_swd_inj_ci == 'swd_class1'] <- 'swd_class1')
+ks_final_wells <- within(ks_final_wells, activity[man_activity == 'pa'] <- 'pa')
+ks_final_wells <- within(ks_final_wells, other[STATUS %in% c("SWD","SWD-P&A")] <- 'no')
 
-
-#### OTHER-P&A(TA) DONE
-# View(ks_final_wells[which(ks_final_wells$STATUS=="OTHER-P&A(TA)"),])
-# activity
-ks_final_wells  <-  within(ks_final_wells, activity[STATUS == "OTHER-P&A(TA)"]  <-  'pa')
-# swd_inj_ci
-ks_final_wells <- within(ks_final_wells, swd_inj_ci[KID == 1006072336]  <-  'swd')
-ks_final_wells <- within(ks_final_wells, swd_inj_ci[KID == 1006112943 | KID == 1031374643]  <-  'inj')
-# other flag
-ks_final_wells  <-  within(ks_final_wells, other[STATUS == "OTHER-P&A(TA)"]  <-  'yes')
-
-
-#### OTHER(1O&1SWD) DONE
-# View(ks_final_wells[which(ks_final_wells$STATUS=="OTHER(1O&1SWD)"),])
-# activity
-ks_final_wells  <-  within(ks_final_wells, activity[API_NUMBER == "15-191-21652"]  <-  'not_pa')
-ks_final_wells  <-  within(ks_final_wells, activity[API_NUMBER == "15-079-00332-0001"]  <-  'no_plug')
-# swd_inj_ci
-ks_final_wells  <-  within(ks_final_wells, swd_inj_ci[STATUS == "OTHER(1O&1SWD)"]  <-  'swd')
-# other flag
-ks_final_wells  <-  within(ks_final_wells, other[STATUS == "OTHER(1O&1SWD)"]  <-  'yes')
-
-
-#### OTHER(CBM/SWD) DONE
-# View(ks_final_wells[which(ks_final_wells$STATUS=="OTHER(CBM/SWD)"),])
-# activity
-ks_final_wells  <-  within(ks_final_wells, activity[API_NUMBER == "15-019-26584"]  <-  'not_pa')
-# swd_inj_ci
-ks_final_wells  <-  within(ks_final_wells, swd_inj_ci[API_NUMBER == "15-019-26584"]  <-  'swd')
-# other flag
-ks_final_wells  <-  within(ks_final_wells, other[API_NUMBER == "15-019-26584"]  <-  'yes')
-
-
-#### OTHER(NHDW) DONE
-# View(ks_final_wells[which(ks_final_wells$STATUS=="OTHER(NHDW)"),])
-# activity
-ks_final_wells  <-  within(ks_final_wells, activity[KID == "1043994238"]  <-  'not_pa')
-# swd_inj_ci
-ks_final_wells  <-  within(ks_final_wells, swd_inj_ci[KID == "1043994238"]  <-  'c1')
-# other flag
-ks_final_wells  <-  within(ks_final_wells, other[KID == "1043994238"]  <-  'yes')
-
-
-#### OTHER(OIL,SWD) DONE
-# View(ks_final_wells[which(ks_final_wells$STATUS=="OTHER(OIL,SWD)"),])
-# activity
-ks_final_wells  <-  within(ks_final_wells, activity[KID == "1006137923"]  <-  'not_pa')
-# swd_inj_ci
-ks_final_wells  <-  within(ks_final_wells, swd_inj_ci[KID == "1006137923"]  <-  'swd')
-# other flag
-ks_final_wells  <-  within(ks_final_wells, other[KID == "1006137923"]  <-  'yes')
-
-
-#### OTHER(SWD-P&A) DONE
-# View(ks_final_wells[which(ks_final_wells$STATUS=="OTHER(SWD-P&A)"),])
-# activity
-ks_final_wells  <-  within(ks_final_wells, activity[STATUS == "OTHER(SWD-P&A)"]  <-  'pa')
-# swd_inj_ci
-ks_final_wells  <-  within(ks_final_wells, swd_inj_ci[STATUS == "OTHER(SWD-P&A)"]  <-  'swd')
-# other flag
-ks_final_wells  <-  within(ks_final_wells, other[STATUS == "OTHER(SWD-P&A)"]  <-  'yes')
-
-
-#### OTHER() DONE
-# swd_inj_ci INJ wells by STATUS2
-ks_final_wells <- within(ks_final_wells, swd_inj_ci[STATUS == "OTHER()" & STATUS2 %in% c(
-  "Authorized Injection Well",
-  "Injection Authorization Terminated",
-  "Injection Authorization Terminated - INACTIVE CODE",
-  "Unplugged Former Injection Well",
-  "Injection Well Split to Another Dkt")]  <-  'inj')
-# swd_inj_ci INJ wells by COMMENTS
-ks_final_wells <- within(ks_final_wells, swd_inj_ci[STATUS == "OTHER()" & COMMENTS %in% c(
-  "WATER INJ WELL",
-  "ACO-1 also lists well as a water injection well - 1/21/04 ABC",
-  "ACO-1 also lists well as water injection - 1/21/04 ABC",
-  "Ground elevation taken from scout card. Well is also a water injection per ACO-1 - 1/14/04 ABC",
-  "injection into Arbuckle?")] <- 'inj')
-
-# swd_inj_ci SWD wells by STATUS2
-ks_final_wells <- within(ks_final_wells, swd_inj_ci[STATUS == "OTHER()" & STATUS2 == "Converted to SWD Well"] <- 'swd')
-
-# swd_inj_ci SWD wells by COMMENTS
-ks_final_wells <- within(ks_final_wells, swd_inj_ci[STATUS == "OTHER()" & COMMENTS %in% c("elog marked in pencil, Collins SWD 1-BRB10/9/2000  quarter call & KB not on elog thus top card/ACO1 not identifiable for well number-BRB10/9/2000","believed to be same well as Mid-West Oil and Gas drilled in the twenties-also exact footage as a Stanolind #1 SWD drilled to just over 500 feet-LKS","SALT WATER DISPOSAL TEST")]  <-  'swd')
-
-# other flag
-ks_final_wells  <-  within(ks_final_wells, other[STATUS == "OTHER()"]  <-  'yes')
-
-write.csv(ks_final_wells,file="ks_final_wells.csv")
-
-
-
-
-#### OTHER(TA)
-# View(ks_final_wells[which(ks_final_wells$STATUS=="OTHER(TA)"),])
-
-# swd_inj_ci
-ks_final_wells <- within(ks_final_wells, swd_inj_ci[STATUS == "OTHER(TA)" & STATUS2 == "Converted to SWD Well"] <- 'swd')
-
-ks_final_wells <- within(ks_final_wells, swd_inj_ci[STATUS == "OTHER(TA)" & STATUS2 == "Authorized Injection Well"] <- 'inj')
-
-ks_final_wells <- within(ks_final_wells, swd_inj_ci[STATUS == "OTHER(TA)" & STATUS2 == "Producing"]  <-  'inj')
-
-# other flag
-ks_final_wells  <-  within(ks_final_wells, other[STATUS == "OTHER(TA)"]  <-  'yes')
-
-
-
-#### class ones
-
-# swd_inj_ci
-ks_final_wells  <-  within(ks_final_wells, swd_inj_ci[STATUS == "OTHER(CLASS1)" | STATUS == "OTHER(CLASS1)" | STATUS == "OTHER(CLASS ONE (OLD))" | STATUS == "OTHER-P&A(CLASS ONE (OLD))" | STATUS == "OTHER(NHDW)"]  <-  'c1')
-
-ks_final_wells  <-  within(ks_final_wells, swd_inj_ci[COMMENTS == "Well may match Class I well with KID 1002876875 (DRL 5-4-2012)"]  <-  'c1')
-
-# other flag
-ks_final_wells  <-  within(ks_final_wells, other[STATUS == "OTHER(CLASS1)" | STATUS == "OTHER(CLASS1)" | STATUS == "OTHER(CLASS ONE (OLD))" | STATUS == "OTHER-P&A(CLASS ONE (OLD))" | COMMENTS == "Well may match Class I well with KID 1002876875 (DRL 5-4-2012)"]  <-  'yes')
-
-# activity
-ks_final_wells  <-  within(ks_final_wells, activity[STATUS == "OTHER-P&A(CLASS ONE (OLD))"]  <-  'pa')
-
-
-
-
-
-
-#### conditional group assignments
-
-# assign statuses
-
-# SWDs
-ks_final_wells  <-  within(ks_final_wells, swd_inj_ci[STATUS == "SWD" | STATUS == "SWD-P&A"]  <-  'swd')
-ks_final_wells  <-  within(ks_final_wells, activity[STATUS == "SWD"]  <-  'not_pa')
-ks_final_wells  <-  within(ks_final_wells, activity[STATUS == "SWD-P&A"]  <-  'pa')
-
-# INJs
-ks_final_wells  <-  within(ks_final_wells, swd_inj_ci[STATUS == "INJ" | STATUS == "INJ-P&A"]  <-  'inj')
-ks_final_wells  <-  within(ks_final_wells, activity[STATUS == "INJ"]  <-  'not_pa')
-ks_final_wells  <-  within(ks_final_wells, activity[STATUS == "INJ-P&A"]  <-  'pa')
-
-# assign not-others to "no"
-ks_final_wells$other[is.na(ks_final_wells$other)]  <-  "no"
+# assign not-others to "yes"
+ks_final_wells$other[is.na(ks_final_wells$other)]  <-  "yes"
 ks_final_wells$activity[is.na(ks_final_wells$activity)]  <-  "not_pa"
-# View(ks_final_wells)
+ks_final_wells$manual[is.na(ks_final_wells$man_swd_inj_ci)] <- "no"
+ks_final_wells$manual[is.na(ks_final_wells$manual)] <- "yes"
+
+View(ks_final_wells)
 
 save(ks_final_wells,file="ks_final_wells.rdata")
 
