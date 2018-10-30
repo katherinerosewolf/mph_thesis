@@ -140,6 +140,8 @@ ks_status1_check_further <- c("INTENT","OTHER()","OTHER(NULL)","OTHER(OTHER)","O
 #### THIS SECTION SHALL ONLY INCLUDE SWD WELLS
 ks_potential_disposal_include_status1s <- sort(c("OTHER()","OTHER(1O&1SWD)","OTHER(CBM/SWD)","OTHER(CLASS ONE (OLD))","OTHER(CLASS1)","OTHER(NHDW)","OTHER(NULL)","OTHER(OIL,SWD)","OTHER(OTHER)","OTHER(SWD-P&A)","OTHER(TA)","OTHER(TEMP ABD)","OTHER-P&A()","OTHER-P&A(CLASS ONE (OLD))","OTHER-P&A(OIL-SWD)","OTHER-P&A(TA)","SWD","SWD-P&A"))
 
+ks_definitely_include_status1s <- sort(c("OTHER(1O&1SWD)","OTHER(CBM/SWD)","OTHER(CLASS ONE (OLD))","OTHER(CLASS1)","OTHER(NHDW)","OTHER(OIL,SWD)","OTHER(SWD-P&A)","OTHER-P&A(CLASS ONE (OLD))","OTHER-P&A(OIL-SWD)","SWD","SWD-P&A"))
+
 ks_potential_disposal_exclude_status1s <- sort(c("INTENT","INJ","INJ-P&A","OTHER(INJ or EOR)","OTHER-P&A(INJ OR )","OTHER-P&A(INJ or EOR)","CBM","CBM-P&A","D&A","EOR","EOR-P&A","GAS","GAS-P&A","LOC","O&G","O&G-P&A","OIL","OIL-P&A","OTHER-P&A(2 OIL)","OTHER-P&A(CATH)","OTHER-P&A(COREHOLE)","OTHER-P&A(GAS-INJ)","OTHER-P&A(GAS-STG)","OTHER-P&A(GSW)","OTHER-P&A(LH)","OTHER-P&A(OBS)","OTHER-P&A(OIL&GAS-INJ)","OTHER-P&A(SHUT-IN)","OTHER-P&A(STRAT)","OTHER-P&A(WATER)","OTHER(2OIL)","OTHER(ABD LOC)","OTHER(CATH)","OTHER(COREHOLE)","OTHER(GAS-INJ)","OTHER(GAS-STG)","OTHER(GAS INJ)","OTHER(GAS SHUT-IN)","OTHER(GSW)","OTHER(HELIUM)","OTHER(LH)","OTHER(Monitor)","OTHER(MONITOR)","OTHER(OBS)","OTHER(OBSERVATION)","OTHER(OIL&GAS-INJ)","OTHER(Oil)","OTHER(OIL/GAS)","OTHER(SHUT-IN)","OTHER(STRAT)","OTHER(WATER)"))
 
 length(ks_potential_disposal_include_status1s) # count included statii
@@ -153,14 +155,28 @@ ks_potential_disposal_exclude_status2s <- # status2s that don't mean inclusion
           ks_potential_disposal_include_status2s)
 ks_potential_disposal_exclude_status2s
 
+# dealing with comments!
 ks_potential_disposal_comments <- ks_clean$COMMENTS
-strings_sought_in_comments <- 
-length(ks_potential_disposal_comments)
-ks_potential_disposal_unique_comments <- unique(ks_potential_disposal_comments)
-ks_potential_disposal_unique_comments
-str(ks_potential_disposal_unique_comments)
+positions_of_possible_comments_to_include <- grep("swd|disp|class",ks_potential_disposal_comments,ignore.case = TRUE)
+positions_of_possible_comments_to_include
+comments_to_review <- ks_clean$COMMENTS[positions_of_possible_comments_to_include]
+comments_to_review
+write.csv(comments_to_review, file = "comments_to_review.csv")
+rows_requiring_comment_investigation <- ks_clean[which(ks_clean$COMMENTS %in% comments_to_review),]
+rows_requiring_comment_investigation_simple <- rows_requiring_comment_investigation[,c("KID","API_NUMBER","STATUS","STATUS2","COMMENTS")]
+View(rows_requiring_comment_investigation)
+write.csv(rows_requiring_comment_investigation, file="rows_requiring_comment_investigation.csv")
+write.csv(rows_requiring_comment_investigation_simple, file="rows_requiring_comment_investigation_simple.csv")
 
+raw_manual_well_assignments <- read.csv(file="manual_well_assignments_comments.csv")
 
+View(raw_manual_well_assignments)
+
+# final well group
+# pull the KIDs of the wells selected from at least one of the groups
+kids_comments_for_the_final_list <- ks_clean$KID[which(ks_clean$COMMENTS %in% comments_to_review)]
+kids_status1s <- ks_clean$KID[which(ks_clean$STATUS %in% ks_definitely_include_status1s)]
+kids_status2s <- ks_Clean$KID[which(ks_clean$STATUS2 %in% )]
 
 
 
