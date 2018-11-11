@@ -202,7 +202,7 @@ View(ks_final_wells)
 ks_final_wells$swd_inj_ci <- NA # categorizing the well as SWD ('swd'), INJ ('inj'), or Class I ('ci')
 ks_final_wells$activity <- NA # categorizing the well as plugged and abandoned ('pa') or not ('not_pa')
 ks_final_wells$has_api <- NA # classifying as having or not having an api ('yes' or 'no')
-ks_final_wells$other <- NA # classifying whether the well had a STATUS of "INJ", "INJ-P&A", "SWD", or "SWD-P&A" ('no') or a STATUS of some other type ('yes')
+ks_final_wells$other <- NA # classifying whether the well had a STATUS of "SWD" or "SWD-P&A" ('no') or a STATUS of some other type ('yes')
 
 
 
@@ -237,6 +237,7 @@ ks_final_wells <- within(ks_final_wells, swd_inj_ci[man_swd_inj_ci == 'swd'] <- 
 ks_final_wells <- within(ks_final_wells, swd_inj_ci[man_swd_inj_ci == 'class1'] <- 'class1')
 ks_final_wells <- within(ks_final_wells, swd_inj_ci[man_swd_inj_ci == 'swd_class1'] <- 'swd_class1')
 ks_final_wells <- within(ks_final_wells, activity[man_activity == 'pa'] <- 'pa')
+ks_final_wells <- within(ks_final_wells, activity[man_activity == 'never_completed'] <- 'never_completed')
 ks_final_wells <- within(ks_final_wells, other[STATUS %in% c("SWD","SWD-P&A")] <- 'no')
 
 # assign not-others to "yes"
@@ -247,55 +248,80 @@ ks_final_wells$manual[is.na(ks_final_wells$manual)] <- "yes"
 
 View(ks_final_wells)
 
-save(ks_final_wells,file="ks_final_wells.rdata")
+View(table(ks_final_wells$swd_inj_ci,ks_final_wells$has_api))
 
+save(ks_final_wells,file="ks_final_wells.rdata")
 
 
 #### deleting those with duplicate APIs
 # make dataset without wells without apis
 ks_only_apis <- ks_final_wells
 ks_only_apis <- ks_final_wells[!(is.na(ks_final_wells$API_NUMBER) | ks_final_wells$API_NUMBER==""),]
-# View(ks_only_apis)
+View(ks_only_apis)
 
 # find duplicate APIs
 ks_final_index  <-  duplicated(ks_only_apis$API_NUMBER) | duplicated(ks_only_apis$API_NUMBER, fromLast = TRUE)
 ks_API_dups <- ks_only_apis[ks_final_index, ]
 # View(ks_API_dups)
 
-
 # remove duplicate APIs, keeping those last modified
 ks_bye_dup_API <- subset(ks_only_apis, ave(modified_as_date, API_NUMBER, FUN = max) == modified_as_date)
-
-# View(ks_bye_dup_API)
+View(ks_bye_dup_API)
 
 
 #### dealing with API duplication based on 4-digit activity code
 
 # delete extraneous four digits
 ks_bye_dup_API$API_NUMBER_SIMPLE  <-  substr(ks_bye_dup_API$API_NUMBER, 0, 12)
-# View(ks_bye_dup_API)
+View(ks_bye_dup_API)
 
 # find duplicate APIs without extraneous four digits
 ks_simple_API_index  <-  duplicated(ks_bye_dup_API$API_NUMBER_SIMPLE) | duplicated(ks_bye_dup_API$API_NUMBER_SIMPLE, fromLast = TRUE)
 ks_simple_API_dups <- ks_bye_dup_API[ks_simple_API_index, ]
-# View(ks_simple_API_dups)
+View(ks_simple_API_dups)
 
 # remove duplicate APIs, keeping those last modified
 ks_bye_dup_API_simple <- subset(ks_bye_dup_API, ave(modified_as_date, API_NUMBER_SIMPLE, FUN = max) == modified_as_date)
 
-# View(ks_bye_dup_API_simple)
+View(ks_bye_dup_API_simple)
+
+# re-find duplicates
+ks_simple_API_index_2 <- duplicated(ks_bye_dup_API_simple$API_NUMBER_SIMPLE) | duplicated(ks_bye_dup_API_simple$API_NUMBER_SIMPLE, fromLast = TRUE)
+ks_simple_API_dups_2 <- ks_bye_dup_API_simple[ks_simple_API_index_2, ]
+View(ks_simple_API_dups_2)
+
+ks_bye_dup_API_simple <- ks_bye_dup_API_simple[order(ks_bye_dup_API_simple$API_NUMBER_SIMPLE,ks_bye_dup_API_simple$other),]
+View(ks_bye_dup_API_simple)
+
+true_no_dup_API <- ks_bye_dup_API_simple[!duplicated(ks_bye_dup_API_simple$API_NUMBER_SIMPLE),]
+View(true_no_dup_API)
+
+# drop never-completeds
+no_never_complete <- subset(true_no_dup_API, !(activity == "never_completed"))
+View(no_never_complete)
+
+# remove classIs
+ks_no_dup_api_or_ci <- subset(no_never_complete, !(swd_inj_ci == "class1"))
+View(ks_no_dup_api_or_ci)
+
 
 # find duplicated latitudes and longitudes
-ks_lat_long_dup_simple_index <- duplicated(ks_bye_dup_API_simple[c("LATITUDE","LONGITUDE")]) | duplicated(ks_bye_dup_API_simple[c("LATITUDE","LONGITUDE")], fromLast = TRUE)
-ks_lat_long_dups_simple <- ks_bye_dup_API_simple[ks_lat_long_dup_simple_index, ]
-# View(ks_lat_long_dups_simple)
+ks_lat_long_dup_index <- duplicated(ks_no_dup_api_or_ci[c("LATITUDE","LONGITUDE")]) | duplicated(ks_no_dup_api_or_ci[c("LATITUDE","LONGITUDE")], fromLast = TRUE)
+ks_lat_long_dup <- ks_no_dup_api_or_ci[ks_lat_long_dup_index, ]
+View(ks_lat_long_dup)
+
+
+View(ks_no_dup_API_or_cI)
+
+
 
 # calling it the final thesis data
-ks_final_thesis_data <- ks_bye_dup_API_simple
+ks_final_thesis_data <- ks_no_dup_api_or_ci
 save(ks_final_thesis_data,file="ks_final_thesis_data.rdata")
-# View(ks_final_thesis_data)
+View(ks_final_thesis_data)
 
 
+table(ks_final_thesis_data$swd_inj_ci,ks_final_thesis_data$activity)
 table(ks_final_thesis_data$other,ks_final_thesis_data$swd_inj_ci)
  
 ks_set_for_mapping <- ks_final_thesis_data[,c("KID","API_NUMBER_SIMPLE","LATITUDE","LONGITUDE","swd_inj_ci")]
@@ -305,14 +331,15 @@ write.csv2(ks_set_for_mapping,file="ks_set_for_mapping.csv")
 
 
 # import mapping results back
-ks_join_results <- read.csv(file="well_join_2018_10_25.txt",stringsAsFactors = FALSE)
+ks_join_results <- read.csv(file="well_join_2018_10_30.txt",stringsAsFactors = FALSE)
 # View(ks_join_results)
 save(ks_join_results,file="ks_join_results.rdata")
 #
 # # load needed files if starting from here
 # load(file="ks_final_thesis_data.rdata")
 # load(file="ks_join_results.rdata")
-# 
+ 
+
 ks_join_to_edit <- ks_join_results
 ks_join_to_edit$API_NUMBER <- NULL
 ks_join_to_edit$LATITUDE <- NULL
@@ -325,64 +352,6 @@ ks_join_to_edit$TARGET_FID <- NULL
 ks_wells_and_block_groups <- merge(x = ks_final_thesis_data, y = ks_join_to_edit, by = "KID", all.x = TRUE)
 View(ks_wells_and_block_groups)
 
-# assigning years
-
-# go for the date limit
-ks_wells_and_block_groups$drilled_post_2006 <- NULL
-ks_wells_and_block_groups$active_post_2006 <- NULL
-
-# 2000 year
-ks_wells_and_block_groups$permit_after_2000  <-  NA
-ks_wells_and_block_groups$spud_after_2000  <-  NA
-ks_wells_and_block_groups$completed_after_2000  <-  NA
-ks_wells_and_block_groups$active_after_2000  <-  NA
-
-# 2007 year
-ks_wells_and_block_groups$permit_after_2007  <-  NA
-ks_wells_and_block_groups$spud_after_2007  <-  NA
-ks_wells_and_block_groups$completed_after_2007  <-  NA
-ks_wells_and_block_groups$active_after_2007  <-  NA
-
-# 2010 year
-ks_wells_and_block_groups$permit_after_2010  <-  NA
-ks_wells_and_block_groups$spud_after_2010  <-  NA
-ks_wells_and_block_groups$completed_after_2010  <-  NA
-ks_wells_and_block_groups$active_after_2010  <-  NA
-
-
-# 2000 permit
-ks_wells_and_block_groups <- within(ks_wells_and_block_groups, permit_after_2000[permit_as_date >= "2000-01-01"]  <-  'yes')
-ks_wells_and_block_groups$permit_after_2000[is.na(ks_wells_and_block_groups$permit_after_2000)]  <-  "no"
-# 2000 spud
-ks_wells_and_block_groups <- within(ks_wells_and_block_groups, spud_after_2000[spud_as_date >= "2000-01-01"]  <-  'yes')
-ks_wells_and_block_groups$spud_after_2000[is.na(ks_wells_and_block_groups$spud_after_2000)]  <-  "no"
-# 2000 completed
-ks_wells_and_block_groups <- within(ks_wells_and_block_groups, completed_after_2000[completion_as_date >= "2000-01-01"]  <-  'yes')
-ks_wells_and_block_groups$completed_after_2000[is.na(ks_wells_and_block_groups$completed_after_2000)]  <-  "no"
-
-# 2007 permit
-ks_wells_and_block_groups <- within(ks_wells_and_block_groups, permit_after_2007[permit_as_date >= "2007-01-01"]  <-  'yes')
-ks_wells_and_block_groups$permit_after_2007[is.na(ks_wells_and_block_groups$permit_after_2007)]  <-  "no"
-# 2007 spud
-ks_wells_and_block_groups <- within(ks_wells_and_block_groups, spud_after_2007[spud_as_date >= "2007-01-01"]  <-  'yes')
-ks_wells_and_block_groups$spud_after_2007[is.na(ks_wells_and_block_groups$spud_after_2007)]  <-  "no"
-# 2007 completed
-ks_wells_and_block_groups <- within(ks_wells_and_block_groups, completed_after_2007[completion_as_date >= "2007-01-01"]  <-  'yes')
-ks_wells_and_block_groups$completed_after_2007[is.na(ks_wells_and_block_groups$completed_after_2007)]  <-  "no"
-
-# 2010 permit
-ks_wells_and_block_groups <- within(ks_wells_and_block_groups, permit_after_2010[permit_as_date >= "2010-01-01"]  <-  'yes')
-ks_wells_and_block_groups$permit_after_2010[is.na(ks_wells_and_block_groups$permit_after_2010)]  <-  "no"
-# 2010 spud
-ks_wells_and_block_groups <- within(ks_wells_and_block_groups, spud_after_2010[spud_as_date >= "2010-01-01"]  <-  'yes')
-ks_wells_and_block_groups$spud_after_2010[is.na(ks_wells_and_block_groups$spud_after_2010)]  <-  "no"
-# 2010 completed
-ks_wells_and_block_groups <- within(ks_wells_and_block_groups, completed_after_2010[completion_as_date >= "2010-01-01"]  <-  'yes')
-ks_wells_and_block_groups$completed_after_2010[is.na(ks_wells_and_block_groups$completed_after_2010)]  <-  "no"
-
-# single fix based on comments and duplicate API
-ks_wells_and_block_groups  <-  within(ks_wells_and_block_groups, swd_inj_ci[KID == "1001233161"]  <-  'swd')
-
 # currently active classification
 ks_wells_and_block_groups$current_active <- NA
 
@@ -394,152 +363,25 @@ ks_wells_and_block_groups  <-  within(ks_wells_and_block_groups, current_active[
 
 # make rest active
 ks_wells_and_block_groups$current_active[is.na(ks_wells_and_block_groups$current_active)]  <-  "presumed_active"
-
-# combine permit or spud after 2000
-ks_wells_and_block_groups$permit_spud_post_2000 <- NA
-ks_wells_and_block_groups$permit_spud_post_2007 <- NA
-ks_wells_and_block_groups$permit_spud_post_2010 <- NA
-
-# post 2000
-ks_wells_and_block_groups  <-  within(ks_wells_and_block_groups, permit_spud_post_2000[permit_after_2000 == "yes" | spud_after_2000 == "yes"]  <-  'yes')
-ks_wells_and_block_groups$permit_spud_post_2000[is.na(ks_wells_and_block_groups$permit_spud_post_2000)]  <-  "no"
-
-# post 2007
-ks_wells_and_block_groups  <-  within(ks_wells_and_block_groups, permit_spud_post_2007[permit_after_2007 == "yes" | spud_after_2007 == "yes"]  <-  'yes')
-ks_wells_and_block_groups$permit_spud_post_2007[is.na(ks_wells_and_block_groups$permit_spud_post_2007)]  <-  "no"
-
-# post 2010
-ks_wells_and_block_groups  <-  within(ks_wells_and_block_groups, permit_spud_post_2010[permit_after_2010 == "yes" | spud_after_2010 == "yes"]  <-  'yes')
-ks_wells_and_block_groups$permit_spud_post_2010[is.na(ks_wells_and_block_groups$permit_spud_post_2010)]  <-  "no"
-
-
-# categories by which to subset: swd_inj_ci, other, permit or spud after 2000, current_active
-
-# make categories manually
-ks_wells_and_block_groups$swd_norm_post2000_active <- NA
-ks_wells_and_block_groups$swd_norm_post2000_pa <- NA
-ks_wells_and_block_groups$swd_norm_pre2000_active <- NA
-ks_wells_and_block_groups$swd_norm_pre2000_pa <- NA
-
-ks_wells_and_block_groups$swd_other_post2000_active <- NA
-ks_wells_and_block_groups$swd_other_post2000_pa <- NA
-ks_wells_and_block_groups$swd_other_pre2000_active <- NA
-ks_wells_and_block_groups$swd_other_pre2000_pa <- NA
-
-ks_wells_and_block_groups$inj_norm_post2000_active <- NA
-ks_wells_and_block_groups$inj_norm_post2000_pa <- NA
-ks_wells_and_block_groups$inj_norm_pre2000_active <- NA
-ks_wells_and_block_groups$inj_norm_pre2000_pa <- NA
-ks_wells_and_block_groups$inj_other_post2000_active <- NA
-ks_wells_and_block_groups$inj_other_post2000_pa <- NA
-ks_wells_and_block_groups$inj_other_pre2000_active <- NA
-ks_wells_and_block_groups$inj_other_pre2000_pa <- NA
-
-ks_wells_and_block_groups$ci_other_post2000_active <- NA
-ks_wells_and_block_groups$ci_other_post2000_pa <- NA
-ks_wells_and_block_groups$ci_other_pre2000_active <- NA
-ks_wells_and_block_groups$ci_other_pre2000_pa <- NA
-
-
-ks_wells_and_block_groups  <-  within(ks_wells_and_block_groups, swd_norm_post2000_active[swd_inj_ci == 'swd' & other == 'no' & permit_spud_post_2000 == 'yes' & current_active == 'presumed_active'] <- 'yes')
-ks_wells_and_block_groups  <-  within(ks_wells_and_block_groups, swd_norm_post2000_pa[swd_inj_ci == 'swd' & other == 'no' & permit_spud_post_2000 == 'yes' & current_active == 'plugged_abandoned'] <- 'yes')
-# ks_wells_and_block_groups$swd_norm_pre2000_active
-ks_wells_and_block_groups  <-  within(ks_wells_and_block_groups, swd_norm_pre2000_active[swd_inj_ci == 'swd' & other == 'no' & permit_spud_post_2000 == 'no' & current_active == 'presumed_active'] <- 'yes')
-ks_wells_and_block_groups  <-  within(ks_wells_and_block_groups, swd_norm_pre2000_pa[swd_inj_ci == 'swd' & other == 'no' & permit_spud_post_2000 == 'no' & current_active == 'plugged_abandoned'] <- 'yes')
-
-
-ks_wells_and_block_groups  <-  within(ks_wells_and_block_groups, swd_other_post2000_active[swd_inj_ci == 'swd' & other == 'yes' & permit_spud_post_2000 == 'yes' & current_active == 'presumed_active'] <- 'yes')
-ks_wells_and_block_groups  <-  within(ks_wells_and_block_groups, swd_other_post2000_pa[swd_inj_ci == 'swd' & other == 'yes' & permit_spud_post_2000 == 'yes' & current_active == 'plugged_abandoned'] <- 'yes')
-# ks_wells_and_block_groups$swd_norm_pre2000_active
-ks_wells_and_block_groups  <-  within(ks_wells_and_block_groups, swd_other_pre2000_active[swd_inj_ci == 'swd' & other == 'yes' & permit_spud_post_2000 == 'no' & current_active == 'presumed_active'] <- 'yes')
-ks_wells_and_block_groups  <-  within(ks_wells_and_block_groups, swd_other_pre2000_pa[swd_inj_ci == 'swd' & other == 'yes' & permit_spud_post_2000 == 'no' & current_active == 'plugged_abandoned'] <- 'yes')
-
-
-ks_wells_and_block_groups  <-  within(ks_wells_and_block_groups, inj_norm_post2000_active[swd_inj_ci == 'inj' & other == 'no' & permit_spud_post_2000 == 'yes' & current_active == 'presumed_active'] <- 'yes')
-ks_wells_and_block_groups  <-  within(ks_wells_and_block_groups, inj_norm_post2000_pa[swd_inj_ci == 'inj' & other == 'no' & permit_spud_post_2000 == 'yes' & current_active == 'plugged_abandoned'] <- 'yes')
-# ks_wells_and_block_groups$inj_norm_pre2000_active
-ks_wells_and_block_groups  <-  within(ks_wells_and_block_groups, inj_norm_pre2000_active[swd_inj_ci == 'inj' & other == 'no' & permit_spud_post_2000 == 'no' & current_active == 'presumed_active'] <- 'yes')
-ks_wells_and_block_groups  <-  within(ks_wells_and_block_groups, inj_norm_pre2000_pa[swd_inj_ci == 'inj' & other == 'no' & permit_spud_post_2000 == 'no' & current_active == 'plugged_abandoned'] <- 'yes')
-
-
-ks_wells_and_block_groups  <-  within(ks_wells_and_block_groups, inj_other_post2000_active[swd_inj_ci == 'inj' & other == 'yes' & permit_spud_post_2000 == 'yes' & current_active == 'presumed_active'] <- 'yes')
-ks_wells_and_block_groups  <-  within(ks_wells_and_block_groups, inj_other_post2000_pa[swd_inj_ci == 'inj' & other == 'yes' & permit_spud_post_2000 == 'yes' & current_active == 'plugged_abandoned'] <- 'yes')
-# ks_wells_and_block_groups$inj_norm_pre2000_active
-ks_wells_and_block_groups  <-  within(ks_wells_and_block_groups, inj_other_pre2000_active[swd_inj_ci == 'inj' & other == 'yes' & permit_spud_post_2000 == 'no' & current_active == 'presumed_active'] <- 'yes')
-ks_wells_and_block_groups  <-  within(ks_wells_and_block_groups, inj_other_pre2000_pa[swd_inj_ci == 'inj' & other == 'yes' & permit_spud_post_2000 == 'no' & current_active == 'plugged_abandoned'] <- 'yes')
-
-
-ks_wells_and_block_groups  <-  within(ks_wells_and_block_groups, ci_other_post2000_active[swd_inj_ci == 'c1' & other == 'yes' & permit_spud_post_2000 == 'yes' & current_active == 'presumed_active'] <- 'yes')
-ks_wells_and_block_groups  <-  within(ks_wells_and_block_groups, ci_other_post2000_pa[swd_inj_ci == 'c1' & other == 'yes' & permit_spud_post_2000 == 'yes' & current_active == 'plugged_abandoned'] <- 'yes')
-# ks_wells_and_block_groups$swd_norm_pre2000_active
-ks_wells_and_block_groups  <-  within(ks_wells_and_block_groups, ci_other_pre2000_active[swd_inj_ci == 'c1' & other == 'yes' & permit_spud_post_2000 == 'no' & current_active == 'presumed_active'] <- 'yes')
-ks_wells_and_block_groups  <-  within(ks_wells_and_block_groups, ci_other_pre2000_pa[swd_inj_ci == 'c1' & other == 'yes' & permit_spud_post_2000 == 'no' & current_active == 'plugged_abandoned'] <- 'yes')
-
 View(ks_wells_and_block_groups)
 
+ks_wells_and_block_groups$swd <- 1
 
-swd_norm_post2000_active <- aggregate(swd_norm_post2000_active~GEOID_Data,ks_wells_and_block_groups,length)
-swd_norm_post2000_pa <- aggregate(swd_norm_post2000_pa~GEOID_Data,ks_wells_and_block_groups,length)
-swd_norm_pre2000_active <- aggregate(swd_norm_pre2000_active~GEOID_Data,ks_wells_and_block_groups,length)
-swd_norm_pre2000_pa <- aggregate(swd_norm_pre2000_pa~GEOID_Data,ks_wells_and_block_groups,length)
-
-swd_other_post2000_active <- aggregate(swd_other_post2000_active~GEOID_Data,ks_wells_and_block_groups,length)
-swd_other_post2000_pa <- aggregate(swd_other_post2000_pa~GEOID_Data,ks_wells_and_block_groups,length) # no data in this one
-swd_other_pre2000_active <- aggregate(swd_other_pre2000_active~GEOID_Data,ks_wells_and_block_groups,length)
-swd_other_pre2000_pa <- aggregate(swd_other_pre2000_pa~GEOID_Data,ks_wells_and_block_groups,length)
-
-inj_norm_post2000_active <- aggregate(inj_norm_post2000_active~GEOID_Data,ks_wells_and_block_groups,length)
-inj_norm_post2000_pa <- aggregate(inj_norm_post2000_pa~GEOID_Data,ks_wells_and_block_groups,length)
-inj_norm_pre2000_active <- aggregate(inj_norm_pre2000_active~GEOID_Data,ks_wells_and_block_groups,length)
-inj_norm_pre2000_pa <- aggregate(inj_norm_pre2000_pa~GEOID_Data,ks_wells_and_block_groups,length)
-inj_other_post2000_active <- aggregate(inj_other_post2000_active~GEOID_Data,ks_wells_and_block_groups,length) # no data in this one
-inj_other_post2000_pa <- aggregate(inj_other_post2000_pa~GEOID_Data,ks_wells_and_block_groups,length) # no data in this one
-inj_other_pre2000_active <- aggregate(inj_other_pre2000_active~GEOID_Data,ks_wells_and_block_groups,length)
-inj_other_pre2000_pa <- aggregate(inj_other_pre2000_pa~GEOID_Data,ks_wells_and_block_groups,length)
-
-ci_other_post2000_active <- aggregate(ci_other_post2000_active~GEOID_Data,ks_wells_and_block_groups,length) # no data
-ci_other_post2000_pa <- aggregate(ci_other_post2000_pa~GEOID_Data,ks_wells_and_block_groups,length) # no data
-ci_other_pre2000_active <- aggregate(ci_other_pre2000_active~GEOID_Data,ks_wells_and_block_groups,length)
-ci_other_pre2000_pa <- aggregate(ci_other_pre2000_pa~GEOID_Data,ks_wells_and_block_groups,length)
-
-# merge them all
-ks_well_counts <- Reduce(function(dtf1, dtf2) merge(dtf1, dtf2, by = "GEOID_Data", all = TRUE),
-       list(
-         swd_norm_post2000_active,
-         swd_norm_post2000_pa,
-         swd_norm_pre2000_active,
-         swd_norm_pre2000_pa,
-
-         swd_other_post2000_active,
-         swd_other_pre2000_active,
-         swd_other_pre2000_pa,
-
-         inj_norm_post2000_active,
-         inj_norm_post2000_pa,
-         inj_norm_pre2000_active,
-         inj_norm_pre2000_pa,
-         inj_other_pre2000_active,
-         inj_other_pre2000_pa,
-
-         ci_other_pre2000_active,
-         ci_other_pre2000_pa
-       ))
-# View(ks_well_counts)
-
-sum(colSums(ks_well_counts[2:16],na.rm = TRUE))
+ks_well_counts <- aggregate (ks_wells_and_block_groups$swd~GEOID_Data,ks_wells_and_block_groups,sum)
+View(ks_well_counts)
 
 # rename GEOID_Data to GEOID in well data
 ks_well_counts$GEOID <- ks_well_counts$GEOID_Data
 save(ks_well_counts,file="ks_well_counts.rdata")
-# load(file="ks_well_counts.rdata")
-
+load(file="ks_well_counts.rdata")
+ 
 # load ACS variables
 load(file="ACS_constructed_variables.rdata")
 View(ACS_constructed_variables[,201:291])
 
-# limit ks block groups to ks
-ks_acs <- ACS_constructed_variables[which(ACS_constructed_variables$STATEFP=='20'),]
-save(ks_acs,file="ks_acs.rdata")
+# # limit ks block groups to ks
+# ks_acs <- ACS_constructed_variables[which(ACS_constructed_variables$STATEFP=='20'),]
+# save(ks_acs,file="ks_acs.rdata")
 load(file="ks_acs.rdata")
 
 # merge well counts and acs!  hey-o!
@@ -549,29 +391,36 @@ save(KS_FINAL_DATASET,file="KS_FINAL_DATASET.rdata")
 write.csv(KS_FINAL_DATASET,file="KS_FINAL_DATASET.csv")
 
 
-
-
 #### Analyses! ####
 
 # load files if starting from here
-load(file = "KS_FINAL_DATASET.rdata")
+# load(file = "KS_FINAL_DATASET.rdata")
 ks_analysis_dataset <- KS_FINAL_DATASET
 View(ks_analysis_dataset)
 
 #### swd well block groups only ####
 
 # make variable for sum of swd wells per block group
-ks_analysis_dataset$any_swd_sum <- NA
-ks_analysis_dataset$any_swd_sum <- rowSums(ks_analysis_dataset[,c("swd_norm_post2000_active","swd_norm_post2000_pa","swd_norm_pre2000_active","swd_norm_pre2000_pa","swd_other_post2000_active","swd_other_pre2000_active","swd_other_pre2000_pa")], na.rm=TRUE)
+ks_analysis_dataset$any_swd_sum <- ks_analysis_dataset[,c("ks_wells_and_block_groups$swd")]
+str(ks_analysis_dataset$any_swd_sum)
+ks_analysis_dataset <- within(ks_analysis_dataset,any_swd_sum[is.na(ks_analysis_dataset$any_swd_sum)] <- 0)
+ks_analysis_dataset[,c("ks_wells_and_block_groups$swd")] <- NULL
+View(ks_analysis_dataset)
+
+sum(ks_analysis_dataset$any_swd_sum)
+
 
 # make new binary variable for have versus not have swd
 ks_analysis_dataset$any_swd_binary <- NA
 ks_analysis_dataset <- within(ks_analysis_dataset, any_swd_binary[any_swd_sum == 0] <- 'no')
 ks_analysis_dataset <- within(ks_analysis_dataset, any_swd_binary[any_swd_sum > 0] <- 'yes')
-ks_analysis_dataset$any_swd_binary
+table(ks_analysis_dataset$any_swd_binary)
 
 names(ks_analysis_dataset)
 
+# drop 12 without people
+ks_analysis_dataset <- ks_analysis_dataset %>%
+  filter(population_density_B01001_ALAND > 0)
 
 #### correlation matrix of ACS variables ####
 names(ks_analysis_dataset) # get variable names
@@ -592,10 +441,6 @@ counts_pairwise_correlations  <-  count.pairwise(correlation_matrix_data[,1:6], 
 # view and write to file
 View(counts_pairwise_correlations)
 write.csv(counts_pairwise_correlations,file="counts_pairwise_correlations.csv")
-
-
-
-
 
 
 #### analysis by presence and absence of swd ####
@@ -702,9 +547,28 @@ aggregate(median_age_B01002~any_swd_binary, data=ks_analysis_dataset, FUN=length
 # t test
 t.test(ks_analysis_dataset$median_age_B01002[ks_analysis_dataset$any_swd_binary=="yes"], ks_analysis_dataset$median_age_B01002[ks_analysis_dataset$any_swd_binary=="no"])
 
+
+
 #### Poisson
+poisson_model <- glm(formula = any_swd_sum ~ median_household_value_B25077 + percent_white_B03002 + population_density_B01001_ALAND + percent_high_school_plus_B15003 + median_age_B01002, family = "poisson", data = ks_analysis_dataset)
+summary(poisson_model)
+
 poisson_model <- glm(formula = any_swd_sum ~ median_household_income_B19013 + median_household_value_B25077 + percent_white_B03002 + population_density_B01001_ALAND + percent_high_school_plus_B15003 + median_age_B01002, family = "poisson", data = ks_analysis_dataset)
 summary(poisson_model)
+confint(poisson_model)
+
+ks_analysis_dataset <- within(ks_analysis_dataset, any_swd_binary[ks_analysis_dataset$any_swd_binary == "yes"]  <-  1)
+ks_analysis_dataset <- within(ks_analysis_dataset, any_swd_binary[ks_analysis_dataset$any_swd_binary == "no"]  <-  0)
+View(ks_analysis_dataset$any_swd_binary)
+ks_analysis_dataset$any_swd_binary <- as.numeric(ks_analysis_dataset$any_swd_binary)
+View(ks_analysis_dataset$any_swd_binary)
+
+#### logistic model r
+logistic_model <- glm(formula = any_swd_binary ~ median_household_income_B19013 + median_household_value_B25077 + percent_white_B03002 + population_density_B01001_ALAND + percent_high_school_plus_B15003 + median_age_B01002, family = "binomial", data = ks_analysis_dataset)
+summary(logistic_model)
+confint(logistic_model)
+
+
 
 
 write.csv(ks_analysis_dataset,file="ks_analysis_dataset.csv")
