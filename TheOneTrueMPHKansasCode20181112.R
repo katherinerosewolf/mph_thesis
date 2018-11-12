@@ -14,32 +14,31 @@ getwd()
 # functions
 `%notin%`  <-  function(x,y) !(x %in% y) # define "not-in" function
 
-################
+#### raw data import ####
 
-#### import main well data ####
+# well data import
+ks_wells_2018_11_01 <- read.csv(file="ks_wells_2018_11_01.txt", stringsAsFactors = FALSE) # import raw data
+save(ks_wells_2018_11_01,file="ks_wells_2018_11_01.rdata") # save as an rdata file
 
-# # import well data
-# ks_wells_2018_11_01 <- read.csv(file="ks_wells_2018_11_01.txt", stringsAsFactors = FALSE)
-# View(ks_wells_2018_11_01)
-# 
-# # save file as an rdata file
-# save(ks_wells_2018_11_01,file="ks_wells_2018_11_01.rdata")
 
+
+
+#### load necessary files ####
 # load rdata file
 load(file="ks_wells_2018_11_01.rdata")
-
-# make version for cleaning
-ks_clean <- ks_wells_2018_11_01
-# View(ks_clean)
-
 
 
 #### import UIC data ####
 
 # import UIC data
-# ks_uic_2018_09_04 <- read.csv(file="KS_UIC_archive_2018_09_04.txt")
-# save(ks_uic_2018_09_04,file="ks_uic_2018_09_04.rdata")
+ks_uic_2018_09_04 <- read.csv(file="KS_UIC_archive_2018_09_04.txt")
+save(ks_uic_2018_09_04,file="ks_uic_2018_09_04.rdata")
 load(file="ks_uic_2018_09_04.rdata")
+
+
+# make version for cleaning
+ks_clean <- ks_wells_2018_11_01
+# View(ks_clean)
 
 
 #### data analysis in UIC data ####
