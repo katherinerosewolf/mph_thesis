@@ -33,15 +33,12 @@ save(ks_wells_2018_11_01,file="ks_wells_2018_11_01.rdata") # save as an rdata fi
 ks_uic_2018_09_04 <- read.csv(file="KS_UIC_archive_2018_09_04.txt") # import raw data
 save(ks_uic_2018_09_04,file="ks_uic_2018_09_04.rdata") # save as an rdata file
 
+
+
 #### load necessary files ####
-# load rdata file
 load(file="ks_wells_2018_11_01.rdata") # load well data
 load(file="ks_uic_2018_09_04.rdata") # load UIC data
 
-
-# make version of well data for cleaning
-ks_clean <- ks_wells_2018_11_01
-# View(ks_clean)
 
 
 #### data analysis in UIC data ####
@@ -58,7 +55,10 @@ uic_statuses <- table(ks_wells_in_uic_data_only$STATUS)
 write.csv(uic_statuses,file="uic_statuses.csv")
 
 
+
 #### formatting changes in main well data ####
+
+ks_clean <- ks_wells_2018_11_01 # make well data file for cleaning
 
 # convert dates to dates
 ks_clean$permit_as_date  <-  as.Date(ks_clean$PERMIT, "%d-%b-%Y") # permit date
@@ -116,9 +116,8 @@ ks_wells_no_API_by_status <- table(ks_wells_no_API$STATUS)
 save(ks_wells_no_API_by_status,file="ks_wells_no_API_by_status.rdata")
 
 
-##### checking ambiguous wells for inclusion or exclusion #####
 
-# load(file="ks_clean.rdata")
+##### checking ambiguous wells for inclusion or exclusion #####
 
 # get counts by well status (main status)
 ks_well_counts_by_status <- table(ks_clean$STATUS)
