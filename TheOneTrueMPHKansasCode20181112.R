@@ -29,15 +29,20 @@ library(psych)
 ks_wells_2018_11_01 <- read.csv(file="ks_wells_2018_11_01.txt", stringsAsFactors = FALSE) # import raw data
 save(ks_wells_2018_11_01,file="ks_wells_2018_11_01.rdata") # save as an rdata file
 
-# UIC data import
-ks_uic_2018_09_04 <- read.csv(file="KS_UIC_archive_2018_09_04.txt") # import raw data
-save(ks_uic_2018_09_04,file="ks_uic_2018_09_04.rdata") # save as an rdata file
+# # UIC data import
+# ks_uic_2018_09_04 <- read.csv(file="KS_UIC_archive_2018_09_04.txt") # import raw data
+# save(ks_uic_2018_09_04,file="ks_uic_2018_09_04.rdata") # save as an rdata file
 
 
 
 #### load necessary files ####
 load(file="ks_wells_2018_11_01.rdata") # load well data
 load(file="ks_uic_2018_09_04.rdata") # load UIC data
+
+
+
+#### make protected file to avoid issues
+ks_clean <- ks_wells_2018_11_01 # make well data file for cleaning
 
 
 
@@ -58,8 +63,6 @@ write.csv(uic_statuses,file="uic_statuses.csv")
 
 #### formatting changes in main well data ####
 
-ks_clean <- ks_wells_2018_11_01 # make well data file for cleaning
-
 # convert dates to dates
 ks_clean$permit_as_date  <-  as.Date(ks_clean$PERMIT, "%d-%b-%Y") # permit date
 ks_clean$spud_as_date  <-  as.Date(ks_clean$SPUD, "%d-%b-%Y") # spud date
@@ -67,14 +70,7 @@ ks_clean$completion_as_date  <-  as.Date(ks_clean$COMPLETION, "%d-%b-%Y") # comp
 ks_clean$plugging_as_date  <-  as.Date(ks_clean$PLUGGING, "%d-%b-%Y") # plugging date
 ks_clean$modified_as_date  <-  as.Date(ks_clean$MODIFIED, "%d-%b-%Y") # modified date
 ks_clean$API_NUMBER  <-  as.character(ks_clean$API_NUMBER) # make API into a character
-
-# get possible values of well status
-unique(ks_clean$STATUS)
-unique(ks_clean$STATUS2)
-
-# view and save results of all these conversions
-# View(ks_clean)
-save(ks_clean,file="ks_clean.rdata")
+save(ks_clean,file="ks_clean.rdata") # save results of all these conversions
 
 
 
@@ -82,12 +78,10 @@ save(ks_clean,file="ks_clean.rdata")
 
 # count unique APIs
 number_of_unique_APIs <- length(unique(ks_clean$API_NUMBER))
-number_of_unique_APIs
 save(number_of_unique_APIs,file="number_of_unique_APIs.rdata")
 
 # raw well count
 raw_well_count <- nrow(ks_clean)
-raw_well_count
 save(raw_well_count,file="raw_well_count.rdata")
 
 # overall counts by API
@@ -105,41 +99,45 @@ save(ks_API_dup_counts,file="ks_dup_API_count.rdata")
 
 # count unique KIDs
 unique_KID_count <- length(unique(ks_clean$KID))
-unique_KID_count
 save(unique_KID_count,file="unique_KID_count.rdata")
 
 # counts by well status for rows without APIs
-ks_wells_no_API <- ks_clean[which(ks_clean$API_NUMBER == ""),]
-save(ks_wells_no_API,file="ks_wells_no_API.rdata")
-
-ks_wells_no_API_by_status <- table(ks_wells_no_API$STATUS)
-save(ks_wells_no_API_by_status,file="ks_wells_no_API_by_status.rdata")
+ks_wells_no_API <- ks_clean[which(ks_clean$API_NUMBER == ""),] # isolate rows for wells sans APIs
+save(ks_wells_no_API,file="ks_wells_no_API.rdata") # save the above
+ks_wells_no_API_by_status <- table(ks_wells_no_API$STATUS) # table of counts of wells sans API by status
+save(ks_wells_no_API_by_status,file="ks_wells_no_API_by_status.rdata") # save table of counts
 
 
 
 ##### checking ambiguous wells for inclusion or exclusion #####
 
 # get counts by well status (main status)
-ks_well_counts_by_status <- table(ks_clean$STATUS)
-ks_well_counts_by_status <- as.data.frame(ks_well_counts_by_status) # convert to dataframe
-save(ks_well_counts_by_status,file="ks_well_counts_by_status.rdata")
-write.csv(ks_well_counts_by_status, file="ks_well_counts_by_status.csv")
+ks_well_counts_by_status1 <- table(ks_clean$STATUS) # get counts
+ks_well_counts_by_status1 <- as.data.frame(ks_well_counts_by_status1) # convert to dataframe
+save(ks_well_counts_by_status1,file="ks_well_counts_by_status1.rdata")
+write.csv(ks_well_counts_by_status1, file="ks_well_counts_by_status1.csv") # write for excel file
 
-# get counts by well status 2
-ks_well_counts_by_status_2 <- table(ks_clean$STATUS2)
-ks_well_counts_by_status_2 <- as.data.frame(ks_well_counts_by_status_2) # convert to dataframe
-save(ks_well_counts_by_status_2,file="ks_well_counts_by_status_2.rdata")
-write.csv(ks_well_counts_by_status_2, file="ks_well_counts_by_status_2.csv")
+# get counts by well status two
+ks_well_counts_by_status2 <- table(ks_clean$STATUS2)
+ks_well_counts_by_status2 <- as.data.frame(ks_well_counts_by_status2) # convert to dataframe
+save(ks_well_counts_by_status2,file="ks_well_counts_by_status2.rdata")
+write.csv(ks_well_counts_by_status2, file="ks_well_counts_by_status2.csv")
 
+# make vectors of status ones and twos
 ks_all_status1s <- sort(unique(ks_clean$STATUS)) # vector of all STATUS values
 ks_all_status2s <- sort(unique(ks_clean$STATUS2)) # vector of all STATUS2 values
+save(ks_all_status1s, file = "ks_all_status1s.rdata")
+save(ks_all_status2s, file = "ks_all_status2s.rdata")
 
-ks_all_status2s
-
+# make vector of status1s for further investigation
 ks_status1_check_further <- c("INTENT","OTHER()","OTHER(NULL)","OTHER(OTHER)","OTHER(TA)","OTHER(TEMP ABD)","OTHER-P&A()","OTHER-P&A(TA)")
 
-#### THIS SECTION SHALL ONLY INCLUDE SWD WELLS
-ks_potential_disposal_include_status1s <- sort(c("OTHER()","OTHER(1O&1SWD)","OTHER(CBM/SWD)","OTHER(CLASS ONE (OLD))","OTHER(CLASS1)","OTHER(NHDW)","OTHER(NULL)","OTHER(OIL,SWD)","OTHER(OTHER)","OTHER(SWD-P&A)","OTHER(TA)","OTHER(TEMP ABD)","OTHER-P&A()","OTHER-P&A(CLASS ONE (OLD))","OTHER-P&A(OIL-SWD)","OTHER-P&A(TA)","SWD","SWD-P&A"))
+
+#### left off here 2018-11-13 ####
+
+
+#### THIS SECTION SHALL ONLY INCLUDE SWD WELLS ####
+ks_potential_disposal_include_status_ones <- sort(c("OTHER()","OTHER(1O&1SWD)","OTHER(CBM/SWD)","OTHER(CLASS ONE (OLD))","OTHER(CLASS1)","OTHER(NHDW)","OTHER(NULL)","OTHER(OIL,SWD)","OTHER(OTHER)","OTHER(SWD-P&A)","OTHER(TA)","OTHER(TEMP ABD)","OTHER-P&A()","OTHER-P&A(CLASS ONE (OLD))","OTHER-P&A(OIL-SWD)","OTHER-P&A(TA)","SWD","SWD-P&A"))
 
 ks_definitely_include_status1s <- sort(c("OTHER(1O&1SWD)","OTHER(CBM/SWD)","OTHER(CLASS ONE (OLD))","OTHER(CLASS1)","OTHER(NHDW)","OTHER(OIL,SWD)","OTHER(SWD-P&A)","OTHER-P&A(CLASS ONE (OLD))","OTHER-P&A(OIL-SWD)","SWD","SWD-P&A"))
 
