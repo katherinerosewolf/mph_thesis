@@ -2,17 +2,26 @@
 # Katherine Wolf
 # November 2018
 
-# setup
+#### check working directory ####
+getwd()
+
+
+
+#### load libraries ####
 library(plyr)
 library(dplyr)
 library(data.table)
 library(ggplot2)
 library(psych)
 
-getwd()
+
+
+#### create necessary functions ####
 
 # functions
 `%notin%`  <-  function(x,y) !(x %in% y) # define "not-in" function
+
+
 
 #### raw data import ####
 
@@ -20,23 +29,17 @@ getwd()
 ks_wells_2018_11_01 <- read.csv(file="ks_wells_2018_11_01.txt", stringsAsFactors = FALSE) # import raw data
 save(ks_wells_2018_11_01,file="ks_wells_2018_11_01.rdata") # save as an rdata file
 
-
-
+# UIC data import
+ks_uic_2018_09_04 <- read.csv(file="KS_UIC_archive_2018_09_04.txt") # import raw data
+save(ks_uic_2018_09_04,file="ks_uic_2018_09_04.rdata") # save as an rdata file
 
 #### load necessary files ####
 # load rdata file
-load(file="ks_wells_2018_11_01.rdata")
+load(file="ks_wells_2018_11_01.rdata") # load well data
+load(file="ks_uic_2018_09_04.rdata") # load UIC data
 
 
-#### import UIC data ####
-
-# import UIC data
-ks_uic_2018_09_04 <- read.csv(file="KS_UIC_archive_2018_09_04.txt")
-save(ks_uic_2018_09_04,file="ks_uic_2018_09_04.rdata")
-load(file="ks_uic_2018_09_04.rdata")
-
-
-# make version for cleaning
+# make version of well data for cleaning
 ks_clean <- ks_wells_2018_11_01
 # View(ks_clean)
 
