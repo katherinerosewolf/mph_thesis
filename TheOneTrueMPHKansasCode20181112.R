@@ -23,21 +23,21 @@ library(psych)
 
 
 
-#### raw data import ####
-
-# well data import
-ks_wells_2018_11_01 <- read.csv(file="ks_wells_2018_11_01.txt", stringsAsFactors = FALSE) # import raw data
-save(ks_wells_2018_11_01,file="ks_wells_2018_11_01.rdata") # save as an rdata file
-
+# #### raw data import ####
+# 
+# # well data import
+# ks_wells_2018_11_01 <- read.csv(file = "ks_wells_2018_11_01.txt", stringsAsFactors = FALSE) # import raw data
+# save(ks_wells_2018_11_01, file = "ks_wells_2018_11_01.rdata") # save as an rdata file
+# 
 # # UIC data import
-# ks_uic_2018_09_04 <- read.csv(file="KS_UIC_archive_2018_09_04.txt") # import raw data
-# save(ks_uic_2018_09_04,file="ks_uic_2018_09_04.rdata") # save as an rdata file
+# ks_uic_2018_09_04 <- read.csv(file = "KS_UIC_archive_2018_09_04.txt") # import raw data
+# save(ks_uic_2018_09_04, file = "ks_uic_2018_09_04.rdata") # save as an rdata file
 
 
 
 #### load necessary files ####
-load(file="ks_wells_2018_11_01.rdata") # load well data
-load(file="ks_uic_2018_09_04.rdata") # load UIC data
+load(file = "ks_wells_2018_11_01.rdata") # load well data
+load(file = "ks_uic_2018_09_04.rdata") # load UIC data
 
 
 
@@ -53,24 +53,32 @@ kids <- unique(ks_uic_2018_09_04$KGS_ID)
 
 # make table of KS wells in UIC data
 ks_wells_in_uic_data_only  <-  subset(ks_clean, KID %in% kids)
-save(ks_wells_in_uic_data_only,file="ks_wells_in_uic_data_only.rdata")
+save(ks_wells_in_uic_data_only, 
+     file = "ks_wells_in_uic_data_only.rdata")
 
 # make table of statuses in UIC data
 uic_statuses <- table(ks_wells_in_uic_data_only$STATUS)
-write.csv(uic_statuses,file="uic_statuses.csv")
+write.csv(uic_statuses, file = "uic_statuses.csv")
 
 
 
 #### formatting changes in main well data ####
 
 # convert dates to dates
-ks_clean$permit_as_date  <-  as.Date(ks_clean$PERMIT, "%d-%b-%Y") # permit date
-ks_clean$spud_as_date  <-  as.Date(ks_clean$SPUD, "%d-%b-%Y") # spud date
-ks_clean$completion_as_date  <-  as.Date(ks_clean$COMPLETION, "%d-%b-%Y") # completion date
-ks_clean$plugging_as_date  <-  as.Date(ks_clean$PLUGGING, "%d-%b-%Y") # plugging date
-ks_clean$modified_as_date  <-  as.Date(ks_clean$MODIFIED, "%d-%b-%Y") # modified date
-ks_clean$API_NUMBER  <-  as.character(ks_clean$API_NUMBER) # make API into a character
-save(ks_clean,file="ks_clean.rdata") # save results of all these conversions
+ks_clean$permit_as_date  <-  
+  as.Date(ks_clean$PERMIT, "%d-%b-%Y") # permit date
+ks_clean$spud_as_date  <-  
+  as.Date(ks_clean$SPUD, "%d-%b-%Y") # spud date
+ks_clean$completion_as_date  <-  
+  as.Date(ks_clean$COMPLETION, "%d-%b-%Y") # completion date
+ks_clean$plugging_as_date  <-  
+  as.Date(ks_clean$PLUGGING, "%d-%b-%Y") # plugging date
+ks_clean$modified_as_date  <-  
+  as.Date(ks_clean$MODIFIED, "%d-%b-%Y") # modified date
+ks_clean$API_NUMBER  <-  
+  as.character(ks_clean$API_NUMBER) # make API into a character
+save(ks_clean, 
+     file = "ks_clean.rdata") # save results of all these conversions
 
 
 
@@ -78,111 +86,243 @@ save(ks_clean,file="ks_clean.rdata") # save results of all these conversions
 
 # count unique APIs
 number_of_unique_APIs <- length(unique(ks_clean$API_NUMBER))
-save(number_of_unique_APIs,file="number_of_unique_APIs.rdata")
+save(number_of_unique_APIs, file = "number_of_unique_APIs.rdata")
 
 # raw well count
 raw_well_count <- nrow(ks_clean)
-save(raw_well_count,file="raw_well_count.rdata")
+save(raw_well_count, file = "raw_well_count.rdata")
 
 # overall counts by API
 ks_by_API_count <- table(ks_clean$API_NUMBER)
-save(ks_by_API_count,file="ks_by_API_count.rdata")
+save(ks_by_API_count, file = "ks_by_API_count.rdata")
 
 # view rows with duplicated APIs
-index <- duplicated(ks_clean$API_NUMBER) | duplicated(ks_clean$API_NUMBER, fromLast = TRUE)
+index <- duplicated(ks_clean$API_NUMBER) | duplicated(ks_clean$API_NUMBER,
+                                                      fromLast = TRUE)
 ks_API_dups <- ks_clean[index,]
-save(ks_API_dups,file="ks_API_dups.rdata")
+save(ks_API_dups, file = "ks_API_dups.rdata")
 
 # view counts of duplicates per API
 ks_API_dup_counts <- table(ks_API_dups$API_NUMBER)
-save(ks_API_dup_counts,file="ks_dup_API_count.rdata")
+save(ks_API_dup_counts, file = "ks_dup_API_count.rdata")
 
 # count unique KIDs
 unique_KID_count <- length(unique(ks_clean$KID))
-save(unique_KID_count,file="unique_KID_count.rdata")
+save(unique_KID_count, file = "unique_KID_count.rdata")
 
 # counts by well status for rows without APIs
-ks_wells_no_API <- ks_clean[which(ks_clean$API_NUMBER == ""),] # isolate rows for wells sans APIs
-save(ks_wells_no_API,file="ks_wells_no_API.rdata") # save the above
-ks_wells_no_API_by_status <- table(ks_wells_no_API$STATUS) # table of counts of wells sans API by status
-save(ks_wells_no_API_by_status,file="ks_wells_no_API_by_status.rdata") # save table of counts
+ks_wells_no_API <- 
+  ks_clean[which(ks_clean$API_NUMBER == ""),] # isolate rows for wells sans APIs
+save(ks_wells_no_API, 
+     file = "ks_wells_no_API.rdata") # save the above
+ks_wells_no_API_by_status <- 
+  table(ks_wells_no_API$STATUS) # table of counts of wells sans API by status
+save(ks_wells_no_API_by_status, 
+     file = "ks_wells_no_API_by_status.rdata") # save table of counts
 
 
 
 ##### checking ambiguous wells for inclusion or exclusion #####
 
 # get counts by well status (main status)
-ks_well_counts_by_status1 <- table(ks_clean$STATUS) # get counts
-ks_well_counts_by_status1 <- as.data.frame(ks_well_counts_by_status1) # convert to dataframe
-save(ks_well_counts_by_status1,file="ks_well_counts_by_status1.rdata")
-write.csv(ks_well_counts_by_status1, file="ks_well_counts_by_status1.csv") # write for excel file
+ks_well_counts_by_status1 <- 
+  table(ks_clean$STATUS) # get counts
+ks_well_counts_by_status1 <- 
+  as.data.frame(ks_well_counts_by_status1) # convert to dataframe
+save(ks_well_counts_by_status1, 
+     file = "ks_well_counts_by_status1.rdata")
+write.csv(ks_well_counts_by_status1, 
+          file = "ks_well_counts_by_status1.csv") # write for excel file
 
 # get counts by well status two
-ks_well_counts_by_status2 <- table(ks_clean$STATUS2)
-ks_well_counts_by_status2 <- as.data.frame(ks_well_counts_by_status2) # convert to dataframe
-save(ks_well_counts_by_status2,file="ks_well_counts_by_status2.rdata")
-write.csv(ks_well_counts_by_status2, file="ks_well_counts_by_status2.csv")
+ks_well_counts_by_status2 <- 
+  table(ks_clean$STATUS2)
+ks_well_counts_by_status2 <- 
+  as.data.frame(ks_well_counts_by_status2) # convert to dataframe
+save(ks_well_counts_by_status2, 
+     file = "ks_well_counts_by_status2.rdata")
+write.csv(ks_well_counts_by_status2, 
+          file = "ks_well_counts_by_status2.csv")
 
 # make vectors of status ones and twos
-ks_all_status1s <- sort(unique(ks_clean$STATUS)) # vector of all STATUS values
-ks_all_status2s <- sort(unique(ks_clean$STATUS2)) # vector of all STATUS2 values
-save(ks_all_status1s, file = "ks_all_status1s.rdata")
-save(ks_all_status2s, file = "ks_all_status2s.rdata")
+ks_all_status1s <- 
+  sort(unique(ks_clean$STATUS)) # vector of all STATUS values
+ks_all_status2s <- 
+  sort(unique(ks_clean$STATUS2)) # vector of all STATUS2 values
+save(ks_all_status1s, 
+     file = "ks_all_status1s.rdata")
+save(ks_all_status2s, # save status1s to file
+     file = "ks_all_status2s.rdata") # save status2s to file
+write.csv(ks_all_status1s, 
+          file = "ks_all_status1s.csv") # csv of status1s for excel
+write.csv(ks_all_status2s, 
+          file = "ks_all_status2s.csv") # csv of status2s for excel
+
+
 
 # make vector of status1s for further investigation
-ks_status1_check_further <- c("INTENT","OTHER()","OTHER(NULL)","OTHER(OTHER)","OTHER(TA)","OTHER(TEMP ABD)","OTHER-P&A()","OTHER-P&A(TA)")
+ks_status1_check_further <- 
+  c("INTENT",
+    "OTHER()",
+    "OTHER(NULL)",
+    "OTHER(OTHER)",
+    "OTHER(TA)",
+    "OTHER(TEMP ABD)",
+    "OTHER-P&A()",
+    "OTHER-P&A(TA)")
 
-
-#### left off here 2018-11-13 ####
 
 
 #### THIS SECTION SHALL ONLY INCLUDE SWD WELLS ####
-ks_potential_disposal_include_status_ones <- sort(c("OTHER()","OTHER(1O&1SWD)","OTHER(CBM/SWD)","OTHER(CLASS ONE (OLD))","OTHER(CLASS1)","OTHER(NHDW)","OTHER(NULL)","OTHER(OIL,SWD)","OTHER(OTHER)","OTHER(SWD-P&A)","OTHER(TA)","OTHER(TEMP ABD)","OTHER-P&A()","OTHER-P&A(CLASS ONE (OLD))","OTHER-P&A(OIL-SWD)","OTHER-P&A(TA)","SWD","SWD-P&A"))
+ks_potential_disposal_include_status1s <- 
+  sort(c("OTHER()",
+         "OTHER(1O&1SWD)",
+         "OTHER(CBM/SWD)",
+         "OTHER(CLASS ONE (OLD))",
+         "OTHER(CLASS1)",
+         "OTHER(NHDW)",
+         "OTHER(NULL)",
+         "OTHER(OIL,SWD)",
+         "OTHER(OTHER)",
+         "OTHER(SWD-P&A)",
+         "OTHER(TA)",
+         "OTHER(TEMP ABD)",
+         "OTHER-P&A()",
+         "OTHER-P&A(CLASS ONE (OLD))",
+         "OTHER-P&A(OIL-SWD)",
+         "OTHER-P&A(TA)",
+         "SWD",
+         "SWD-P&A"))
 
-ks_definitely_include_status1s <- sort(c("OTHER(1O&1SWD)","OTHER(CBM/SWD)","OTHER(CLASS ONE (OLD))","OTHER(CLASS1)","OTHER(NHDW)","OTHER(OIL,SWD)","OTHER(SWD-P&A)","OTHER-P&A(CLASS ONE (OLD))","OTHER-P&A(OIL-SWD)","SWD","SWD-P&A"))
+ks_definitely_include_status1s <- 
+  sort(c("OTHER(1O&1SWD)",
+         "OTHER(CBM/SWD)",
+         "OTHER(CLASS ONE (OLD))",
+         "OTHER(CLASS1)",
+         "OTHER(NHDW)",
+         "OTHER(OIL,SWD)",
+         "OTHER(SWD-P&A)",
+         "OTHER-P&A(CLASS ONE (OLD))",
+         "OTHER-P&A(OIL-SWD)",
+         "SWD","SWD-P&A"))
 
-ks_potential_disposal_exclude_status1s <- sort(c("INTENT","INJ","INJ-P&A","OTHER(INJ or EOR)","OTHER-P&A(INJ OR )","OTHER-P&A(INJ or EOR)","CBM","CBM-P&A","D&A","EOR","EOR-P&A","GAS","GAS-P&A","LOC","O&G","O&G-P&A","OIL","OIL-P&A","OTHER-P&A(2 OIL)","OTHER-P&A(CATH)","OTHER-P&A(COREHOLE)","OTHER-P&A(GAS-INJ)","OTHER-P&A(GAS-STG)","OTHER-P&A(GSW)","OTHER-P&A(LH)","OTHER-P&A(OBS)","OTHER-P&A(OIL&GAS-INJ)","OTHER-P&A(SHUT-IN)","OTHER-P&A(STRAT)","OTHER-P&A(WATER)","OTHER(2OIL)","OTHER(ABD LOC)","OTHER(CATH)","OTHER(COREHOLE)","OTHER(GAS-INJ)","OTHER(GAS-STG)","OTHER(GAS INJ)","OTHER(GAS SHUT-IN)","OTHER(GSW)","OTHER(HELIUM)","OTHER(LH)","OTHER(Monitor)","OTHER(MONITOR)","OTHER(OBS)","OTHER(OBSERVATION)","OTHER(OIL&GAS-INJ)","OTHER(Oil)","OTHER(OIL/GAS)","OTHER(SHUT-IN)","OTHER(STRAT)","OTHER(WATER)"))
+ks_potential_disposal_exclude_status1s <- 
+  sort(c("INTENT",
+         "INJ",
+         "INJ-P&A",
+         "OTHER(INJ or EOR)",
+         "OTHER-P&A(INJ OR )",
+         "OTHER-P&A(INJ or EOR)",
+         "CBM",
+         "CBM-P&A",
+         "D&A",
+         "EOR",
+         "EOR-P&A",
+         "GAS",
+         "GAS-P&A",
+         "LOC",
+         "O&G",
+         "O&G-P&A",
+         "OIL",
+         "OIL-P&A",
+         "OTHER-P&A(2 OIL)",
+         "OTHER-P&A(CATH)",
+         "OTHER-P&A(COREHOLE)",
+         "OTHER-P&A(GAS-INJ)",
+         "OTHER-P&A(GAS-STG)",
+         "OTHER-P&A(GSW)",
+         "OTHER-P&A(LH)",
+         "OTHER-P&A(OBS)",
+         "OTHER-P&A(OIL&GAS-INJ)",
+         "OTHER-P&A(SHUT-IN)",
+         "OTHER-P&A(STRAT)",
+         "OTHER-P&A(WATER)",
+         "OTHER(2OIL)",
+         "OTHER(ABD LOC)",
+         "OTHER(CATH)",
+         "OTHER(COREHOLE)",
+         "OTHER(GAS-INJ)",
+         "OTHER(GAS-STG)",
+         "OTHER(GAS INJ)",
+         "OTHER(GAS SHUT-IN)",
+         "OTHER(GSW)",
+         "OTHER(HELIUM)",
+         "OTHER(LH)",
+         "OTHER(Monitor)",
+         "OTHER(MONITOR)",
+         "OTHER(OBS)",
+         "OTHER(OBSERVATION)",
+         "OTHER(OIL&GAS-INJ)",
+         "OTHER(Oil)",
+         "OTHER(OIL/GAS)",
+         "OTHER(SHUT-IN)",
+         "OTHER(STRAT)",
+         "OTHER(WATER)"))
 
+# check lengths of vectors
 length(ks_potential_disposal_include_status1s) # count included statii
 length(ks_potential_disposal_exclude_status1s) # count excluded statii
 length(ks_all_status1s)
 
-ks_potential_disposal_include_status2s <- # status2s to include regardless of status1
-  sort(c("Converted to SWD Well"))
-ks_potential_disposal_exclude_status2s <- # status2s that don't mean inclusion
-  setdiff(ks_all_status2s, 
+
+
+#### left off here 2018-11-13 ####
+
+ks_potential_disposal_include_status2s <- 
+  sort(c("Converted to SWD Well")) # included status2s regardless of status1
+ks_potential_disposal_exclude_status2s <- 
+  setdiff(ks_all_status2s, # status2s that don't mean inclusion
           ks_potential_disposal_include_status2s)
 ks_potential_disposal_exclude_status2s
 
 # dealing with comments!
-ks_potential_disposal_comments <- ks_clean$COMMENTS
-positions_of_possible_comments_to_include <- grep("swd|disp|class",ks_potential_disposal_comments,ignore.case = TRUE)
+ks_potential_disposal_comments <- 
+  ks_clean$COMMENTS
+positions_of_possible_comments_to_include <- 
+  grep("swd|disp|class", 
+       ks_potential_disposal_comments, 
+       ignore.case = TRUE)
 positions_of_possible_comments_to_include
-comments_to_review <- ks_clean$COMMENTS[positions_of_possible_comments_to_include]
+comments_to_review <- 
+  ks_clean$COMMENTS[positions_of_possible_comments_to_include]
 comments_to_review
-write.csv(comments_to_review, file = "comments_to_review.csv")
-rows_requiring_comment_investigation <- ks_clean[which(ks_clean$COMMENTS %in% comments_to_review),]
-rows_requiring_comment_investigation_simple <- rows_requiring_comment_investigation[,c("KID","API_NUMBER","STATUS","STATUS2","COMMENTS")]
+write.csv(comments_to_review, 
+          file = "comments_to_review.csv")
+rows_requiring_comment_investigation <- 
+  ks_clean[which(ks_clean$COMMENTS %in% comments_to_review),]
+rows_requiring_comment_investigation_simple <- 
+  rows_requiring_comment_investigation[
+    ,c("KID","API_NUMBER","STATUS","STATUS2","COMMENTS")
+    ]
 View(rows_requiring_comment_investigation)
-write.csv(rows_requiring_comment_investigation, file="rows_requiring_comment_investigation.csv")
-write.csv(rows_requiring_comment_investigation_simple, file="rows_requiring_comment_investigation_simple.csv")
+write.csv(rows_requiring_comment_investigation, 
+          file = "rows_requiring_comment_investigation.csv")
+write.csv(rows_requiring_comment_investigation_simple, 
+          file = "rows_requiring_comment_investigation_simple.csv")
 
-raw_manual_well_assignments <- read.csv(file="manual_well_assignments_comments.csv")
+raw_manual_well_assignments <- 
+  read.csv(file = "manual_well_assignments_comments.csv")
 
-manual_without_drops <- raw_manual_well_assignments %>%
+manual_without_drops <- 
+  raw_manual_well_assignments %>%
   filter(swd_inj_ci != "drop")
 
 View(manual_without_drops)
 
-core_manual <- manual_without_drops[,c("KID","swd_inj_ci","pa")]
-names(core_manual) <- c("KID","man_swd_inj_ci","man_activity")
+core_manual <- [,c("KID","swd_inj_ci","pa")]
+names(core_manual) <- 
+  c("KID","man_swd_inj_ci","man_activity")
 View(core_manual)
 
 # final well group
 # pull the KIDs of the wells selected from at least one of the groups
-kids_comments_for_the_final_list <- ks_clean$KID[which(ks_clean$KID %in% manual_without_drops$KID)]
-kids_status1s <- ks_clean$KID[which(ks_clean$STATUS %in% ks_definitely_include_status1s)]
-kids_status2s <- ks_clean$KID[which(ks_clean$STATUS2 %in% ks_potential_disposal_include_status2s)]
+kids_comments_for_the_final_list <- 
+  ks_clean$KID[which(ks_clean$KID %in% manual_without_drops$KID)]
+kids_status1s <- 
+  ks_clean$KID[which(ks_clean$STATUS %in% ks_definitely_include_status1s)]
+kids_status2s <- 
+  ks_clean$KID[which(ks_clean$STATUS2 %in% 
+                       ks_potential_disposal_include_status2s)]
 
 length(kids_comments_for_the_final_list)
 length(kids_status1s)
@@ -249,7 +389,7 @@ View(ks_final_wells)
 
 View(table(ks_final_wells$swd_inj_ci,ks_final_wells$has_api))
 
-save(ks_final_wells,file="ks_final_wells.rdata")
+save(ks_final_wells, file = "ks_final_wells.rdata")
 
 
 #### deleting those with duplicate APIs
@@ -316,7 +456,7 @@ View(ks_no_dup_API_or_cI)
 
 # calling it the final thesis data
 ks_final_thesis_data <- ks_no_dup_api_or_ci
-save(ks_final_thesis_data,file="ks_final_thesis_data.rdata")
+save(ks_final_thesis_data, file = "ks_final_thesis_data.rdata")
 View(ks_final_thesis_data)
 
 
@@ -325,18 +465,18 @@ table(ks_final_thesis_data$other,ks_final_thesis_data$swd_inj_ci)
  
 ks_set_for_mapping <- ks_final_thesis_data[,c("KID","API_NUMBER_SIMPLE","LATITUDE","LONGITUDE","swd_inj_ci")]
 # View(ks_set_for_mapping)
-write.csv2(ks_set_for_mapping,file="ks_set_for_mapping.csv")
+write.csv2(ks_set_for_mapping, file = "ks_set_for_mapping.csv")
 
 
 
 # import mapping results back
-ks_join_results <- read.csv(file="well_join_2018_10_30.txt",stringsAsFactors = FALSE)
+ks_join_results <- read.csv(file = "well_join_2018_10_30.txt",stringsAsFactors = FALSE)
 # View(ks_join_results)
-save(ks_join_results,file="ks_join_results.rdata")
+save(ks_join_results, file = "ks_join_results.rdata")
 #
 # # load needed files if starting from here
-load(file="ks_final_thesis_data.rdata")
-load(file="ks_join_results.rdata")
+load(file = "ks_final_thesis_data.rdata")
+load(file = "ks_join_results.rdata")
  
 
 ks_join_to_edit <- ks_join_results
@@ -371,23 +511,23 @@ View(ks_well_counts)
 
 # rename GEOID_Data to GEOID in well data
 ks_well_counts$GEOID <- ks_well_counts$GEOID_Data
-save(ks_well_counts,file="ks_well_counts.rdata")
-load(file="ks_well_counts.rdata")
+save(ks_well_counts, file = "ks_well_counts.rdata")
+load(file = "ks_well_counts.rdata")
  
 # load ACS variables
-load(file="ACS_constructed_variables.rdata")
+load(file = "ACS_constructed_variables.rdata")
 View(ACS_constructed_variables[,201:291])
 
 # # limit ks block groups to ks
 # ks_acs <- ACS_constructed_variables[which(ACS_constructed_variables$STATEFP=='20'),]
-# save(ks_acs,file="ks_acs.rdata")
-load(file="ks_acs.rdata")
+# save(ks_acs, file = "ks_acs.rdata")
+load(file = "ks_acs.rdata")
 
 # merge well counts and acs!  hey-o!
 KS_FINAL_DATASET <- merge(ks_well_counts, ks_acs, by = "GEOID", all = TRUE)
 View(KS_FINAL_DATASET)
-save(KS_FINAL_DATASET,file="KS_FINAL_DATASET.rdata")
-write.csv(KS_FINAL_DATASET,file="KS_FINAL_DATASET.csv")
+save(KS_FINAL_DATASET, file = "KS_FINAL_DATASET.rdata")
+write.csv(KS_FINAL_DATASET, file = "KS_FINAL_DATASET.csv")
 
 
 #### Analyses! ####
@@ -432,14 +572,14 @@ correlation_matrix  <-  round(cor(correlation_matrix_data[,1:6], use = "pairwise
 
 # view and write to file
 View(correlation_matrix)
-write.csv(correlation_matrix,file="correlation_matrix.csv")
+write.csv(correlation_matrix, file = "correlation_matrix.csv")
 
 # count observations going into the correlation matrix
 counts_pairwise_correlations  <-  count.pairwise(correlation_matrix_data[,1:6], y = NULL,diagonal=TRUE)
 
 # view and write to file
 View(counts_pairwise_correlations)
-write.csv(counts_pairwise_correlations,file="counts_pairwise_correlations.csv")
+write.csv(counts_pairwise_correlations, file = "counts_pairwise_correlations.csv")
 
 
 #### checking normality ####
@@ -603,4 +743,4 @@ confint(logistic_model)
 
 
 
-write.csv(ks_analysis_dataset,file="ks_analysis_dataset.csv")
+write.csv(ks_analysis_dataset, file = "ks_analysis_dataset.csv")
