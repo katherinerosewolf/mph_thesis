@@ -3,11 +3,14 @@
 # November 2018
 
 #### check working directory ####
-getwd()
+
+getwd() # this directory should be the one with your data files in it!
+# if not, use "setwd()" to set the working directory
 
 
 
 #### load libraries ####
+
 library(plyr)
 library(dplyr)
 library(data.table)
@@ -36,12 +39,14 @@ library(psych)
 
 
 #### load necessary files ####
+
 load(file = "ks_wells_2018_11_01.rdata") # load well data
 load(file = "ks_uic_2018_09_04.rdata") # load UIC data
 
 
 
-#### make protected file to avoid issues
+#### make protected file to avoid issues ####
+
 ks_clean <- ks_wells_2018_11_01 # make well data file for cleaning
 
 
@@ -77,6 +82,26 @@ ks_clean$modified_as_date  <-
   as.Date(ks_clean$MODIFIED, "%d-%b-%Y") # modified date
 ks_clean$API_NUMBER  <-  
   as.character(ks_clean$API_NUMBER) # make API into a character
+
+
+
+#### add analysis categories ####
+
+# categorizing the well as SWD ('swd'), INJ ('inj'), or Class I ('ci')
+ks_clean$well_type <- NA
+
+# categorizing the well as plugged and abandoned ('pa') or not ('not_pa')
+ks_clean$activity <- NA
+
+# classifying as having or not having an api ('yes' or 'no')
+ks_clean$has_api <- NA
+
+# whether the well was classified via either
+# (1) a STATUS of "SWD" or "SWD-P&A" ('status');
+# (2) a status2 of "Converted to SWD Well" ('status2'); or
+# (3) manual comment review ('comments')
+ks_clean$assignment <- NA
+
 save(ks_clean, 
      file = "ks_clean.rdata") # save results of all these conversions
 
@@ -257,15 +282,18 @@ ks_potential_disposal_exclude_status1s <-
 # check lengths of vectors
 length(ks_potential_disposal_include_status1s) # count included statii
 length(ks_potential_disposal_exclude_status1s) # count excluded statii
-length(ks_all_status1s) # above two #s should sum to this #
+length(ks_all_status1s) # above two numbers should sum to this number
 
 
 
 #### selecting rows based on status2 ####
+# make vector of status2s to include regardless of status1
 ks_potential_disposal_include_status2s <- 
-  sort(c("Converted to SWD Well")) # status2s to include regardless of status1
+  sort(c("Converted to SWD Well")) 
+
+# vector of status2s that don't guarantee inclusion
 ks_potential_disposal_exclude_status2s <- 
-  setdiff(ks_all_status2s, # status2s that don't guarantee inclusion
+  setdiff(ks_all_status2s,
           ks_potential_disposal_include_status2s)
 ks_potential_disposal_exclude_status2s
 
@@ -275,9 +303,10 @@ ks_potential_disposal_exclude_status2s
 ks_potential_disposal_comments <-   # make vector of just comments
   ks_clean$COMMENTS
 
-# below identifies rows with comments with "swd", "disp", "salt", or "class"
+# below identifies rows with comments containing the strings 
+# "swd", "disp", "salt", "class", or "waste"
 positions_of_possible_comments_to_include <-
-  grep("swd|disp|salt|class", 
+  grep("swd|disp|salt|class|waste", 
        ks_potential_disposal_comments, 
        ignore.case = TRUE)
 
@@ -295,7 +324,16 @@ rows_requiring_comment_investigation <-
 # make dataframe of most relevant columns of entire rows matching comments
 rows_requiring_comment_investigation_simple <- 
   rows_requiring_comment_investigation[
-    ,c("KID","API_NUMBER","STATUS","STATUS2","COMMENTS")
+    ,c("KID",
+       "API_NUMBER",
+       "has_api",
+       "activity",
+       "well_type",
+       "assignment",
+       "STATUS",
+       "STATUS2",
+       "COMMENTS"
+       )
     ]
 
 # make .csv files of rows matching comments and simple rows matching comments
@@ -308,6 +346,8 @@ write.csv(rows_requiring_comment_investigation_simple,
 
 raw_manual_well_assignments <- 
   read.csv(file = "manual_well_assignments_comments.csv")
+
+#### rules for manual well assignments:
 
 manual_without_drops <- 
   raw_manual_well_assignments %>%
@@ -342,22 +382,6 @@ length(kids_for_final_list)
 
 ks_final_wells <- ks_clean[which(ks_clean$KID %in% kids_for_final_list),]
 View(ks_final_wells)
-
-#### category additions ####
-# categorizing the well as SWD ('swd'), INJ ('inj'), or Class I ('ci')
-ks_final_wells$swd_inj_ci <- NA
-
-# categorizing the well as plugged and abandoned ('pa') or not ('not_pa')
-ks_final_wells$activity <- NA
-
-# classifying as having or not having an api ('yes' or 'no')
-ks_final_wells$has_api <- NA
-
-# whether the well was classified via either
-# (1) a STATUS of "SWD" or "SWD-P&A" ('status');
-# (2) a status2 of "Converted to SWD Well" ('status2'); or
-# (3) manual comment review ('comments')
-ks_final_wells$assignment <- NA
 
 
 
