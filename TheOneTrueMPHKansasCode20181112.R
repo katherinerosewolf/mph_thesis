@@ -124,7 +124,7 @@ save(ks_wells_no_API_by_status,
 
 ##### checking ambiguous wells for inclusion or exclusion #####
 
-# get counts by well status (main status)
+# get counts by well status1 (main status)
 ks_well_counts_by_status1 <- 
   table(ks_clean$STATUS) # get counts
 ks_well_counts_by_status1 <- 
@@ -134,7 +134,7 @@ save(ks_well_counts_by_status1,
 write.csv(ks_well_counts_by_status1, 
           file = "ks_well_counts_by_status1.csv") # write for excel file
 
-# get counts by well status two
+# get counts by well status2
 ks_well_counts_by_status2 <- 
   table(ks_clean$STATUS2)
 ks_well_counts_by_status2 <- 
@@ -144,7 +144,7 @@ save(ks_well_counts_by_status2,
 write.csv(ks_well_counts_by_status2, 
           file = "ks_well_counts_by_status2.csv")
 
-# make vectors of status ones and twos
+# make vectors of status1s and status2s
 ks_all_status1s <- 
   sort(unique(ks_clean$STATUS)) # vector of all STATUS values
 ks_all_status2s <- 
@@ -158,7 +158,7 @@ write.csv(ks_all_status1s,
 write.csv(ks_all_status2s, 
           file = "ks_all_status2s.csv") # csv of status2s for excel
 
-# make vector of status1s for further investigation
+# make vectors of status1s for further investigation or not
 ks_status1_check_further <- 
   c("INTENT",
     "OTHER()",
@@ -169,9 +169,6 @@ ks_status1_check_further <-
     "OTHER-P&A()",
     "OTHER-P&A(TA)")
 
-
-
-#### THIS SECTION SHALL ONLY INCLUDE SWD WELLS ####
 ks_potential_disposal_include_status1s <- 
   sort(c("OTHER()",
          "OTHER(1O&1SWD)",
@@ -260,44 +257,54 @@ ks_potential_disposal_exclude_status1s <-
 # check lengths of vectors
 length(ks_potential_disposal_include_status1s) # count included statii
 length(ks_potential_disposal_exclude_status1s) # count excluded statii
-length(ks_all_status1s)
+length(ks_all_status1s) # above two #s should sum to this #
 
 
 
-#### left off here 2018-11-13 ####
-
+#### selecting rows based on status2 ####
 ks_potential_disposal_include_status2s <- 
-  sort(c("Converted to SWD Well")) 
-  # included status2s regardless of status1
+  sort(c("Converted to SWD Well")) # status2s to include regardless of status1
 ks_potential_disposal_exclude_status2s <- 
-  setdiff(ks_all_status2s, # status2s that don't mean inclusion
+  setdiff(ks_all_status2s, # status2s that don't guarantee inclusion
           ks_potential_disposal_include_status2s)
 ks_potential_disposal_exclude_status2s
 
-# dealing with comments!
-ks_potential_disposal_comments <- 
+
+
+#### investigating rows based on comments ####
+ks_potential_disposal_comments <-   # make vector of just comments
   ks_clean$COMMENTS
-positions_of_possible_comments_to_include <- 
-  grep("swd|disp|class", 
+
+# below identifies rows with comments with "swd", "disp", "salt", or "class"
+positions_of_possible_comments_to_include <-
+  grep("swd|disp|salt|class", 
        ks_potential_disposal_comments, 
        ignore.case = TRUE)
-positions_of_possible_comments_to_include
-comments_to_review <- 
+
+comments_to_review <-   # makes vector of identified comments
   ks_clean$COMMENTS[positions_of_possible_comments_to_include]
-comments_to_review
-write.csv(comments_to_review, 
+
+# makes .csv file of identified comments
+write.csv(comments_to_review,   # makes .csv file of identified comments
           file = "comments_to_review.csv")
-rows_requiring_comment_investigation <- 
+
+# makes dataframe of entire rows matching comments
+rows_requiring_comment_investigation <-
   ks_clean[which(ks_clean$COMMENTS %in% comments_to_review),]
+
+# make dataframe of most relevant columns of entire rows matching comments
 rows_requiring_comment_investigation_simple <- 
   rows_requiring_comment_investigation[
     ,c("KID","API_NUMBER","STATUS","STATUS2","COMMENTS")
     ]
-View(rows_requiring_comment_investigation)
-write.csv(rows_requiring_comment_investigation, 
+
+# make .csv files of rows matching comments and simple rows matching comments
+write.csv(rows_requiring_comment_investigation,
           file = "rows_requiring_comment_investigation.csv")
 write.csv(rows_requiring_comment_investigation_simple, 
           file = "rows_requiring_comment_investigation_simple.csv")
+
+#### manual review of the above to determine assignments must happen here ####
 
 raw_manual_well_assignments <- 
   read.csv(file = "manual_well_assignments_comments.csv")
@@ -336,12 +343,21 @@ length(kids_for_final_list)
 ks_final_wells <- ks_clean[which(ks_clean$KID %in% kids_for_final_list),]
 View(ks_final_wells)
 
-# add my own categories
-ks_final_wells$swd_inj_ci <- NA # categorizing the well as SWD ('swd'), INJ ('inj'), or Class I ('ci')
-ks_final_wells$activity <- NA # categorizing the well as plugged and abandoned ('pa') or not ('not_pa')
-ks_final_wells$has_api <- NA # classifying as having or not having an api ('yes' or 'no')
-ks_final_wells$other <- NA # classifying whether the well had a STATUS of "SWD" or "SWD-P&A" ('no') or a STATUS of some other type ('yes')
+#### category additions ####
+# categorizing the well as SWD ('swd'), INJ ('inj'), or Class I ('ci')
+ks_final_wells$swd_inj_ci <- NA
 
+# categorizing the well as plugged and abandoned ('pa') or not ('not_pa')
+ks_final_wells$activity <- NA
+
+# classifying as having or not having an api ('yes' or 'no')
+ks_final_wells$has_api <- NA
+
+# whether the well was classified via either
+# (1) a STATUS of "SWD" or "SWD-P&A" ('status');
+# (2) a status2 of "Converted to SWD Well" ('status2'); or
+# (3) manual comment review ('comments')
+ks_final_wells$assignment <- NA
 
 
 
