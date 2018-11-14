@@ -158,8 +158,6 @@ write.csv(ks_all_status1s,
 write.csv(ks_all_status2s, 
           file = "ks_all_status2s.csv") # csv of status2s for excel
 
-
-
 # make vector of status1s for further investigation
 ks_status1_check_further <- 
   c("INTENT",
@@ -269,7 +267,8 @@ length(ks_all_status1s)
 #### left off here 2018-11-13 ####
 
 ks_potential_disposal_include_status2s <- 
-  sort(c("Converted to SWD Well")) # included status2s regardless of status1
+  sort(c("Converted to SWD Well")) 
+  # included status2s regardless of status1
 ks_potential_disposal_exclude_status2s <- 
   setdiff(ks_all_status2s, # status2s that don't mean inclusion
           ks_potential_disposal_include_status2s)
