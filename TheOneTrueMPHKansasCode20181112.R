@@ -347,14 +347,15 @@ write.csv(rows_requiring_comment_investigation_simple,
 
 #### manual review of the above to determine assignments must happen here ####
 
+# import manual assignments
 raw_manual_well_assignments <- 
-  read.csv(file = "manual_well_assignments_comments.csv")
+  read.csv(file = "rows_requiring_comment_investigation_simple_2018_11_14.csv")
 
 #### rules for manual well assignments
 
 manual_without_drops <- 
   raw_manual_well_assignments %>%
-  filter(swd_inj_ci != "drop")
+  filter(well_type != "drop")
 
 View(manual_without_drops)
 
