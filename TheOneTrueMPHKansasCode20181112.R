@@ -224,7 +224,8 @@ ks_definitely_include_status1s <-
          "OTHER(SWD-P&A)",
          "OTHER-P&A(CLASS ONE (OLD))",
          "OTHER-P&A(OIL-SWD)",
-         "SWD","SWD-P&A"))
+         "SWD",
+         "SWD-P&A"))
 
 ks_potential_disposal_exclude_status1s <- 
   sort(c("INTENT",
@@ -342,12 +343,14 @@ write.csv(rows_requiring_comment_investigation,
 write.csv(rows_requiring_comment_investigation_simple, 
           file = "rows_requiring_comment_investigation_simple.csv")
 
+
+
 #### manual review of the above to determine assignments must happen here ####
 
 raw_manual_well_assignments <- 
   read.csv(file = "manual_well_assignments_comments.csv")
 
-#### rules for manual well assignments:
+#### rules for manual well assignments
 
 manual_without_drops <- 
   raw_manual_well_assignments %>%
@@ -355,10 +358,6 @@ manual_without_drops <-
 
 View(manual_without_drops)
 
-core_manual <- [,c("KID","swd_inj_ci","pa")]
-names(core_manual) <- 
-  c("KID","man_swd_inj_ci","man_activity")
-View(core_manual)
 
 # final well group
 # pull the KIDs of the wells selected from at least one of the groups
