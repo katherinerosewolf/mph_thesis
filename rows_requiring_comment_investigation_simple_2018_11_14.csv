@@ -282,61 +282,61 @@
 279573,1026659026,15-119-20754-0001,NA,plugged,swd,comments,gas_to_swd,also_swd,yes,,GAS-P&A,Authorized Injection Well,also SWD.
 320543,1031331686,15-079-20198-0001,NA,plugged,swd,comments,gas_to_swd,converted_to_swd,yes,,GAS-P&A,Converted to EOR Well,converted to SWD
 108094,1002950519,15-189-00031,NA,plugged,swd,comments,gas_to_swd,later_used_as_swd,yes,,GAS-P&A,Converted to SWD Well,Later used as SWD.
-127045,1006017078,15-007-21914,NA,plugged,swd,comments,,,,,GAS-P&A,Plugged and Abandoned,"Plugged by Kevin Allam Oil Operations, converted to SWD?."
-145329,1006053864,15-055-21480,NA,plugged,swd,comments,,,,,GAS-P&A,Plugged and Abandoned,"Donna Dill (12/14/01): This is a wierd one, but both numbers are actually good.  15-055-21480-0001 is a gas well that is still producing.  15-055-21480 is a side string disposal that was plugged 05/16/2001."
-347014,1033661043,15-095-00400-0002,NA,plugged,swd,comments,,,,,GAS-P&A,Plugged and Abandoned,"I am guessing this is the second workover, although the KCC record says it is the first.  The dates are too different and it is GAS and the original well was dry, and the first workover was SWD, so I do think this is a separate workover. MCM 10-12-2005"
-305421,1028477359,15-155-01490-0001,NA,plugged,swd,comments,,,,,GAS-P&A,,Also SWD. Discovery well for Castleton field.
-275091,1026641891,15-007-00581-0001,NA,active,swd,comments,,,,,INJ,Converted to Producing Well,Well previously named Updegraff #1; ACO-1 also lists as a SWD well - 5/11/04 ABC
-50931,1002886926,15-009-14904,NA,active,swd,comments,,,,,INJ,,SALT WATER DISPOSAL UNIT (CUTTINGS WELL_ID=74300)
-33214,1001303827,15-167-74281,NA,plugged,swd,comments,,,,,INJ-P&A,Plugged and Abandoned,SWD CABLE TOOL
-152824,1006068724,15-075-30095,NA,plugged,swd,comments,,,,,INJ-P&A,Plugged and Abandoned,"per driller's log, dual completion as Disposal well (Sumner 2484-85) & Gas (Chase 2786-91) - SKS 7/5/2001"
-330533,1031519042,15-077-01064,NA,ab_loc,swd,comments,,,,,LOC,Cancelled API Number,Elog marked SW SW SE and well name Grabs SWD #1 (DRL 12-21-06)
-355135,1034870866,15-189-22534,NA,ab_loc,swd,comments,,,,,LOC,Cancelled API Number,AB LOC of SWD
-396406,1040855994,15-001-29920,NA,ab_loc,swd,comments,,,,,LOC,Cancelled API Number,SWD AB LOC
-419611,1044063517,15-019-27153,NA,ab_loc,swd,comments,,,,,LOC,Cancelled API Number,AB LOC SWD
-425397,1044152611,15-083-21835,NA,ab_loc,swd,comments,,,,,LOC,Cancelled API Number,AB LOC SWD
-13527,1001230431,15-065-02444,NA,plugged,swd,comments,,,,,LOC,Converted to SWD Well,Drillers log states use swdw
-340651,1031939347,15-137-19033,NA,ab_loc,swd,comments,,,,,LOC,Expired Intent to Drill (C-1),AB-LOC of SWD
-345395,1033431843,15-099-23755,NA,ab_loc,swd,comments,,,,,LOC,Expired Intent to Drill (C-1),AB LOC of SWD
-348588,1033763995,15-099-23833,NA,ab_loc,swd,comments,,,,,LOC,Expired Intent to Drill (C-1),Expired intent for SWD well.
-353933,1034571700,15-099-23928,NA,ab_loc,swd,comments,,,,,LOC,Expired Intent to Drill (C-1),AB LOC of SWD
-353934,1034571702,15-099-23929,NA,ab_loc,swd,comments,,,,,LOC,Expired Intent to Drill (C-1),AB LOC of SWD
-366440,1036146748,15-191-01512-0001,NA,ab_loc,swd,comments,,,,,LOC,Expired Intent to Drill (C-1),AB-LOC of SWD
-410440,1043560458,15-185-00072-0001,NA,ab_loc,swd,comments,,,,,LOC,Expired Intent to Drill (C-1),AB LOC SWD
-412675,1043917825,15-207-27871,NA,ab_loc,swd,comments,,,,,LOC,Expired Intent to Drill (C-1),AB LOC SWD
-413369,1043936607,15-191-22623,NA,ab_loc,swd,comments,,,,,LOC,Expired Intent to Drill (C-1),Expired intent for SWD.
-415515,1043981335,15-031-23034,NA,ab_loc,swd,comments,,,,,LOC,Expired Intent to Drill (C-1),AB LOC SWD
-416824,1044009375,15-077-21769,NA,ab_loc,swd,comments,,,,,LOC,Expired Intent to Drill (C-1),AB-LOC SWD
-416842,1044010414,15-077-21771,NA,ab_loc,swd,comments,,,,,LOC,Expired Intent to Drill (C-1),AB-LOC SWD
-417636,1044030717,15-077-21778,NA,ab_loc,swd,comments,,,,,LOC,Expired Intent to Drill (C-1),AB LOC SWD
-420880,1044080821,15-077-21832,NA,ab_loc,swd,comments,,,,,LOC,Expired Intent to Drill (C-1),AB LOC SWD
-422143,1044101155,15-033-21635,NA,ab_loc,swd,comments,,,,,LOC,Expired Intent to Drill (C-1),AB-LOC SWD
-422849,1044113123,15-191-22653,NA,ab_loc,swd,comments,,,,,LOC,Expired Intent to Drill (C-1),AB LOC SWD
-423219,1044121774,15-135-25416,NA,ab_loc,swd,comments,,,,,LOC,Expired Intent to Drill (C-1),AB LOC SWD
-432144,1044246645,15-155-21655,NA,ab_loc,swd,comments,,,,,LOC,Expired Intent to Drill (C-1),AB LOC SWD
-432161,1044246662,15-155-21652,NA,ab_loc,swd,comments,,,,,LOC,Expired Intent to Drill (C-1),AB LOC SWD
-436168,1044591239,15-205-28214,NA,ab_loc,swd,comments,,,,,LOC,Expired Intent to Drill (C-1),AB LOC SWD
-49923,1002885737,15-007-01041-0002,NA,active,swd,comments,,,,,O&G,,Other API 15-007-01699-0002. Dual completion Gas from Snyderville and disposal in Lansing. Two workovers in 1996.  Numbering confusing as OWWO in 1994 not given OWWO code.
-126731,1006016448,15-007-21577,NA,plugged,swd,comments,,,,,O&G-P&A,Converted to EOR Well,changed to SWD.
-313182,1030279963,15-081-30081,NA,plugged,swd,comments,,,,,O&G-P&A,Plugged and Abandoned,From Donna Dill at the KCC: 15-081-30081-0000 is the Fromong 1 drilled in 1965.  It was reworked as a SWD well in 1983 and called the Fromong 2. There is another Fromong 2 (15-081-30082-0000) drilled in 1966.   MCM 12-29-03
-185515,1006134596,15-167-20881,NA,active,swd,comments,,,,,OIL,Authorized Injection Well,changed to SWD in 1997.
-1628,1001194305,15-009-14230,NA,NA,swd,comments,,,,,OIL,Converted to EOR Well,E-log says Meda Steckel SWD #6. - MH 06-04-2003.
-321039,1031373177,15-195-01012-0001,NA,active,swd,comments,,,,,OIL,Converted to Producing Well,Dual Completion: Disposal Formation is Arbuckle. (DRL 11-13-06);   The previous API for this record was 15-195-00959-0001. MCM 05-15-2006
-10879,1001218422,15-051-05807,NA,active,swd,status2,,,,,OIL,Converted to SWD Well,Well deepened and worked-over and converted to SWD. See work-over entry for information. (DRL 09-26-06)
-27376,1001290412,15-163-04278,NA,active,swd,status2,,,,,OIL,Converted to SWD Well,Well deepened to 4108  12-10-1951. Status changed to SWD at this time.  (drl 2/2006)
-77932,1002916754,15-073-20699,NA,active,swd,status2,,,,,OIL,Converted to SWD Well,OWWO as SWD by CROSS
-83013,1002922156,15-083-00231,NA,plugged,swd,status2,,,,,OIL,Converted to SWD Well,"Well drilled as oil well, card states 2300-3000 BOPD, but at some point was converted to SWD well. Was SWD when plugged by Okmar in 1968. (DS-DRL per KCC 1-14-2013)"
-83354,1002922516,15-083-10290,NA,active,swd,status2,,,,,OIL,Converted to SWD Well,"The Ray Lee 4 is now a disposal well according to the operator. Greg Bohnenblust, DOR, 02/27/04."
-111417,1002954326,15-197-20020,NA,active,swd,status2,,,,,OIL,Converted to SWD Well,On 19 Feb 2009 the KCC changed the name on this record from ROBINSON 1-SWD to HAY 2. MCM 20 Feb 2009
-112379,1002955335,15-205-23994,NA,active,swd,status2,,,,,OIL,Converted to SWD Well,will drill for Arbuckle for disposal later
-288835,1027808461,15-161-19033,NA,active,swd,status2,,,,,OIL,Converted to SWD Well,"Footages changed from 845 FNL, 831 FEL to 1795 FNL, 1809 FEL. 845 FNL, 831 FEL were measured from center of section. TD changed from 2059 to 1617 per completion form. 7-21-1964 SWD OWWO record added to database (DRL-DS 10-27-2010)"
-291636,1027935677,15-125-26707,NA,repurposed,swd,status2,,,,,OIL,Converted to SWD Well,Well type changed from Oil to SWD per ACO-1.(DRL-DS 07-14-2011) WELL TYPE CHANGED BACK TO OIL. OWWO WAS SWD. -RLH 09/02/11
-321986,1031431081,15-051-01066-0002,NA,ab_loc,swd,comments,,,,,OIL,Producing,"Attempt to convert well to disposal well failed, per ACO-1. (DRL 09-25-06)"
-254683,1025687343,15-175-00119-0001,NA,active,swd,comments,,,,,OIL,Recompleted,"Well from 1964, plugged back in 1966. Converted to SWD in 1998."
-452842,1022362165,15-007-20893-0001,NA,ab_loc,swd,comments,,,,,OIL,UIC Application Dismissed,The KCC told me that the operator applied for a SWD well on the 01 and renamed it Holton 4.  Then the application was dismissed and it went back to producing on the  02 and the name went back to Lorena 1-B RE. MCM 4 Apr 2007
-29419,1001296893,15-167-01985,NA,active,swd,comments,,,,,OIL,,"spud, comp dates per top card - SKS 9/26/2000  elog well header marked Frank Kilian 4 SWD-BRB10/18/2000"
+127045,1006017078,15-007-21914,NA,plugged,may_swd,comments,gas_to_swd,converted_to_swd?_in_comments_only,yes,yes,GAS-P&A,Plugged and Abandoned,"Plugged by Kevin Allam Oil Operations, converted to SWD?."
+145329,1006053864,15-055-21480,NA,plugged,swd,comments,gas_to_swd,side_string_disposal,yes,,GAS-P&A,Plugged and Abandoned,"Donna Dill (12/14/01): This is a wierd one, but both numbers are actually good.  15-055-21480-0001 is a gas well that is still producing.  15-055-21480 is a side string disposal that was plugged 05/16/2001."
+347014,1033661043,15-095-00400-0002,NA,plugged,swd,comments,swd_to_gas,first_workover_to_swd,yes,yes,GAS-P&A,Plugged and Abandoned,"I am guessing this is the second workover, although the KCC record says it is the first.  The dates are too different and it is GAS and the original well was dry, and the first workover was SWD, so I do think this is a separate workover. MCM 10-12-2005"
+305421,1028477359,15-155-01490-0001,NA,plugged,swd,comments,gas_to_swd,also_swd,yes,,GAS-P&A,,Also SWD. Discovery well for Castleton field.
+275091,1026641891,15-007-00581-0001,NA,active,swd,comments,gas_to_swd,also_swd,yes,yes,INJ,Converted to Producing Well,Well previously named Updegraff #1; ACO-1 also lists as a SWD well - 5/11/04 ABC
+50931,1002886926,15-009-14904,NA,active,swd,comments,swd,salt_water_disposal_unit,yes,yes_no_docs,INJ,,SALT WATER DISPOSAL UNIT (CUTTINGS WELL_ID=74300)
+33214,1001303827,15-167-74281,NA,plugged,swd,comments,swd,online_calls_STATUS_SWD-P&A,yes,yes,INJ-P&A,Plugged and Abandoned,SWD CABLE TOOL
+152824,1006068724,15-075-30095,NA,plugged,swd,comments,dual_gas_swd,dual_completion_gas_swd_driller_log_online_has_as_OTHER-P&A(OIL&GAS-INJ),yes,yes,INJ-P&A,Plugged and Abandoned,"per driller's log, dual completion as Disposal well (Sumner 2484-85) & Gas (Chase 2786-91) - SKS 7/5/2001"
+330533,1031519042,15-077-01064,NA,ab_loc,swd,comments,cancelled_api_abandoned_loc_swd,well name swd,yes,yes_no_docs,LOC,Cancelled API Number,Elog marked SW SW SE and well name Grabs SWD #1 (DRL 12-21-06)
+355135,1034870866,15-189-22534,NA,ab_loc,swd,comments,cancelled_api_abandoned_loc_swd,ab_loc_swd,yes,,LOC,Cancelled API Number,AB LOC of SWD
+396406,1040855994,15-001-29920,NA,ab_loc,swd,comments,cancelled_api_abandoned_loc_swd,ab_loc_swd,yes,,LOC,Cancelled API Number,SWD AB LOC
+419611,1044063517,15-019-27153,NA,ab_loc,swd,comments,cancelled_api_abandoned_loc_swd,ab_loc_swd,yes,,LOC,Cancelled API Number,AB LOC SWD
+425397,1044152611,15-083-21835,NA,ab_loc,swd,comments,cancelled_api_abandoned_loc_swd,ab_loc_swd,yes,,LOC,Cancelled API Number,AB LOC SWD
+13527,1001230431,15-065-02444,NA,ab_loc,swd,comments,da_to_swd,drillers_log_states_use_swdw_possibly_drilled_and_plugged,yes,yes,LOC,Converted to SWD Well,Drillers log states use swdw
+340651,1031939347,15-137-19033,NA,ab_loc,swd,comments,expired_intent_ab_loc_swd,ab_loc_swd,yes,,LOC,Expired Intent to Drill (C-1),AB-LOC of SWD
+345395,1033431843,15-099-23755,NA,ab_loc,swd,comments,expired_intent_ab_loc_swd,ab_loc_swd,yes,,LOC,Expired Intent to Drill (C-1),AB LOC of SWD
+348588,1033763995,15-099-23833,NA,ab_loc,swd,comments,expired_intent_ab_loc_swd,expired_intent_swd,yes,,LOC,Expired Intent to Drill (C-1),Expired intent for SWD well.
+353933,1034571700,15-099-23928,NA,ab_loc,swd,comments,expired_intent_ab_loc_swd,ab_loc_swd,yes,,LOC,Expired Intent to Drill (C-1),AB LOC of SWD
+353934,1034571702,15-099-23929,NA,ab_loc,swd,comments,expired_intent_ab_loc_swd,ab_loc_swd,yes,,LOC,Expired Intent to Drill (C-1),AB LOC of SWD
+366440,1036146748,15-191-01512-0001,NA,ab_loc,swd,comments,expired_intent_ab_loc_swd,ab_loc_swd,yes,,LOC,Expired Intent to Drill (C-1),AB-LOC of SWD
+410440,1043560458,15-185-00072-0001,NA,ab_loc,swd,comments,expired_intent_ab_loc_swd,ab_loc_swd,yes,,LOC,Expired Intent to Drill (C-1),AB LOC SWD
+412675,1043917825,15-207-27871,NA,ab_loc,swd,comments,expired_intent_ab_loc_swd,ab_loc_swd,yes,,LOC,Expired Intent to Drill (C-1),AB LOC SWD
+413369,1043936607,15-191-22623,NA,ab_loc,swd,comments,expired_intent_ab_loc_swd,expired_intent_swd,yes,,LOC,Expired Intent to Drill (C-1),Expired intent for SWD.
+415515,1043981335,15-031-23034,NA,ab_loc,swd,comments,expired_intent_ab_loc_swd,ab_loc_swd,yes,,LOC,Expired Intent to Drill (C-1),AB LOC SWD
+416824,1044009375,15-077-21769,NA,ab_loc,swd,comments,expired_intent_ab_loc_swd,ab_loc_swd,yes,,LOC,Expired Intent to Drill (C-1),AB-LOC SWD
+416842,1044010414,15-077-21771,NA,ab_loc,swd,comments,expired_intent_ab_loc_swd,ab_loc_swd,yes,,LOC,Expired Intent to Drill (C-1),AB-LOC SWD
+417636,1044030717,15-077-21778,NA,ab_loc,swd,comments,expired_intent_ab_loc_swd,ab_loc_swd,yes,,LOC,Expired Intent to Drill (C-1),AB LOC SWD
+420880,1044080821,15-077-21832,NA,ab_loc,swd,comments,expired_intent_ab_loc_swd,ab_loc_swd,yes,,LOC,Expired Intent to Drill (C-1),AB LOC SWD
+422143,1044101155,15-033-21635,NA,ab_loc,swd,comments,expired_intent_ab_loc_swd,ab_loc_swd,yes,,LOC,Expired Intent to Drill (C-1),AB-LOC SWD
+422849,1044113123,15-191-22653,NA,ab_loc,swd,comments,expired_intent_ab_loc_swd,ab_loc_swd,yes,,LOC,Expired Intent to Drill (C-1),AB LOC SWD
+423219,1044121774,15-135-25416,NA,ab_loc,swd,comments,expired_intent_ab_loc_swd,ab_loc_swd,yes,,LOC,Expired Intent to Drill (C-1),AB LOC SWD
+432144,1044246645,15-155-21655,NA,ab_loc,swd,comments,expired_intent_ab_loc_swd,ab_loc_swd,yes,,LOC,Expired Intent to Drill (C-1),AB LOC SWD
+432161,1044246662,15-155-21652,NA,ab_loc,swd,comments,expired_intent_ab_loc_swd,ab_loc_swd,yes,,LOC,Expired Intent to Drill (C-1),AB LOC SWD
+436168,1044591239,15-205-28214,NA,ab_loc,swd,comments,expired_intent_ab_loc_swd,ab_loc_swd,yes,,LOC,Expired Intent to Drill (C-1),AB LOC SWD
+49923,1002885737,15-007-01041-0002,NA,active,swd,comments,dual_gas_swd,dual_completion_two_workovers_1996_per_ACO1_comments_state_1994_wrongly_second_owwo_converted_it_to_swd,yes,yes,O&G,,Other API 15-007-01699-0002. Dual completion Gas from Snyderville and disposal in Lansing. Two workovers in 1996.  Numbering confusing as OWWO in 1994 not given OWWO code.
+126731,1006016448,15-007-21577,NA,unknown,may_swd,comments,gas_to_swd,changed_to_swd_per_comments_but_no_record_stating_swd,yes,yes,O&G-P&A,Converted to EOR Well,changed to SWD.
+313182,1030279963,15-081-30081,NA,plugged,swd,comments,oil_gas_to_swd,owwo_as_swd_1983_per_comments,yes,yes_no_docs,O&G-P&A,Plugged and Abandoned,From Donna Dill at the KCC: 15-081-30081-0000 is the Fromong 1 drilled in 1965.  It was reworked as a SWD well in 1983 and called the Fromong 2. There is another Fromong 2 (15-081-30082-0000) drilled in 1966.   MCM 12-29-03
+185515,1006134596,15-167-20881,NA,active,prob_not,comments,eor,comments_say_swd_aco1_says_inj_database_has_status_EOR_not_OIL,yes,yes,OIL,Authorized Injection Well,changed to SWD in 1997.
+1628,1001194305,15-009-14230,NA,NA,may_swd,comments,eor,wireline_log_name_swd,yes,yes,OIL,Converted to EOR Well,E-log says Meda Steckel SWD #6. - MH 06-04-2003.
+321039,1031373177,15-195-01012-0001,NA,active,may_swd,comments,dual_oil_swd,aco1_says_dual_swd_oil_api_no_0001_suffix_on_aco1_i_think_swd,yes,yes,OIL,Converted to Producing Well,Dual Completion: Disposal Formation is Arbuckle. (DRL 11-13-06);   The previous API for this record was 15-195-00959-0001. MCM 05-15-2006
+10879,1001218422,15-051-05807,NA,active,swd,status2,oil_to_swd,well_converted_to_swd,yes,,OIL,Converted to SWD Well,Well deepened and worked-over and converted to SWD. See work-over entry for information. (DRL 09-26-06)
+27376,1001290412,15-163-04278,NA,active,swd,status2,oil_to_swd,well_deepened_status_changed_to_swd,yes,,OIL,Converted to SWD Well,Well deepened to 4108  12-10-1951. Status changed to SWD at this time.  (drl 2/2006)
+77932,1002916754,15-073-20699,NA,active,swd,status2,oil_to_swd,owwo_as_swd,yes,,OIL,Converted to SWD Well,OWWO as SWD by CROSS
+83013,1002922156,15-083-00231,NA,plugged,swd,status2,oil_to_swd,some_point_was_converted_to_swd,yes,,OIL,Converted to SWD Well,"Well drilled as oil well, card states 2300-3000 BOPD, but at some point was converted to SWD well. Was SWD when plugged by Okmar in 1968. (DS-DRL per KCC 1-14-2013)"
+83354,1002922516,15-083-10290,NA,active,swd,status2,oil_to_swd,now_disposal_according_to_operator,yes,yes,OIL,Converted to SWD Well,"The Ray Lee 4 is now a disposal well according to the operator. Greg Bohnenblust, DOR, 02/27/04."
+111417,1002954326,15-197-20020,NA,active,swd,status2,oil_to_swd,kcc_changed_name_from_robinson_1_swd_to_hay_2,yes,yes_no_docs,OIL,Converted to SWD Well,On 19 Feb 2009 the KCC changed the name on this record from ROBINSON 1-SWD to HAY 2. MCM 20 Feb 2009
+112379,1002955335,15-205-23994,NA,active,may_swd,status2,oil_to_swd,will_drill_for_swd_later_per_aco1_of_1984,yes,yes,OIL,Converted to SWD Well,will drill for Arbuckle for disposal later
+288835,1027808461,15-161-19033,NA,active,swd,status2,oil_to_swd,SWD_1964_OWWO_record_added_to_database,yes,,OIL,Converted to SWD Well,"Footages changed from 845 FNL, 831 FEL to 1795 FNL, 1809 FEL. 845 FNL, 831 FEL were measured from center of section. TD changed from 2059 to 1617 per completion form. 7-21-1964 SWD OWWO record added to database (DRL-DS 10-27-2010)"
+291636,1027935677,15-125-26707,NA,repurposed,swd,status2,oil_to_swd,owwo_swd,yes,,OIL,Converted to SWD Well,Well type changed from Oil to SWD per ACO-1.(DRL-DS 07-14-2011) WELL TYPE CHANGED BACK TO OIL. OWWO WAS SWD. -RLH 09/02/11
+321986,1031431081,15-051-01066-0002,NA,ab_loc,swd,comments,oil_to_swd,attempt_to_convert_to_swd_failed,yes,,OIL,Producing,"Attempt to convert well to disposal well failed, per ACO-1. (DRL 09-25-06)"
+254683,1025687343,15-175-00119-0001,NA,active,swd,comments,oil_to_swd,converted_to_swd_1998,yes,,OIL,Recompleted,"Well from 1964, plugged back in 1966. Converted to SWD in 1998."
+452842,1022362165,15-007-20893-0001,NA,ab_loc,swd,comments,oil_to_ab_loc_swd_to_oil,uic_application_dismissed_per_kcc,yes,yes,OIL,UIC Application Dismissed,The KCC told me that the operator applied for a SWD well on the 01 and renamed it Holton 4.  Then the application was dismissed and it went back to producing on the  02 and the name went back to Lorena 1-B RE. MCM 4 Apr 2007
+29419,1001296893,15-167-01985,NA,active,may_swd,comments,swd_log_name_only,elog_well_header_marked_frank_kilian_4_swd_but_currently_producing_oil,yes,yes,OIL,,"spud, comp dates per top card - SKS 9/26/2000  elog well header marked Frank Kilian 4 SWD-BRB10/18/2000"
 37907,1001320394,15-185-31790,NA,active,swd,comments,,,,,OIL,,Original depth 3814; deepened 8-26-1939 to 10-16-1939 as disposal well.
-204042,1006513485,15-051-70112,NA,active,swd,comments,,,,,OIL,,"Well worked over and deepened in 1955 and converted to SWD. DF, Depth, Dates and Lease Name per Deepening Record. (DRL 11-07-06)"
+204042,1006513485,15-051-70112,NA,active,swd,comments,oil_to_swd,well_worked_over_deepened_converted_to_swd_1955,,,OIL,,"Well worked over and deepened in 1955 and converted to SWD. DF, Depth, Dates and Lease Name per Deepening Record. (DRL 11-07-06)"
 478694,1046802439,15-185-12493-0001,NA,active,swd,comments,,,,,OIL,,"Well history - Originally drilled as oil well, appears no production, several months after completion date, deepened and completed as SWD. Workover code 0001 added to API for administrative tracking.  KGS-W, MTD, 05/11/2018"
 50138,1002886003,15-007-30193,NA,plugged,swd,comments,,,,,OIL-P&A,Converted to EOR Well,SWD conversion later?
 155800,1006074692,15-083-20055,NA,plugged,swd,comments,,,,,OIL-P&A,Converted to EOR Well,Plugged by Fina Oil and Chemical Co.; may have been converted to SWD well.
@@ -349,7 +349,7 @@
 379469,1037337104,15-049-21858,NA,plugged,swd,comments,,,,,OIL-P&A,Converted to SWD Well,Converted to SWD 11-2-1988 API 15-049-21858-0001
 379710,1037337381,15-007-20012,NA,plugged,swd,comments,,,,,OIL-P&A,Converted to SWD Well,"Later operator Indian Oil Co., who probably did the SWD conversion. Other API 15-007-30313."
 435029,1044577786,15-195-33071,NA,plugged,swd,comments,,,,,OIL-P&A,Converted to SWD Well,"According to completion card, well was plugged back in April of 1963 and converted to a Cedar Hill SWD. (KCC)plugging date added to record 2015-03-19 (DLS)"
-285,1001187060,15-007-01172,NA,plugged,swd,comments,,,,,OIL-P&A,Plugged and Abandoned,Plugged by Kansas Oilfield Supply Corp. after a period as a SWD well (?).
+285,1001187060,15-007-01172,NA,plugged,swd,comments,oil_to_swd,plugged_after_period_as_swd,,,OIL-P&A,Plugged and Abandoned,Plugged by Kansas Oilfield Supply Corp. after a period as a SWD well (?).
 522,1001187667,15-007-70080,NA,plugged,swd,comments,,,,,OIL-P&A,Plugged and Abandoned,Later converted to SWD or EOR.
 613,1001187779,15-007-01815,NA,plugged,swd,comments,,,,,OIL-P&A,Plugged and Abandoned,"According to scout cards, was changed to SWDW  at a later date. Have two cards, two drillers logs. Dates a problem."
 10943,1001218488,15-051-05880,NA,plugged,swd,comments,,,,,OIL-P&A,Plugged and Abandoned,Well deepened 02-08-1952 to 02-28-1952 to a new total depth of 3836 feet. Converted to SWDW.(DRL 08-09-06)
