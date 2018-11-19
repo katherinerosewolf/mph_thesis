@@ -65,6 +65,9 @@ save(ks_wells_in_uic_data_only,
 uic_statuses <- table(ks_wells_in_uic_data_only$STATUS)
 write.csv(uic_statuses, file = "uic_statuses.csv")
 
+View(ks_clean[ks_clean$KID %in% c("1001300396"),])
+View(ks_clean[ks_clean$SECTION == 34 & ks_clean$FIELD == "DAVIDSON",])
+
 
 
 #### formatting changes in main well data ####
