@@ -2,6 +2,7 @@
 .Rhistory
 .Rdata
 .Ruserdata
-old_data/
 supporting_ks_documentation/
+supporting_ks_documentation/**
+old_data/
 ~$rows_requiring_comment_investigation_simple_manual_updated.xlsx
