@@ -11,18 +11,33 @@ getwd() # this directory should be the one with your data files in it!
 
 #### load libraries ####
 
-library(plyr)
-library(dplyr)
 library(data.table)
 library(ggplot2)
+library(plyr)
+library(dplyr)
 library(psych)
+library(tcltk2)
 
 
 
 #### create necessary functions ####
 
-# functions
+# notin function
 `%notin%`  <-  function(x,y) !(x %in% y) # define "not-in" function
+
+# function to force R to stop
+my_wait <- function() {
+  tt <- tktoplevel()
+  tkpack(tkbutton(
+    tt, 
+    text = 'continue', 
+    command = 
+      function()tkdestroy(tt)),
+          side='bottom')
+  tkbind(tt, '<Key>', 
+         function()tkdestroy(tt))
+    tkwait.window(tt)
+}
 
 
 
@@ -90,8 +105,11 @@ ks_clean$API_NUMBER  <-
 # categorizing the well as SWD ('swd'), INJ ('inj'), or Class I ('ci')
 ks_clean$well_type <- NA
 
-# categorizing the well as plugged and abandoned ('pa') or not ('not_pa')
+# categorizing the well as active ('active'), inactive ('inactive'), future ('future'), or sited and abandoned ('canceled')
 ks_clean$activity <- NA
+
+# categorizing the well as 
+ks_clean$detailed_activity <- NA
 
 # classifying as having or not having an api ('yes' or 'no')
 ks_clean$has_api <- NA
@@ -100,7 +118,19 @@ ks_clean$has_api <- NA
 # (1) a STATUS of "SWD" or "SWD-P&A" ('status');
 # (2) a status2 of "Converted to SWD Well" ('status2'); or
 # (3) manual comment review ('comments')
-ks_clean$assignment <- NA
+ks_clean$assignment_source <- NA
+
+# classifying the detailed well type (see data documentation for possible values)
+ks_clean$detailed_well_type <- NA
+
+# raw notes on manual well assignments
+ks_clean$assignment_notes <- NA
+
+# whether the comments of the intial well have already been reviewed ('yes', 'NA')
+ks_clean$comments_examined <- NA
+
+# whether I reviewed documents from the Kansas Geological Society ('yes', 'no')
+ks_clean$kgs_available_documents_verified <- NA
 
 save(ks_clean, 
      file = "ks_clean.rdata") # save results of all these conversions
@@ -122,8 +152,9 @@ ks_by_API_count <- table(ks_clean$API_NUMBER)
 save(ks_by_API_count, file = "ks_by_API_count.rdata")
 
 # view rows with duplicated APIs
-index <- duplicated(ks_clean$API_NUMBER) | duplicated(ks_clean$API_NUMBER,
-                                                      fromLast = TRUE)
+index <- 
+  duplicated(ks_clean$API_NUMBER) | duplicated(ks_clean$API_NUMBER, 
+                                               fromLast = TRUE)
 ks_API_dups <- ks_clean[index,]
 save(ks_API_dups, file = "ks_API_dups.rdata")
 
@@ -185,14 +216,14 @@ write.csv(ks_all_status2s,
 
 # make vectors of status1s for further investigation or not
 ks_status1_check_further <- 
-  c("INTENT",
-    "OTHER()",
-    "OTHER(NULL)",
-    "OTHER(OTHER)",
-    "OTHER(TA)",
-    "OTHER(TEMP ABD)",
-    "OTHER-P&A()",
-    "OTHER-P&A(TA)")
+  sort(c("INTENT",
+         "OTHER()",
+         "OTHER(NULL)",
+         "OTHER(OTHER)",
+         "OTHER(TA)",
+         "OTHER(TEMP ABD)",
+         "OTHER-P&A()",
+         "OTHER-P&A(TA)"))
 
 ks_potential_disposal_include_status1s <- 
   sort(c("OTHER()",
@@ -330,7 +361,11 @@ rows_requiring_comment_investigation_simple <-
        "has_api",
        "activity",
        "well_type",
-       "assignment",
+       "assignment_source",
+       "detailed_well_type",
+       "assignment_notes",
+       "comments_examined",
+       "kgs_available_documents_verified",
        "STATUS",
        "STATUS2",
        "COMMENTS"
@@ -343,99 +378,223 @@ write.csv(rows_requiring_comment_investigation,
 write.csv(rows_requiring_comment_investigation_simple, 
           file = "rows_requiring_comment_investigation_simple.csv")
 
-#### manual review of the above to determine assignments must happen here ####
+
+
+#### manual well assignment space ####
+# cat("Please assign the ambiguous wells manually in an Excel file.  Afterward, find the window that just opened and click on the 'continue' button to continue the program.  The next prompt asks you to choose the file with the well assignments.")
+# my_wait() # runs function to force the program to wait for input
+
+# # import manual assignments
+# manual_well_assignment_csv_file <- # asks user to choose the correct .csv file
+#   file.choose()
+# 
+# raw_manual_well_assignments_dataframe <- # converts above .csv to a dataframe
+#   read.csv(manual_well_assignment_csv_file)
+
+raw_manual_well_assignments_dataframe <- # converts above .csv to a dataframe
+  read.csv(
+    file = 
+      "rows_requiring_comment_investigation_simple_2018_11_24_back_to_r.csv")
+
+# View(raw_manual_well_assignments_dataframe) # view the import
 
 
 
+#### creating the semi-final well list #### 
+# This section combines all the manually assigned wells as well as the wells
+# pulled due solely due to their STATUS or STATUS2.
 
-# import manual assignments
-raw_manual_well_assignments <- 
-  read.csv(file = "rows_requiring_comment_investigation_simple_2018_11_20_back_to_r.csv")
+# pull well KIDs identified manually or by status1 or status2
+kids_from_manual_assignments <-   # KIDs of manually added wells
+  ks_clean$KID[which(ks_clean$KID %in% 
+                       raw_manual_well_assignments_dataframe$KID)]
 
-#### rules for manual well assignments
+kids_status1s <-   # KIDs of wells IDed via status1
+  ks_clean$KID[which(ks_clean$STATUS %in% 
+                       ks_definitely_include_status1s)]
 
-manual_without_drops <- 
-  raw_manual_well_assignments %>%
-  filter(well_type != "drop")
-
-View(manual_without_drops)
-
-
-# final well group
-# pull the KIDs of the wells selected from at least one of the groups
-kids_comments_for_the_final_list <- 
-  ks_clean$KID[which(ks_clean$KID %in% manual_without_drops$KID)]
-kids_status1s <- 
-  ks_clean$KID[which(ks_clean$STATUS %in% ks_definitely_include_status1s)]
-kids_status2s <- 
+kids_status2s <-   # KIDs of wells IDed via status2
   ks_clean$KID[which(ks_clean$STATUS2 %in% 
                        ks_potential_disposal_include_status2s)]
 
-length(kids_comments_for_the_final_list)
-length(kids_status1s)
-length(kids_status2s)
+# length(kids_from_manual_assignments) # count of manual KIDs
+# length(kids_status1s)  # count of status1 KIDs
+# length(kids_status2s)  # count of status2 KIDs
 
-kid_list <- c(kids_comments_for_the_final_list, kids_status1s, kids_status2s)
-kids_for_final_list <- unlist(kid_list)
-length(kids_for_final_list)
-kids_for_final_list <- unique(kids_for_final_list)
-length(kids_for_final_list)
+# combine the lists
+kids_semi_final_list <- c(kids_from_manual_assignments, 
+                         kids_status1s,
+                         kids_status2s)
 
-ks_final_wells <- ks_clean[which(ks_clean$KID %in% kids_for_final_list),]
-View(ks_final_wells)
+# convert the list of three vectors into just one vector
+kids_semi_final_list <- 
+  unlist(kids_semi_final_list)
+
+kids_semi_final_list <-   # delete duplicates
+  unique(kids_semi_final_list)   
+
+ks_semi_final_wells <-   # make dataframe of data from selected wells
+  ks_clean[which(ks_clean$KID %in% 
+                   kids_semi_final_list),]
+
+# View(ks_semi_final_wells)
+
+# save data to disk
+save(ks_semi_final_wells, file = "ks_semi_final_wells.rdata")
+write.csv(ks_semi_final_wells, file = "ks_semi_final_wells.csv")
 
 
 
+#### create working semi-final dataset ####
+
+ks_semi_final_wells_working <-   # make safe working dataset
+  ks_semi_final_wells
 
 
-#### category assignments ####
+# status1s
+
+ks_semi_final_status1s <-   # make vector of status1s in semi-final dataset
+  sort(unique(ks_semi_final_wells$STATUS))
+
+# View(ks_semi_final_status1s)   # view vector of status1s
+
+# View(table(ks_semi_final_wells_working$STATUS))   # view table of status1s
+
+write.csv(ks_semi_final_status1s,   # write .csv of status1s
+          file = "ks_semi_final_status1s.csv")
+
+
+# status2s
+
+ks_semi_final_status2s <-   # make vector of status2s in semi-final dataset
+  sort(unique(ks_semi_final_wells$STATUS2))
+
+# View(ks_semi_final_status2s)   # view vector of status2s
+
+# View(table(ks_semi_final_wells_working$STATUS2))   # view table of status2s
+
+write.csv(ks_semi_final_status2s,   # write .csv of status2s
+          file = "ks_semi_final_status2s.csv")
+
+
+
+#### CATEGORY ASSIGNMENTS IN SEMI-FINAL DATASET ####
 
 #### assign has api ####
-ks_final_wells$has_api  <-  ifelse(ks_final_wells$API_NUMBER == "", "no", "yes")
-View(ks_final_wells)
+# assign it
+ks_semi_final_wells_working$has_api <-
+  ifelse(ks_semi_final_wells_working$API_NUMBER == "", "no", "yes")
 
-#### swd versus not ####
-View(table(ks_final_wells$STATUS))
+# View(ks_semi_final_wells_working)
 
-ks_definitely_include_status1s <- sort(c("OTHER(1O&1SWD)","OTHER(CBM/SWD)","OTHER(CLASS ONE (OLD))","OTHER(CLASS1)","OTHER(NHDW)","OTHER(OIL,SWD)","OTHER(SWD-P&A)","OTHER-P&A(CLASS ONE (OLD))","OTHER-P&A(OIL-SWD)","SWD","SWD-P&A"))
 
-swd_statii <- sort(c("OTHER(1O&1SWD)","OTHER(CBM/SWD)","OTHER(OIL,SWD)","OTHER(SWD-P&A)","OTHER-P&A(OIL-SWD)","SWD","SWD-P&A"))
-class1_statii <- sort(c("OTHER(CLASS ONE (OLD))","OTHER(CLASS1)","OTHER(NHDW)","OTHER-P&A(CLASS ONE (OLD))"))
-swd_statii2 <- sort(c("Converted to SWD Well"))
 
-ks_final_wells <- within(ks_final_wells, swd_inj_ci[STATUS %in% class1_statii] <-  'class1')
-ks_final_wells <- within(ks_final_wells, swd_inj_ci[STATUS %in% swd_statii | STATUS2 %in% swd_statii2]  <-  'swd')
+#### assign well_type ####
 
-#### pa versus not ####
-pa_statii <- sort(c("OTHER(SWD-P&A)","OTHER-P&A(CLASS ONE (OLD))","OTHER-P&A(OIL-SWD)","SWD-P&A"))
-ks_final_wells <- within(ks_final_wells, activity[STATUS %in% pa_statii] <-  'pa')
+# View(table(ks_semi_final_wells_working$STATUS)) view possible status1s
+
+# ks_definitely_include_status1s <- # reminder of status1s chosen to keep
+#   sort(c("OTHER(1O&1SWD)",
+#          "OTHER(CBM/SWD)",
+#          "OTHER(CLASS ONE (OLD))",
+#          "OTHER(CLASS1)",
+#          "OTHER(NHDW)",
+#          "OTHER(OIL,SWD)",
+#          "OTHER(SWD-P&A)",
+#          "OTHER-P&A(CLASS ONE (OLD))",
+#          "OTHER-P&A(OIL-SWD)",
+#          "SWD",
+#          "SWD-P&A"))
+
+swd_status1s <-   # make vector of status1s that mean swd well
+  sort(c("OTHER(1O&1SWD)",
+         "OTHER(CBM/SWD)",
+         "OTHER(OIL,SWD)",
+         "OTHER(SWD-P&A)",
+         "OTHER-P&A(OIL-SWD)",
+         "SWD",
+         "SWD-P&A"))
+
+class1_status1s <-   # make vector of status1s that mean class1 well
+  sort(c("OTHER(CLASS ONE (OLD))",
+         "OTHER(CLASS1)",
+         "OTHER(NHDW)",
+         "OTHER-P&A(CLASS ONE (OLD))"))
+
+swd_status2s <-   # make vector of status2s that mean swd well
+  sort(c("Converted to SWD Well"))
+
+ks_semi_final_wells_working <-   # assign class1
+  within(ks_semi_final_wells_working, 
+         well_type[STATUS %in% class1_status1s] <- 'class1')
+
+ks_semi_final_wells_working <-   # assign swd
+  within(ks_semi_final_wells_working, 
+         well_type[STATUS %in% swd_status1s | 
+                     STATUS2 %in% swd_status2s] <- 'swd')
+
+
+
+#### START HERE 2018-11-24 ####
+
+#### assign activity ####
+
+# plugged and abandoned
+
+pa_status1s <-   # make vector of pa status1s
+  sort(c("OTHER(SWD-P&A)",
+         "OTHER-P&A(CLASS ONE (OLD))",
+         "OTHER-P&A(OIL-SWD)",
+         "SWD-P&A"))
+
+pa_status2s <-   # make vector of pa status2s
+  sort(c("Plugged and Abandoned",
+         "OTHER-P&A(CLASS ONE (OLD))",
+         "OTHER-P&A(OIL-SWD)",
+         "SWD-P&A"))
+
+ks_semi_final_wells_working <-   # assign pa wells
+  within(ks_semi_final_wells_working, 
+         activity[STATUS %in% pa_status1s] <- 'pa')
+
+
+# inactive
+inactive_status_1s <-   # make vector of inactive status1s
+  sort(c("",
+         "",
+         ))
 
 #### deal with comments ####
-ks_final_wells <- merge(ks_final_wells, core_manual, by = "KID", all.x = TRUE, all.y = TRUE)
-ks_final_wells <- within(ks_final_wells, swd_inj_ci[man_swd_inj_ci == 'swd'] <- 'swd')
-ks_final_wells <- within(ks_final_wells, swd_inj_ci[man_swd_inj_ci == 'class1'] <- 'class1')
-ks_final_wells <- within(ks_final_wells, swd_inj_ci[man_swd_inj_ci == 'swd_class1'] <- 'swd_class1')
-ks_final_wells <- within(ks_final_wells, activity[man_activity == 'pa'] <- 'pa')
-ks_final_wells <- within(ks_final_wells, activity[man_activity == 'never_completed'] <- 'never_completed')
-ks_final_wells <- within(ks_final_wells, other[STATUS %in% c("SWD","SWD-P&A")] <- 'no')
+ks_semi_final_wells_working <- merge(ks_semi_final_wells_working, core_manual, by = "KID", all.x = TRUE, all.y = TRUE)
+ks_semi_final_wells_working <- within(ks_semi_final_wells_working, well_type[man_well_type == 'swd'] <- 'swd')
+ks_semi_final_wells_working <- within(ks_semi_final_wells_working, well_type[man_well_type == 'class1'] <- 'class1')
+ks_semi_final_wells_working <- within(ks_semi_final_wells_working, well_type[man_well_type == 'swd_class1'] <- 'swd_class1')
+ks_semi_final_wells_working <- within(ks_semi_final_wells_working, activity[man_activity == 'pa'] <- 'pa')
+ks_semi_final_wells_working <- within(ks_semi_final_wells_working, activity[man_activity == 'never_completed'] <- 'never_completed')
+ks_semi_final_wells_working <- within(ks_semi_final_wells_working, other[STATUS %in% c("SWD","SWD-P&A")] <- 'no')
 
 # assign not-others to "yes"
-ks_final_wells$other[is.na(ks_final_wells$other)]  <-  "yes"
-ks_final_wells$activity[is.na(ks_final_wells$activity)]  <-  "not_pa"
-ks_final_wells$manual[is.na(ks_final_wells$man_swd_inj_ci)] <- "no"
-ks_final_wells$manual[is.na(ks_final_wells$manual)] <- "yes"
+ks_semi_final_wells_working$other[is.na(ks_semi_final_wells_working$other)]  <-  "yes"
+ks_semi_final_wells_working$activity[is.na(ks_semi_final_wells_working$activity)]  <-  "not_pa"
+ks_semi_final_wells_working$manual[is.na(ks_semi_final_wells_working$man_well_type)] <- "no"
+ks_semi_final_wells_working$manual[is.na(ks_semi_final_wells_working$manual)] <- "yes"
 
-View(ks_final_wells)
+View(ks_semi_final_wells_working)
 
-View(table(ks_final_wells$swd_inj_ci,ks_final_wells$has_api))
+View(table(ks_semi_final_wells_working$well_type,ks_semi_final_wells_working$has_api))
 
-save(ks_final_wells, file = "ks_final_wells.rdata")
+save(ks_semi_final_wells_working, file = "ks_semi_final_wells_working.rdata")
+
+
+
+#### handling duplicates ####
+
 
 
 #### deleting those with duplicate APIs
 # make dataset without wells without apis
-ks_only_apis <- ks_final_wells
-ks_only_apis <- ks_final_wells[!(is.na(ks_final_wells$API_NUMBER) | ks_final_wells$API_NUMBER==""),]
+ks_only_apis <- ks_semi_final_wells_working
+ks_only_apis <- ks_semi_final_wells_working[!(is.na(ks_semi_final_wells_working$API_NUMBER) | ks_semi_final_wells_working$API_NUMBER==""),]
 View(ks_only_apis)
 
 # find duplicate APIs
@@ -480,7 +639,7 @@ no_never_complete <- subset(true_no_dup_API, !(activity == "never_completed"))
 View(no_never_complete)
 
 # remove classIs
-ks_no_dup_api_or_ci <- subset(no_never_complete, !(swd_inj_ci == "class1"))
+ks_no_dup_api_or_ci <- subset(no_never_complete, !(well_type == "class1"))
 View(ks_no_dup_api_or_ci)
 
 
@@ -500,10 +659,10 @@ save(ks_final_thesis_data, file = "ks_final_thesis_data.rdata")
 View(ks_final_thesis_data)
 
 
-table(ks_final_thesis_data$swd_inj_ci,ks_final_thesis_data$activity)
-table(ks_final_thesis_data$other,ks_final_thesis_data$swd_inj_ci)
+table(ks_final_thesis_data$well_type,ks_final_thesis_data$activity)
+table(ks_final_thesis_data$other,ks_final_thesis_data$well_type)
  
-ks_set_for_mapping <- ks_final_thesis_data[,c("KID","API_NUMBER_SIMPLE","LATITUDE","LONGITUDE","swd_inj_ci")]
+ks_set_for_mapping <- ks_final_thesis_data[,c("KID","API_NUMBER_SIMPLE","LATITUDE","LONGITUDE","well_type")]
 # View(ks_set_for_mapping)
 write.csv2(ks_set_for_mapping, file = "ks_set_for_mapping.csv")
 
@@ -523,7 +682,7 @@ ks_join_to_edit <- ks_join_results
 ks_join_to_edit$API_NUMBER <- NULL
 ks_join_to_edit$LATITUDE <- NULL
 ks_join_to_edit$LONGITUDE <- NULL
-ks_join_to_edit$swd_inj_ci <- NULL
+ks_join_to_edit$well_type <- NULL
 ks_join_to_edit$Join_Count <- NULL
 ks_join_to_edit$OBJECTID_1 <- NULL
 ks_join_to_edit$TARGET_FID <- NULL

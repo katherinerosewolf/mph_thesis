@@ -1,0 +1,30 @@
+,x,
+1,,
+2,Approved for Plugging - CP-1 Received,inactive
+3,Approved Intent to Drill,future
+4,Authorized Injection Well,na
+5,Cancelled API Number,cancel
+6,Converted to EOR Well,na
+7,Converted to Producing Well,na
+8,Converted to SWD Well,na
+9,DEVELOPMENT,future
+10,Expired Intent to Drill (C-1),cancel
+11,Expired Plugging Application (CP-1),cancel
+12,Inactive Well,inactive
+13,Injection Authorization Terminated,na
+14,Injection Authorization Terminated - INACTIVE CODE,na
+15,Injection Well Split to Another Dkt,na
+16,KCC Fee Fund Plugging,inactive
+17,ON LIST,future
+18,Pending Injection Application,future
+19,Plugged and Abandoned,pa
+20,Producing,na
+21,Re-Plugged (non Fee-Fund),pa
+22,Recompleted,na
+23,Spudded,spud
+24,UIC Application Denied,cancel
+25,UIC Application Dismissed,cancel
+26,UIC Application Withdrawn,cancel
+27,Unknown,na
+28,Unplugged Former Injection Well,na
+29,Well Drilled,spud
