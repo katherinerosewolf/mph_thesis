@@ -105,11 +105,14 @@ ks_clean$API_NUMBER  <-
 # categorizing the well as SWD ('swd'), INJ ('inj'), or Class I ('ci')
 ks_clean$well_type <- NA
 
-# categorizing the well as active ('active'), inactive ('inactive'), future ('future'), or sited and abandoned ('canceled')
+# categorizing the well as in the uic database ('yes') or no ('no')
+ks_clean$uic <- NA
+
+# categorizing the well as active ('active'), inactive ('inactive'), drilled ('drill'), future ('future'), or never drilled or used as a saltwater disposal well ('canceled')
 ks_clean$activity <- NA
 
-# categorizing the well as 
-ks_clean$detailed_activity <- NA
+# categorizing the well as plugged ('plugged'), unplugged ('unplugged'), or unknown
+ks_clean$plugging <- NA
 
 # classifying as having or not having an api ('yes' or 'no')
 ks_clean$has_api <- NA
@@ -535,34 +538,83 @@ ks_semi_final_wells_working <-   # assign swd
 
 
 
-#### START HERE 2018-11-24 ####
-
 #### assign activity ####
 
-# plugged and abandoned
-
-pa_status1s <-   # make vector of pa status1s
-  sort(c("OTHER(SWD-P&A)",
-         "OTHER-P&A(CLASS ONE (OLD))",
-         "OTHER-P&A(OIL-SWD)",
-         "SWD-P&A"))
-
-pa_status2s <-   # make vector of pa status2s
-  sort(c("Plugged and Abandoned",
-         "OTHER-P&A(CLASS ONE (OLD))",
-         "OTHER-P&A(OIL-SWD)",
-         "SWD-P&A"))
-
-ks_semi_final_wells_working <-   # assign pa wells
-  within(ks_semi_final_wells_working, 
-         activity[STATUS %in% pa_status1s] <- 'pa')
-
-
 # inactive
-inactive_status_1s <-   # make vector of inactive status1s
-  sort(c("",
-         "",
-         ))
+inactive_status1s <-   # make vector of pa status1s
+  sort(c("EOR-P&A",
+         "GAS-P&A",
+         "INJ-P&A",
+         "O&G-P&A",
+         "OIL-P&A",
+         "OTHER-P&A(CLASS ONE (OLD))",
+         "OTHER-P&A(LH)",
+         "OTHER-P&A(OIL-SWD)",
+         "OTHER-P&A(OIL&GAS-INJ)",
+         "OTHER-P&A(STRAT)",
+         "OTHER-P&A(TA)",
+         "OTHER-P&A(WATER)",
+         "OTHER(SWD-P&A)",
+         "SWD-P&A",
+         "D&A",
+         "OTHER(LH)",
+         "OTHER(TA)"))
+
+inactive_status2s <-   # make vector of pa status2s
+  sort(c("Approved for Plugging - CP-1 Received",
+         "Expired Plugging Application (CP-1)",
+         "Inactive Well",
+         "Injection Authorization Terminated",
+         "Injection Authorization Terminated - INACTIVE CODE",
+         "KCC Fee Fund Plugging",
+         "Plugged and Abandoned",
+         "Re-Plugged (non Fee-Fund)",
+         "Unplugged Former Injection Well"))
+
+ks_semi_final_wells_working <-   # assign inactive wells
+  within(ks_semi_final_wells_working, 
+         activity[STATUS %in% inactive_status1s |
+                    STATUS2 %in% inactive_status2s] <- 'inactive')
+
+
+# future
+future_status2s <-   # make vector of future status2s
+  sort(c("Approved Intent to Drill",
+         "DEVELOPMENT",
+         "ON LIST",
+         "Pending Injection Application"))
+
+ks_semi_final_wells_working <-   # assign inactive wells
+  within(ks_semi_final_wells_working, 
+         activity[STATUS %in% future_status2s] <- 'future')
+
+
+# cancel
+cancel_status2s <-   # make vector of cancel status2s
+  sort(c("Cancelled API Number",
+         "Expired Intent to Drill (C-1)",
+         "UIC Application Denied",
+         "UIC Application Dismissed",
+         "UIC Application Withdrawn"))
+
+ks_semi_final_wells_working <-   # assign cancel wells
+  within(ks_semi_final_wells_working, 
+         activity[STATUS %in% cancel_status2s] <- 'cancel')
+
+# drill
+drill_status2s <-   # make vector of drill status2s
+  sort(c("Spudded",
+         "Well Drilled"))
+
+ks_semi_final_wells_working <-   # assign drill wells
+  within(ks_semi_final_wells_working, 
+         activity[STATUS %in% drill_status2s] <- 'drill')
+
+
+
+#### assign plugging ####
+
+
 
 #### deal with comments ####
 ks_semi_final_wells_working <- merge(ks_semi_final_wells_working, core_manual, by = "KID", all.x = TRUE, all.y = TRUE)

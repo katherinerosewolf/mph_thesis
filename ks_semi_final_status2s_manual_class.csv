@@ -1,30 +1,30 @@
-,x,activity_status,activity_status_2
-1,,na,na
-2,Approved for Plugging - CP-1 Received,to_plug,inactive
-3,Approved Intent to Drill,to_drill,future
-4,Authorized Injection Well,na,na
-5,Cancelled API Number,cancel,cancel
-6,Converted to EOR Well,na,na
-7,Converted to Producing Well,na,na
-8,Converted to SWD Well,na,na
-9,DEVELOPMENT,dev,future
-10,Expired Intent to Drill (C-1),cancel,cancel
-11,Expired Plugging Application (CP-1),exp_plug,inactive
-12,Inactive Well,inactive,inactive
-13,Injection Authorization Terminated,na,na
-14,Injection Authorization Terminated - INACTIVE CODE,inactive,inactive
-15,Injection Well Split to Another Dkt,na,na
-16,KCC Fee Fund Plugging,to_plug,inactive
-17,ON LIST,future,future
-18,Pending Injection Application,future,future
-19,Plugged and Abandoned,pa,inactive
-20,Producing,na,na
-21,Re-Plugged (non Fee-Fund),pa,inactive
-22,Recompleted,na,na
-23,Spudded,spud,spud
-24,UIC Application Denied,cancel,cancel
-25,UIC Application Dismissed,cancel,cancel
-26,UIC Application Withdrawn,cancel,cancel
-27,Unknown,na,unknown
-28,Unplugged Former Injection Well,na,inactive
-29,Well Drilled,drilled,spud
+,x,detailed_activity,activity,,inactive,future,cancel,drill
+1,,na,na,,,,,
+2,Approved for Plugging - CP-1 Received,to_plug,inactive,,Approved for Plugging - CP-1 Received,Approved Intent to Drill,Cancelled API Number,Spudded
+3,Approved Intent to Drill,to_drill,future,,Expired Plugging Application (CP-1),DEVELOPMENT,Expired Intent to Drill (C-1),Well Drilled
+4,Authorized Injection Well,na,na,,Inactive Well,ON LIST,UIC Application Denied,
+5,Cancelled API Number,cancel,cancel,,Injection Authorization Terminated,Pending Injection Application,UIC Application Dismissed,
+6,Converted to EOR Well,na,na,,Injection Authorization Terminated - INACTIVE CODE,,UIC Application Withdrawn,
+7,Converted to Producing Well,na,na,,KCC Fee Fund Plugging,,,
+8,Converted to SWD Well,na,na,,Plugged and Abandoned,,,
+9,DEVELOPMENT,dev,future,,Re-Plugged (non Fee-Fund),,,
+10,Expired Intent to Drill (C-1),cancel,cancel,,Unplugged Former Injection Well,,,
+11,Expired Plugging Application (CP-1),exp_plug,inactive,,,,,
+12,Inactive Well,inactive,inactive,,,,,
+13,Injection Authorization Terminated,inactive,inactive,,,,,
+14,Injection Authorization Terminated - INACTIVE CODE,inactive,inactive,,,,,
+15,Injection Well Split to Another Dkt,na,na,,,,,
+16,KCC Fee Fund Plugging,to_plug,inactive,,,,,
+17,ON LIST,future,future,,,,,
+18,Pending Injection Application,future,future,,,,,
+19,Plugged and Abandoned,pa,inactive,,,,,
+20,Producing,na,na,,,,,
+21,Re-Plugged (non Fee-Fund),pa,inactive,,,,,
+22,Recompleted,na,na,,,,,
+23,Spudded,drilled,drill,,,,,
+24,UIC Application Denied,cancel,cancel,,,,,
+25,UIC Application Dismissed,cancel,cancel,,,,,
+26,UIC Application Withdrawn,cancel,cancel,,,,,
+27,Unknown,na,na,,,,,
+28,Unplugged Former Injection Well,na,inactive,,,,,
+29,Well Drilled,drilled,drill,,,,,
