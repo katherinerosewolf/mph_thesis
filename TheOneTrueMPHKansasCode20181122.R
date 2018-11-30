@@ -135,6 +135,9 @@ ks_clean$comments_examined <- NA
 # whether I reviewed documents from the Kansas Geological Society ('yes', 'no')
 ks_clean$kgs_available_documents_verified <- NA
 
+# whether well is plugged ('yes', 'maybe', 'no')
+ks_clean$plug <- NA
+
 save(ks_clean, 
      file = "ks_clean.rdata") # save results of all these conversions
 
@@ -540,7 +543,7 @@ ks_semi_final_wells_working <-   # assign swd
 
 #### assign activity ####
 
-# inactive
+# assign inactive statuses
 inactive_status1s <-   # make vector of pa status1s
   sort(c("EOR-P&A",
          "GAS-P&A",
@@ -577,7 +580,7 @@ ks_semi_final_wells_working <-   # assign inactive wells
                     STATUS2 %in% inactive_status2s] <- 'inactive')
 
 
-# future
+# assign future statuses
 future_status2s <-   # make vector of future status2s
   sort(c("Approved Intent to Drill",
          "DEVELOPMENT",
@@ -589,7 +592,7 @@ ks_semi_final_wells_working <-   # assign inactive wells
          activity[STATUS %in% future_status2s] <- 'future')
 
 
-# cancel
+# assign cancel statuses
 cancel_status2s <-   # make vector of cancel status2s
   sort(c("Cancelled API Number",
          "Expired Intent to Drill (C-1)",
@@ -601,7 +604,8 @@ ks_semi_final_wells_working <-   # assign cancel wells
   within(ks_semi_final_wells_working, 
          activity[STATUS %in% cancel_status2s] <- 'cancel')
 
-# drill
+
+# assign drill statuses
 drill_status2s <-   # make vector of drill status2s
   sort(c("Spudded",
          "Well Drilled"))
@@ -611,8 +615,9 @@ ks_semi_final_wells_working <-   # assign drill wells
          activity[STATUS %in% drill_status2s] <- 'drill')
 
 
-
 #### assign plugging ####
+
+
 
 
 
