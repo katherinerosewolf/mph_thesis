@@ -51,7 +51,86 @@ my_wait <- function() {
 # # UIC data import
 # ks_uic_2018_09_04 <- fread(file = "KS_UIC_archive_2018_09_04.txt") # import raw data
 # save(ks_uic_2018_09_04, file = "ks_uic_2018_09_04.rdata") # save as an rdata file
-# # ACS data import
+#
+# ACS data import
+BG_METADATA_2016 <-
+  fread("BG_METADATA_2016.txt")
+X00_COUNTS <- 
+  fread("X00_COUNTS.txt")
+X01_AGE_AND_SEX <- 
+  fread("X01_AGE_AND_SEX.txt")
+X02_RACE <- 
+  fread("X02_RACE.txt")
+X03_HISPANC_OR_LATINO_ORIGIN <- 
+  fread("X03_HISPANC_OR_LATINO_ORIGIN.txt")
+X07_MIGRATION <- 
+  fread("X07_MIGRATION.txt")
+X08_COMMUTING <- 
+  fread("X08_COMMUTING.txt")
+X09_CHILDREN_HOUSEHOLD_RELATIONSHIP <- 
+  fread("X09_CHILDREN_HOUSEHOLD_RELATIONSHIP.txt")
+X11_HOUSEHOLD_FAMILY_SUBFAMILIES <- 
+  fread("X11_HOUSEHOLD_FAMILY_SUBFAMILIES.txt")
+X12_MARITAL_STATUS_AND_HISTORY <- 
+  fread("X12_MARITAL_STATUS_AND_HISTORY.txt")
+X14_SCHOOL_ENROLLMENT <- 
+  fread("X14_SCHOOL_ENROLLMENT.txt")
+X15_EDUCATIONAL_ATTAINMENT <- 
+  fread("X15_EDUCATIONAL_ATTAINMENT.txt")
+X16_LANGUAGE_SPOKEN_AT_HOME <- 
+  fread("X16_LANGUAGE_SPOKEN_AT_HOME.txt")
+X17_POVERTY <- 
+  fread("X17_POVERTY.txt")
+X19_INCOME <- 
+  fread("X19_INCOME.txt")
+X20_EARNINGS <- 
+  fread("X20_EARNINGS.txt")
+X21_VETERAN_STATUS <- 
+  fread("X21_VETERAN_STATUS.txt")
+X22_FOOD_STAMPS <- 
+  fread("X22_FOOD_STAMPS.txt")
+X23_EMPLOYMENT_STATUS <- 
+  fread("X23_EMPLOYMENT_STATUS.txt")
+X24_INDUSTRY_OCCUPATION <- 
+  fread("X24_INDUSTRY_OCCUPATION.txt")
+X25_HOUSING_CHARACTERISTICS <- 
+  fread("X25_HOUSING_CHARACTERISTICS.txt")
+X27_HEALTH_INSURANCE <- 
+  fread("X27_HEALTH_INSURANCE.txt")
+X99_IMPUTATION <- 
+  fread("X99_IMPUTATION.txt")
+ACS_2016_5YR_BG_20_KANSAS <- 
+  fread("ACS_2016_5YR_BG_20_KANSAS.txt")
+
+# save ACS files as RData files so that I never have to reload them again
+save(BG_METADATA_2016,
+     file="BG_METADATA_2016.rdata")
+save(X00_COUNTS,file="X00_COUNTS.rdata")
+save(X01_AGE_AND_SEX,file="X01_AGE_AND_SEX.rdata")
+save(X02_RACE,file="X02_RACE.rdata")
+save(X03_HISPANC_OR_LATINO_ORIGIN,file="X03_HISPANC_OR_LATINO_ORIGIN.rdata")
+save(X07_MIGRATION,file="X07_MIGRATION.rdata")
+save(X08_COMMUTING,file="X08_COMMUTING.rdata")
+save(X09_CHILDREN_HOUSEHOLD_RELATIONSHIP,file="X09_CHILDREN_HOUSEHOLD_RELATIONSHIP.rdata")
+save(X11_HOUSEHOLD_FAMILY_SUBFAMILIES,file="X11_HOUSEHOLD_FAMILY_SUBFAMILIES.rdata")
+save(X12_MARITAL_STATUS_AND_HISTORY,file="X12_MARITAL_STATUS_AND_HISTORY.rdata")
+save(X14_SCHOOL_ENROLLMENT,file="X14_SCHOOL_ENROLLMENT.rdata")
+save(X15_EDUCATIONAL_ATTAINMENT,file="X15_EDUCATIONAL_ATTAINMENT.rdata")
+save(X16_LANGUAGE_SPOKEN_AT_HOME,file="X16_LANGUAGE_SPOKEN_AT_HOME.rdata")
+save(X17_POVERTY,file="X17_POVERTY.rdata")
+save(X19_INCOME,file="X19_INCOME.rdata")
+save(X20_EARNINGS,file="X20_EARNINGS.rdata")
+save(X21_VETERAN_STATUS,file="X21_VETERAN_STATUS.rdata")
+save(X22_FOOD_STAMPS,file="X22_FOOD_STAMPS.rdata")
+save(X23_EMPLOYMENT_STATUS,file="X23_EMPLOYMENT_STATUS.rdata")
+save(X24_INDUSTRY_OCCUPATION,file="X24_INDUSTRY_OCCUPATION.rdata")
+save(X25_HOUSING_CHARACTERISTICS,file="X25_HOUSING_CHARACTERISTICS.rdata")
+save(X27_HEALTH_INSURANCE,file="X27_HEALTH_INSURANCE.rdata")
+save(X99_IMPUTATION,file="X99_IMPUTATION.rdata")
+save(ACS_2016_5YR_BG_20_KANSAS,file="ACS_2016_5YR_BG_20_KANSAS.rdata")
+
+
+
 
 
 
@@ -60,6 +139,124 @@ my_wait <- function() {
 
 load(file = "ks_wells_2018_11_01.rdata") # load well data
 load(file = "ks_uic_2018_09_04.rdata") # load UIC data
+
+
+
+#### census data ####
+
+#
+#
+
+#
+# load rdata files if needed
+# load(file="BG_METADATA_2016.rdata")
+# load(file="X00_COUNTS.rdata")
+# load(file="X01_AGE_AND_SEX.rdata")
+# load(file="X02_RACE.rdata")
+# load(file="X03_HISPANC_OR_LATINO_ORIGIN.rdata")
+# load(file="X07_MIGRATION.rdata")
+# load(file="X08_COMMUTING.rdata")
+# load(file="X09_CHILDREN_HOUSEHOLD_RELATIONSHIP.rdata")
+# load(file="X11_HOUSEHOLD_FAMILY_SUBFAMILIES.rdata")
+# load(file="X12_MARITAL_STATUS_AND_HISTORY.rdata")
+# load(file="X14_SCHOOL_ENROLLMENT.rdata")
+# load(file="X15_EDUCATIONAL_ATTAINMENT.rdata")
+# load(file="X16_LANGUAGE_SPOKEN_AT_HOME.rdata")
+# load(file="X17_POVERTY.rdata")
+# load(file="X19_INCOME.rdata")
+# load(file="X20_EARNINGS.rdata")
+# load(file="X21_VETERAN_STATUS.rdata")
+# load(file="X22_FOOD_STAMPS.rdata")
+# load(file="X23_EMPLOYMENT_STATUS.rdata")
+# load(file="X24_INDUSTRY_OCCUPATION.rdata")
+# load(file="X25_HOUSING_CHARACTERISTICS.rdata")
+# load(file="X27_HEALTH_INSURANCE.rdata")
+# load(file="X99_IMPUTATION.rdata")
+# load(file="ACS_2016_5YR_BG_20_KANSAS.rdata")
+# 
+# # convert everything to a data table
+# BG_METADATA_2016_data_table<-data.table(BG_METADATA_2016)
+# X00_COUNTS_data_table<-data.table(X00_COUNTS)
+# X01_AGE_AND_SEX_data_table<-data.table(X01_AGE_AND_SEX)
+# X02_RACE_data_table<-data.table(X02_RACE)
+# X03_HISPANC_OR_LATINO_ORIGIN_data_table<-data.table(X03_HISPANC_OR_LATINO_ORIGIN)
+# X07_MIGRATION_data_table<-data.table(X07_MIGRATION)
+# X08_COMMUTING_data_table<-data.table(X08_COMMUTING)
+# X09_CHILDREN_HOUSEHOLD_RELATIONSHIP_data_table<-data.table(X09_CHILDREN_HOUSEHOLD_RELATIONSHIP)
+# X11_HOUSEHOLD_FAMILY_SUBFAMILIES_data_table<-data.table(X11_HOUSEHOLD_FAMILY_SUBFAMILIES)
+# X12_MARITAL_STATUS_AND_HISTORY_data_table<-data.table(X12_MARITAL_STATUS_AND_HISTORY)
+# X14_SCHOOL_ENROLLMENT_data_table<-data.table(X14_SCHOOL_ENROLLMENT)
+# X15_EDUCATIONAL_ATTAINMENT_data_table<-data.table(X15_EDUCATIONAL_ATTAINMENT)
+# X16_LANGUAGE_SPOKEN_AT_HOME_data_table<-data.table(X16_LANGUAGE_SPOKEN_AT_HOME)
+# X17_POVERTY_data_table<-data.table(X17_POVERTY)
+# X19_INCOME_data_table<-data.table(X19_INCOME)
+# X20_EARNINGS_data_table<-data.table(X20_EARNINGS)
+# X21_VETERAN_STATUS_data_table<-data.table(X21_VETERAN_STATUS)
+# X22_FOOD_STAMPS_data_table<-data.table(X22_FOOD_STAMPS)
+# X23_EMPLOYMENT_STATUS_data_table<-data.table(X23_EMPLOYMENT_STATUS)
+# X24_INDUSTRY_OCCUPATION_data_table<-data.table(X24_INDUSTRY_OCCUPATION)
+# X25_HOUSING_CHARACTERISTICS_data_table<-data.table(X25_HOUSING_CHARACTERISTICS)
+# X27_HEALTH_INSURANCE_data_table<-data.table(X27_HEALTH_INSURANCE)
+# X99_IMPUTATION_data_table<-data.table(X99_IMPUTATION)
+# ACS_2016_5YR_BG_20_KANSAS_data_table<-data.table(ACS_2016_5YR_BG_20_KANSAS)
+# 
+# # save data tables
+# save(BG_METADATA_2016_data_table,file="BG_METADATA_2016_data_table.rdata")
+# save(X00_COUNTS_data_table,file="X00_COUNTS_data_table.rdata")
+# save(X01_AGE_AND_SEX_data_table,file="X01_AGE_AND_SEX_data_table.rdata")
+# save(X02_RACE_data_table,file="X02_RACE_data_table.rdata")
+# save(X03_HISPANC_OR_LATINO_ORIGIN_data_table,file="X03_HISPANC_OR_LATINO_ORIGIN_data_table.rdata")
+# save(X07_MIGRATION_data_table,file="X07_MIGRATION_data_table.rdata")
+# save(X08_COMMUTING_data_table,file="X08_COMMUTING_data_table.rdata")
+# save(X09_CHILDREN_HOUSEHOLD_RELATIONSHIP_data_table,file="X09_CHILDREN_HOUSEHOLD_RELATIONSHIP_data_table.rdata")
+# save(X11_HOUSEHOLD_FAMILY_SUBFAMILIES_data_table,file="X11_HOUSEHOLD_FAMILY_SUBFAMILIES_data_table.rdata")
+# save(X12_MARITAL_STATUS_AND_HISTORY_data_table,file="X12_MARITAL_STATUS_AND_HISTORY_data_table.rdata")
+# save(X14_SCHOOL_ENROLLMENT_data_table,file="X14_SCHOOL_ENROLLMENT_data_table.rdata")
+# save(X15_EDUCATIONAL_ATTAINMENT_data_table,file="X15_EDUCATIONAL_ATTAINMENT_data_table.rdata")
+# save(X16_LANGUAGE_SPOKEN_AT_HOME_data_table,file="X16_LANGUAGE_SPOKEN_AT_HOME_data_table.rdata")
+# save(X17_POVERTY_data_table,file="X17_POVERTY_data_table.rdata")
+# save(X19_INCOME_data_table,file="X19_INCOME_data_table.rdata")
+# save(X20_EARNINGS_data_table,file="X20_EARNINGS_data_table.rdata")
+# save(X21_VETERAN_STATUS_data_table,file="X21_VETERAN_STATUS_data_table.rdata")
+# save(X22_FOOD_STAMPS_data_table,file="X22_FOOD_STAMPS_data_table.rdata")
+# save(X23_EMPLOYMENT_STATUS_data_table,file="X23_EMPLOYMENT_STATUS_data_table.rdata")
+# save(X24_INDUSTRY_OCCUPATION_data_table,file="X24_INDUSTRY_OCCUPATION_data_table.rdata")
+# save(X25_HOUSING_CHARACTERISTICS_data_table,file="X25_HOUSING_CHARACTERISTICS_data_table.rdata")
+# save(X27_HEALTH_INSURANCE_data_table,file="X27_HEALTH_INSURANCE_data_table.rdata")
+# save(X99_IMPUTATION_data_table,file="X99_IMPUTATION_data_table.rdata")
+# save(ACS_2016_5YR_BG_20_KANSAS_data_table,file="ACS_2016_5YR_BG_20_KANSAS_data_table.rdata")
+# 
+# 
+# # load data tables
+# load(file="BG_METADATA_2016_data_table.rdata")
+# load(file="X00_COUNTS_data_table.rdata")
+# load(file="X01_AGE_AND_SEX_data_table.rdata")
+# load(file="X02_RACE_data_table.rdata")
+# load(file="X03_HISPANC_OR_LATINO_ORIGIN_data_table.rdata")
+# load(file="X07_MIGRATION_data_table.rdata")
+# load(file="X08_COMMUTING_data_table.rdata")
+# load(file="X09_CHILDREN_HOUSEHOLD_RELATIONSHIP_data_table.rdata")
+# load(file="X11_HOUSEHOLD_FAMILY_SUBFAMILIES_data_table.rdata")
+# load(file="X12_MARITAL_STATUS_AND_HISTORY_data_table.rdata")
+# load(file="X14_SCHOOL_ENROLLMENT_data_table.rdata")
+# load(file="X15_EDUCATIONAL_ATTAINMENT_data_table.rdata")
+# load(file="X16_LANGUAGE_SPOKEN_AT_HOME_data_table.rdata")
+# load(file="X17_POVERTY_data_table.rdata")
+# load(file="X19_INCOME_data_table.rdata")
+# load(file="X20_EARNINGS_data_table.rdata")
+# load(file="X21_VETERAN_STATUS_data_table.rdata")
+# load(file="X22_FOOD_STAMPS_data_table.rdata")
+# load(file="X23_EMPLOYMENT_STATUS_data_table.rdata")
+# load(file="X24_INDUSTRY_OCCUPATION_data_table.rdata")
+# load(file="X25_HOUSING_CHARACTERISTICS_data_table.rdata")
+# load(file="X27_HEALTH_INSURANCE_data_table.rdata")
+# load(file="X99_IMPUTATION_data_table.rdata")
+# load(file="ACS_2016_5YR_BG_20_KANSAS_data_table.rdata")
+#
+# 
+# # merge data tables if have infinite memory
+# # merge_data_tables<-function(x, y) x[y, on = "GEOID"]
+# # ACS_all_data_tables<-Reduce(merge_data_tables,list(X00_COUNTS_data_table,X01_AGE_AND_SEX_data_table,X02_RACE_data_table,X03_HISPANC_OR_LATINO_ORIGIN_data_table,X07_MIGRATION_data_table,X08_COMMUTING_data_table,X09_CHILDREN_HOUSEHOLD_RELATIONSHIP_data_table,X11_HOUSEHOLD_FAMILY_SUBFAMILIES_data_table,X12_MARITAL_STATUS_AND_HISTORY_data_table,X14_SCHOOL_ENROLLMENT_data_table,X15_EDUCATIONAL_ATTAINMENT_data_table,X16_LANGUAGE_SPOKEN_AT_HOME_data_table,X17_POVERTY_data_table,X19_INCOME_data_table,X20_EARNINGS_data_table,X21_VETERAN_STATUS_data_table,X22_FOOD_STAMPS_data_table,X23_EMPLOYMENT_STATUS_data_table,X24_INDUSTRY_OCCUPATION_data_table,X25_HOUSING_CHARACTERISTICS_data_table,X27_HEALTH_INSURANCE_data_table,X99_IMPUTATION_data_table))
 
 
 
