@@ -1,30 +1,40 @@
-,x,detailed_activity,activity,,inactive,future,cancel,drill
-1,,na,na,,,,,
-2,Approved for Plugging - CP-1 Received,to_plug,inactive,,Approved for Plugging - CP-1 Received,Approved Intent to Drill,Cancelled API Number,Spudded
-3,Approved Intent to Drill,to_drill,future,,Expired Plugging Application (CP-1),DEVELOPMENT,Expired Intent to Drill (C-1),Well Drilled
-4,Authorized Injection Well,na,na,,Inactive Well,ON LIST,UIC Application Denied,
-5,Cancelled API Number,cancel,cancel,,Injection Authorization Terminated,Pending Injection Application,UIC Application Dismissed,
-6,Converted to EOR Well,na,na,,Injection Authorization Terminated - INACTIVE CODE,,UIC Application Withdrawn,
-7,Converted to Producing Well,na,na,,KCC Fee Fund Plugging,,,
-8,Converted to SWD Well,na,na,,Plugged and Abandoned,,,
-9,DEVELOPMENT,dev,future,,Re-Plugged (non Fee-Fund),,,
-10,Expired Intent to Drill (C-1),cancel,cancel,,Unplugged Former Injection Well,,,
-11,Expired Plugging Application (CP-1),exp_plug,inactive,,,,,
-12,Inactive Well,inactive,inactive,,plugged,not_plugged,,
-13,Injection Authorization Terminated,inactive,inactive,,Plugged and Abandoned,Approved for Plugging - CP-1 Received,,
-14,Injection Authorization Terminated - INACTIVE CODE,inactive,inactive,,Re-Plugged (non Fee-Fund),Expired Plugging Application (CP-1),,
-15,Injection Well Split to Another Dkt,na,na,,,,,
-16,KCC Fee Fund Plugging,to_plug,inactive,,,,,
-17,ON LIST,future,future,,,,,
-18,Pending Injection Application,future,future,,,,,
-19,Plugged and Abandoned,pa,inactive,,,,,
-20,Producing,na,na,,,,,
-21,Re-Plugged (non Fee-Fund),pa,inactive,,,,,
-22,Recompleted,na,na,,,,,
-23,Spudded,drilled,drill,,,,,
-24,UIC Application Denied,cancel,cancel,,,,,
-25,UIC Application Dismissed,cancel,cancel,,,,,
-26,UIC Application Withdrawn,cancel,cancel,,,,,
-27,Unknown,na,na,,,,,
-28,Unplugged Former Injection Well,na,inactive,,,,,
-29,Well Drilled,drilled,drill,,,,,
+,x,detailed_activity,activity,,da,lh,pa,ta,inactive
+1,CBM,na,na,,D&A,,EOR-P&A,,EOR-P&A
+2,D&A,da,inactive,,,,GAS-P&A,,GAS-P&A
+3,EOR,na,na,,,,INJ-P&A,,INJ-P&A
+4,EOR-P&A,pa,inactive,,,,O&G-P&A,,O&G-P&A
+5,GAS,na,na,,,,OIL-P&A,,OIL-P&A
+6,GAS-P&A,pa,inactive,,,,OTHER-P&A(CLASS ONE (OLD)),,OTHER-P&A(CLASS ONE (OLD))
+7,INJ,na,na,,,,OTHER-P&A(LH),,OTHER-P&A(LH)
+8,INJ-P&A,pa,inactive,,,,OTHER-P&A(OIL-SWD),,OTHER-P&A(OIL-SWD)
+9,LOC,na,na,,,,OTHER-P&A(OIL&GAS-INJ),,OTHER-P&A(OIL&GAS-INJ)
+10,O&G,na,na,,,,OTHER-P&A(STRAT),,OTHER-P&A(STRAT)
+11,O&G-P&A,pa,inactive,,,,OTHER-P&A(TA),,OTHER-P&A(TA)
+12,OIL,na,na,,,,OTHER-P&A(WATER),,OTHER-P&A(WATER)
+13,OIL-P&A,pa,inactive,,,,OTHER(SWD-P&A),,OTHER(SWD-P&A)
+14,OTHER-P&A(CLASS ONE (OLD)),pa,inactive,,,,SWD-P&A,,SWD-P&A
+15,OTHER-P&A(LH),pa,inactive,,,,,,D&A
+16,OTHER-P&A(OIL-SWD),pa,inactive,,,,,,OTHER(LH)
+17,OTHER-P&A(OIL&GAS-INJ),pa,inactive,,,,,,OTHER(TA)
+18,OTHER-P&A(STRAT),pa,inactive,,,,,,
+19,OTHER-P&A(TA),pa,inactive,,plug,,,,
+20,OTHER-P&A(WATER),pa,inactive,,EOR-P&A,,,,
+21,OTHER(),na,na,,GAS-P&A,,,,
+22,OTHER(1O&1SWD),na,na,,INJ-P&A,,,,
+23,OTHER(CBM/SWD),na,na,,O&G-P&A,,,,
+24,OTHER(CLASS ONE (OLD)),na,na,,OIL-P&A,,,,
+25,OTHER(CLASS1),na,na,,OTHER-P&A(CLASS ONE (OLD)),,,,
+26,OTHER(GAS-INJ),na,na,,OTHER-P&A(LH),,,,
+27,OTHER(GAS-STG),na,na,,OTHER-P&A(OIL-SWD),,,,
+28,OTHER(LH),lh,inactive,,OTHER-P&A(OIL&GAS-INJ),,,,
+29,OTHER(NHDW),na,na,,OTHER-P&A(STRAT),,,,
+30,OTHER(OBS),na,na,,OTHER-P&A(TA),,,,
+31,OTHER(OIL&GAS-INJ),na,na,,OTHER-P&A(WATER),,,,
+32,"OTHER(OIL,SWD)",na,na,,OTHER(SWD-P&A),,,,
+33,OTHER(OTHER),na,na,,SWD-P&A,,,,
+34,OTHER(STRAT),na,na,,,,,,
+35,OTHER(SWD-P&A),pa,inactive,,,,,,
+36,OTHER(TA),ta,inactive,,,,,,
+37,OTHER(WATER),na,na,,,,,,
+38,SWD,na,na,,,,,,
+39,SWD-P&A,pa,inactive,,,,,,

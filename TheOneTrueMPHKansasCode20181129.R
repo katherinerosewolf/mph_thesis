@@ -51,6 +51,8 @@ my_wait <- function() {
 # # UIC data import
 # ks_uic_2018_09_04 <- fread(file = "KS_UIC_archive_2018_09_04.txt") # import raw data
 # save(ks_uic_2018_09_04, file = "ks_uic_2018_09_04.rdata") # save as an rdata file
+# # ACS data import
+
 
 
 
@@ -112,8 +114,14 @@ ks_clean$uic <- NA
 # categorizing the well as active ('active'), inactive ('inactive'), drilled ('drill'), future ('future'), or never drilled or used as a saltwater disposal well ('canceled')
 ks_clean$activity <- NA
 
-# categorizing the well as plugged ('plugged') or unknown
-ks_clean$plugging <- NA
+# categorizing the well as plugged ('plugged') or unknown by STATUS or STATUS2
+ks_clean$plug_status <- NA
+
+# categorizing the well as plugged or not by plugging_as_date
+ks_clean$plug_date_binary <- NA
+
+# categorizing as plugged or not by the above two categories
+ks_clean$plug_overall <- NA
 
 # classifying as having or not having an api ('yes' or 'no')
 ks_clean$has_api <- NA
@@ -615,6 +623,8 @@ ks_semi_final_wells_working <-   # assign drill wells
 
 
 #### assign plug ####
+
+# assign plug_status
 plug_status1s <-   # make vector of plug status1s
   sort(c("EOR-P&A",
          "GAS-P&A",
@@ -635,12 +645,69 @@ plug_status2s <-   # make vector of plug status2s
   sort(c("Plugged and Abandoned",
          "Re-Plugged (non Fee-Fund)"))
 
-ks_semi_final_wells_working <-   # assign plugged wells
+ks_semi_final_wells_working <-   # assign plugged by status
+  within(ks_semi_final_wells_working,
+         plug_status[STATUS %in% plug_status1s | 
+                       STATUS2 %in% plug_status2s] <-
+           'has_plug_status')
+
+ks_semi_final_wells_working <-   # assign rest to not status
+  within(ks_semi_final_wells_working,
+         plug_status[is.na(plug_status)] <-
+           'no_plug_status')
+
+# assign plug_date
+ks_semi_final_wells_working <-   # assign plugged by date
   within(ks_semi_final_wells_working, 
-         plugging[STATUS %in% plug_status1s | 
-                    STATUS2 %in% plug_status2s] <- 'plugged')
+         plug_date_binary[!is.na(plugging_as_date)] <-
+           'has_plug_date')
+
+ks_semi_final_wells_working <-   # assign rest to no plug date
+  within(ks_semi_final_wells_working,
+         plug_date_binary[is.na(plug_date_binary)] <-
+           'no_plug_date')
 
 View(ks_semi_final_wells_working)
+
+# assign overall plugged
+ks_semi_final_wells_working <-   # assign overall plug
+  within(ks_semi_final_wells_working,
+         plug_overall[plug_status == 
+                        "has_plug_status" | 
+                       plug_date_binary == "has_plug_date"] <-
+           'plugged')
+
+ks_semi_final_wells_working <-   # assign overall plug
+  within(ks_semi_final_wells_working,
+         plug_overall[is.na(plug_overall)] <-
+           'not_plugged')
+
+View(ks_semi_final_wells_working)
+
+
+
+#### assign UIC status ####
+
+uic_kids <-   # pull KIDs of uic wells in UIC database
+  unique(ks_uic_2018_09_04$KGS_ID)
+
+# assign wells as in or not in the uic
+ks_semi_final_wells_working$uic <-   
+  ifelse(ks_semi_final_wells_working$KID %in% uic_kids,
+         'in_uic',
+         'not_in_uic')
+
+
+
+# View(ks_uic)
+# kids<-unique(ks_uic$KGS_ID)
+# kids
+#
+# ks_wells_in_uic_data_only <- subset(ks_clean, KID %in% kids)
+# View(ks_wells_in_uic_data_only)
+# uic_statuses<-table(ks_wells_in_uic_data_only$STATUS)
+# View(uic_statuses)
+# write.csv(uic_statuses,file="uic_statuses.csv")
 
 
 #### deal with comments ####
