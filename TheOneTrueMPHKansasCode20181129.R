@@ -52,187 +52,214 @@ my_wait <- function() {
 # ks_uic_2018_09_04 <- fread(file = "KS_UIC_archive_2018_09_04.txt") # import raw data
 # save(ks_uic_2018_09_04, file = "ks_uic_2018_09_04.rdata") # save as an rdata file
 #
-# ACS data import
-BG_METADATA_2016 <-
-  fread("BG_METADATA_2016.txt")
-X00_COUNTS <- 
-  fread("X00_COUNTS.txt")
-X01_AGE_AND_SEX <- 
-  fread("X01_AGE_AND_SEX.txt")
-X02_RACE <- 
-  fread("X02_RACE.txt")
-X03_HISPANC_OR_LATINO_ORIGIN <- 
-  fread("X03_HISPANC_OR_LATINO_ORIGIN.txt")
-X07_MIGRATION <- 
-  fread("X07_MIGRATION.txt")
-X08_COMMUTING <- 
-  fread("X08_COMMUTING.txt")
-X09_CHILDREN_HOUSEHOLD_RELATIONSHIP <- 
-  fread("X09_CHILDREN_HOUSEHOLD_RELATIONSHIP.txt")
-X11_HOUSEHOLD_FAMILY_SUBFAMILIES <- 
-  fread("X11_HOUSEHOLD_FAMILY_SUBFAMILIES.txt")
-X12_MARITAL_STATUS_AND_HISTORY <- 
-  fread("X12_MARITAL_STATUS_AND_HISTORY.txt")
-X14_SCHOOL_ENROLLMENT <- 
-  fread("X14_SCHOOL_ENROLLMENT.txt")
-X15_EDUCATIONAL_ATTAINMENT <- 
-  fread("X15_EDUCATIONAL_ATTAINMENT.txt")
-X16_LANGUAGE_SPOKEN_AT_HOME <- 
-  fread("X16_LANGUAGE_SPOKEN_AT_HOME.txt")
-X17_POVERTY <- 
-  fread("X17_POVERTY.txt")
-X19_INCOME <- 
-  fread("X19_INCOME.txt")
-X20_EARNINGS <- 
-  fread("X20_EARNINGS.txt")
-X21_VETERAN_STATUS <- 
-  fread("X21_VETERAN_STATUS.txt")
-X22_FOOD_STAMPS <- 
-  fread("X22_FOOD_STAMPS.txt")
-X23_EMPLOYMENT_STATUS <- 
-  fread("X23_EMPLOYMENT_STATUS.txt")
-X24_INDUSTRY_OCCUPATION <- 
-  fread("X24_INDUSTRY_OCCUPATION.txt")
-X25_HOUSING_CHARACTERISTICS <- 
-  fread("X25_HOUSING_CHARACTERISTICS.txt")
-X27_HEALTH_INSURANCE <- 
-  fread("X27_HEALTH_INSURANCE.txt")
-X99_IMPUTATION <- 
-  fread("X99_IMPUTATION.txt")
-ACS_2016_5YR_BG_20_KANSAS <- 
-  fread("ACS_2016_5YR_BG_20_KANSAS.txt")
-
-# save ACS files as RData files so that I never have to reload them again
-save(BG_METADATA_2016,
-     file="BG_METADATA_2016.rdata")
-save(X00_COUNTS,file="X00_COUNTS.rdata")
-save(X01_AGE_AND_SEX,file="X01_AGE_AND_SEX.rdata")
-save(X02_RACE,file="X02_RACE.rdata")
-save(X03_HISPANC_OR_LATINO_ORIGIN,file="X03_HISPANC_OR_LATINO_ORIGIN.rdata")
-save(X07_MIGRATION,file="X07_MIGRATION.rdata")
-save(X08_COMMUTING,file="X08_COMMUTING.rdata")
-save(X09_CHILDREN_HOUSEHOLD_RELATIONSHIP,file="X09_CHILDREN_HOUSEHOLD_RELATIONSHIP.rdata")
-save(X11_HOUSEHOLD_FAMILY_SUBFAMILIES,file="X11_HOUSEHOLD_FAMILY_SUBFAMILIES.rdata")
-save(X12_MARITAL_STATUS_AND_HISTORY,file="X12_MARITAL_STATUS_AND_HISTORY.rdata")
-save(X14_SCHOOL_ENROLLMENT,file="X14_SCHOOL_ENROLLMENT.rdata")
-save(X15_EDUCATIONAL_ATTAINMENT,file="X15_EDUCATIONAL_ATTAINMENT.rdata")
-save(X16_LANGUAGE_SPOKEN_AT_HOME,file="X16_LANGUAGE_SPOKEN_AT_HOME.rdata")
-save(X17_POVERTY,file="X17_POVERTY.rdata")
-save(X19_INCOME,file="X19_INCOME.rdata")
-save(X20_EARNINGS,file="X20_EARNINGS.rdata")
-save(X21_VETERAN_STATUS,file="X21_VETERAN_STATUS.rdata")
-save(X22_FOOD_STAMPS,file="X22_FOOD_STAMPS.rdata")
-save(X23_EMPLOYMENT_STATUS,file="X23_EMPLOYMENT_STATUS.rdata")
-save(X24_INDUSTRY_OCCUPATION,file="X24_INDUSTRY_OCCUPATION.rdata")
-save(X25_HOUSING_CHARACTERISTICS,file="X25_HOUSING_CHARACTERISTICS.rdata")
-save(X27_HEALTH_INSURANCE,file="X27_HEALTH_INSURANCE.rdata")
-save(X99_IMPUTATION,file="X99_IMPUTATION.rdata")
-save(ACS_2016_5YR_BG_20_KANSAS,file="ACS_2016_5YR_BG_20_KANSAS.rdata")
-
-
-
-
-
-
-
-#### load necessary files ####
-
-load(file = "ks_wells_2018_11_01.rdata") # load well data
-load(file = "ks_uic_2018_09_04.rdata") # load UIC data
-
-
-
-#### census data ####
-
-#
-#
-
-#
-# load rdata files if needed
-# load(file="BG_METADATA_2016.rdata")
-# load(file="X00_COUNTS.rdata")
-# load(file="X01_AGE_AND_SEX.rdata")
-# load(file="X02_RACE.rdata")
-# load(file="X03_HISPANC_OR_LATINO_ORIGIN.rdata")
-# load(file="X07_MIGRATION.rdata")
-# load(file="X08_COMMUTING.rdata")
-# load(file="X09_CHILDREN_HOUSEHOLD_RELATIONSHIP.rdata")
-# load(file="X11_HOUSEHOLD_FAMILY_SUBFAMILIES.rdata")
-# load(file="X12_MARITAL_STATUS_AND_HISTORY.rdata")
-# load(file="X14_SCHOOL_ENROLLMENT.rdata")
-# load(file="X15_EDUCATIONAL_ATTAINMENT.rdata")
-# load(file="X16_LANGUAGE_SPOKEN_AT_HOME.rdata")
-# load(file="X17_POVERTY.rdata")
-# load(file="X19_INCOME.rdata")
-# load(file="X20_EARNINGS.rdata")
-# load(file="X21_VETERAN_STATUS.rdata")
-# load(file="X22_FOOD_STAMPS.rdata")
-# load(file="X23_EMPLOYMENT_STATUS.rdata")
-# load(file="X24_INDUSTRY_OCCUPATION.rdata")
-# load(file="X25_HOUSING_CHARACTERISTICS.rdata")
-# load(file="X27_HEALTH_INSURANCE.rdata")
-# load(file="X99_IMPUTATION.rdata")
-# load(file="ACS_2016_5YR_BG_20_KANSAS.rdata")
+# # ACS data import
+# BG_METADATA_2016 <-
+#   fread("BG_METADATA_2016.txt")
+# X00_COUNTS <- 
+#   fread("X00_COUNTS.txt")
+# X01_AGE_AND_SEX <- 
+#   fread("X01_AGE_AND_SEX.txt")
+# X02_RACE <- 
+#   fread("X02_RACE.txt")
+# X03_HISPANIC_OR_LATINO_ORIGIN <- 
+#   fread("X03_HISPANIC_OR_LATINO_ORIGIN.txt")
+# X07_MIGRATION <- 
+#   fread("X07_MIGRATION.txt")
+# X08_COMMUTING <- 
+#   fread("X08_COMMUTING.txt")
+# X09_CHILDREN_HOUSEHOLD_RELATIONSHIP <- 
+#   fread("X09_CHILDREN_HOUSEHOLD_RELATIONSHIP.txt")
+# X11_HOUSEHOLD_FAMILY_SUBFAMILIES <- 
+#   fread("X11_HOUSEHOLD_FAMILY_SUBFAMILIES.txt")
+# X12_MARITAL_STATUS_AND_HISTORY <- 
+#   fread("X12_MARITAL_STATUS_AND_HISTORY.txt")
+# X14_SCHOOL_ENROLLMENT <- 
+#   fread("X14_SCHOOL_ENROLLMENT.txt")
+# X15_EDUCATIONAL_ATTAINMENT <- 
+#   fread("X15_EDUCATIONAL_ATTAINMENT.txt")
+# X16_LANGUAGE_SPOKEN_AT_HOME <- 
+#   fread("X16_LANGUAGE_SPOKEN_AT_HOME.txt")
+# X17_POVERTY <- 
+#   fread("X17_POVERTY.txt")
+# X19_INCOME <- 
+#   fread("X19_INCOME.txt")
+# X20_EARNINGS <- 
+#   fread("X20_EARNINGS.txt")
+# X21_VETERAN_STATUS <- 
+#   fread("X21_VETERAN_STATUS.txt")
+# X22_FOOD_STAMPS <- 
+#   fread("X22_FOOD_STAMPS.txt")
+# X23_EMPLOYMENT_STATUS <- 
+#   fread("X23_EMPLOYMENT_STATUS.txt")
+# X24_INDUSTRY_OCCUPATION <- 
+#   fread("X24_INDUSTRY_OCCUPATION.txt")
+# X25_HOUSING_CHARACTERISTICS <- 
+#   fread("X25_HOUSING_CHARACTERISTICS.txt")
+# X27_HEALTH_INSURANCE <- 
+#   fread("X27_HEALTH_INSURANCE.txt")
+# X99_IMPUTATION <- 
+#   fread("X99_IMPUTATION.txt")
+# ACS_2016_5YR_BG_20_KANSAS <- 
+#   fread("ACS_2016_5YR_BG_20_KANSAS.txt")
 # 
+# # save as rdata files
+# save(BG_METADATA_2016,
+#      file = "BG_METADATA_2016.rdata")
+# save(X00_COUNTS,
+#      file = "X00_COUNTS.rdata")
+# save(X01_AGE_AND_SEX,
+#      file = "X01_AGE_AND_SEX.rdata")
+# save(X02_RACE,
+#      file = "X02_RACE.rdata")
+# save(X03_HISPANIC_OR_LATINO_ORIGIN,
+#      file = "X03_HISPANIC_OR_LATINO_ORIGIN.rdata")
+# save(X07_MIGRATION,
+#      file = "X07_MIGRATION.rdata")
+# save(X08_COMMUTING,
+#      file = "X08_COMMUTING.rdata")
+# save(X09_CHILDREN_HOUSEHOLD_RELATIONSHIP,
+#      file = "X09_CHILDREN_HOUSEHOLD_RELATIONSHIP.rdata")
+# save(X11_HOUSEHOLD_FAMILY_SUBFAMILIES,
+#      file = "X11_HOUSEHOLD_FAMILY_SUBFAMILIES.rdata")
+# save(X12_MARITAL_STATUS_AND_HISTORY,
+#      file = "X12_MARITAL_STATUS_AND_HISTORY.rdata")
+# save(X14_SCHOOL_ENROLLMENT,
+#      file = "X14_SCHOOL_ENROLLMENT.rdata")
+# save(X15_EDUCATIONAL_ATTAINMENT,
+#      file = "X15_EDUCATIONAL_ATTAINMENT.rdata")
+# save(X16_LANGUAGE_SPOKEN_AT_HOME,
+#      file = "X16_LANGUAGE_SPOKEN_AT_HOME.rdata")
+# save(X17_POVERTY,
+#      file = "X17_POVERTY.rdata")
+# save(X19_INCOME,
+#      file = "X19_INCOME.rdata")
+# save(X20_EARNINGS,
+#      file = "X20_EARNINGS.rdata")
+# save(X21_VETERAN_STATUS,
+#      file = "X21_VETERAN_STATUS.rdata")
+# save(X22_FOOD_STAMPS,
+#      file = "X22_FOOD_STAMPS.rdata")
+# save(X23_EMPLOYMENT_STATUS,
+#      file = "X23_EMPLOYMENT_STATUS.rdata")
+# save(X24_INDUSTRY_OCCUPATION,
+#      file = "X24_INDUSTRY_OCCUPATION.rdata")
+# save(X25_HOUSING_CHARACTERISTICS,
+#      file = "X25_HOUSING_CHARACTERISTICS.rdata")
+# save(X27_HEALTH_INSURANCE,
+#      file = "X27_HEALTH_INSURANCE.rdata")
+# save(X99_IMPUTATION,
+#      file = "X99_IMPUTATION.rdata")
+# save(ACS_2016_5YR_BG_20_KANSAS,
+#      file = "ACS_2016_5YR_BG_20_KANSAS.rdata")
+#
 # # convert everything to a data table
-# BG_METADATA_2016_data_table<-data.table(BG_METADATA_2016)
-# X00_COUNTS_data_table<-data.table(X00_COUNTS)
-# X01_AGE_AND_SEX_data_table<-data.table(X01_AGE_AND_SEX)
-# X02_RACE_data_table<-data.table(X02_RACE)
-# X03_HISPANC_OR_LATINO_ORIGIN_data_table<-data.table(X03_HISPANC_OR_LATINO_ORIGIN)
-# X07_MIGRATION_data_table<-data.table(X07_MIGRATION)
-# X08_COMMUTING_data_table<-data.table(X08_COMMUTING)
-# X09_CHILDREN_HOUSEHOLD_RELATIONSHIP_data_table<-data.table(X09_CHILDREN_HOUSEHOLD_RELATIONSHIP)
-# X11_HOUSEHOLD_FAMILY_SUBFAMILIES_data_table<-data.table(X11_HOUSEHOLD_FAMILY_SUBFAMILIES)
-# X12_MARITAL_STATUS_AND_HISTORY_data_table<-data.table(X12_MARITAL_STATUS_AND_HISTORY)
-# X14_SCHOOL_ENROLLMENT_data_table<-data.table(X14_SCHOOL_ENROLLMENT)
-# X15_EDUCATIONAL_ATTAINMENT_data_table<-data.table(X15_EDUCATIONAL_ATTAINMENT)
-# X16_LANGUAGE_SPOKEN_AT_HOME_data_table<-data.table(X16_LANGUAGE_SPOKEN_AT_HOME)
-# X17_POVERTY_data_table<-data.table(X17_POVERTY)
-# X19_INCOME_data_table<-data.table(X19_INCOME)
-# X20_EARNINGS_data_table<-data.table(X20_EARNINGS)
-# X21_VETERAN_STATUS_data_table<-data.table(X21_VETERAN_STATUS)
-# X22_FOOD_STAMPS_data_table<-data.table(X22_FOOD_STAMPS)
-# X23_EMPLOYMENT_STATUS_data_table<-data.table(X23_EMPLOYMENT_STATUS)
-# X24_INDUSTRY_OCCUPATION_data_table<-data.table(X24_INDUSTRY_OCCUPATION)
-# X25_HOUSING_CHARACTERISTICS_data_table<-data.table(X25_HOUSING_CHARACTERISTICS)
-# X27_HEALTH_INSURANCE_data_table<-data.table(X27_HEALTH_INSURANCE)
-# X99_IMPUTATION_data_table<-data.table(X99_IMPUTATION)
-# ACS_2016_5YR_BG_20_KANSAS_data_table<-data.table(ACS_2016_5YR_BG_20_KANSAS)
+# BG_METADATA_2016_data_table <- 
+#   data.table(BG_METADATA_2016)
+# X00_COUNTS_data_table <- 
+#   data.table(X00_COUNTS)
+# X01_AGE_AND_SEX_data_table <- 
+#   data.table(X01_AGE_AND_SEX)
+# X02_RACE_data_table <- 
+#   data.table(X02_RACE)
+# X03_HISPANIC_OR_LATINO_ORIGIN_data_table <- 
+#   data.table(X03_HISPANIC_OR_LATINO_ORIGIN)
+# X07_MIGRATION_data_table <- 
+#   data.table(X07_MIGRATION)
+# X08_COMMUTING_data_table <- 
+#   data.table(X08_COMMUTING)
+# X09_CHILDREN_HOUSEHOLD_RELATIONSHIP_data_table <- 
+#   data.table(X09_CHILDREN_HOUSEHOLD_RELATIONSHIP)
+# X11_HOUSEHOLD_FAMILY_SUBFAMILIES_data_table <- 
+#   data.table(X11_HOUSEHOLD_FAMILY_SUBFAMILIES)
+# X12_MARITAL_STATUS_AND_HISTORY_data_table <- 
+#   data.table(X12_MARITAL_STATUS_AND_HISTORY)
+# X14_SCHOOL_ENROLLMENT_data_table <- 
+#   data.table(X14_SCHOOL_ENROLLMENT)
+# X15_EDUCATIONAL_ATTAINMENT_data_table <- 
+#   data.table(X15_EDUCATIONAL_ATTAINMENT)
+# X16_LANGUAGE_SPOKEN_AT_HOME_data_table <- 
+#   data.table(X16_LANGUAGE_SPOKEN_AT_HOME)
+# X17_POVERTY_data_table <- 
+#   data.table(X17_POVERTY)
+# X19_INCOME_data_table <- 
+#   data.table(X19_INCOME)
+# X20_EARNINGS_data_table <- 
+#   data.table(X20_EARNINGS)
+# X21_VETERAN_STATUS_data_table <- 
+#   data.table(X21_VETERAN_STATUS)
+# X22_FOOD_STAMPS_data_table <- 
+#   data.table(X22_FOOD_STAMPS)
+# X23_EMPLOYMENT_STATUS_data_table <- 
+#   data.table(X23_EMPLOYMENT_STATUS)
+# X24_INDUSTRY_OCCUPATION_data_table <- 
+#   data.table(X24_INDUSTRY_OCCUPATION)
+# X25_HOUSING_CHARACTERISTICS_data_table <- 
+#   data.table(X25_HOUSING_CHARACTERISTICS)
+# X27_HEALTH_INSURANCE_data_table <- 
+#   data.table(X27_HEALTH_INSURANCE)
+# X99_IMPUTATION_data_table <- 
+#   data.table(X99_IMPUTATION)
+# ACS_2016_5YR_BG_20_KANSAS_data_table <- 
+#   data.table(ACS_2016_5YR_BG_20_KANSAS)
 # 
 # # save data tables
-# save(BG_METADATA_2016_data_table,file="BG_METADATA_2016_data_table.rdata")
-# save(X00_COUNTS_data_table,file="X00_COUNTS_data_table.rdata")
-# save(X01_AGE_AND_SEX_data_table,file="X01_AGE_AND_SEX_data_table.rdata")
-# save(X02_RACE_data_table,file="X02_RACE_data_table.rdata")
-# save(X03_HISPANC_OR_LATINO_ORIGIN_data_table,file="X03_HISPANC_OR_LATINO_ORIGIN_data_table.rdata")
-# save(X07_MIGRATION_data_table,file="X07_MIGRATION_data_table.rdata")
-# save(X08_COMMUTING_data_table,file="X08_COMMUTING_data_table.rdata")
-# save(X09_CHILDREN_HOUSEHOLD_RELATIONSHIP_data_table,file="X09_CHILDREN_HOUSEHOLD_RELATIONSHIP_data_table.rdata")
-# save(X11_HOUSEHOLD_FAMILY_SUBFAMILIES_data_table,file="X11_HOUSEHOLD_FAMILY_SUBFAMILIES_data_table.rdata")
-# save(X12_MARITAL_STATUS_AND_HISTORY_data_table,file="X12_MARITAL_STATUS_AND_HISTORY_data_table.rdata")
-# save(X14_SCHOOL_ENROLLMENT_data_table,file="X14_SCHOOL_ENROLLMENT_data_table.rdata")
-# save(X15_EDUCATIONAL_ATTAINMENT_data_table,file="X15_EDUCATIONAL_ATTAINMENT_data_table.rdata")
-# save(X16_LANGUAGE_SPOKEN_AT_HOME_data_table,file="X16_LANGUAGE_SPOKEN_AT_HOME_data_table.rdata")
-# save(X17_POVERTY_data_table,file="X17_POVERTY_data_table.rdata")
-# save(X19_INCOME_data_table,file="X19_INCOME_data_table.rdata")
-# save(X20_EARNINGS_data_table,file="X20_EARNINGS_data_table.rdata")
-# save(X21_VETERAN_STATUS_data_table,file="X21_VETERAN_STATUS_data_table.rdata")
-# save(X22_FOOD_STAMPS_data_table,file="X22_FOOD_STAMPS_data_table.rdata")
-# save(X23_EMPLOYMENT_STATUS_data_table,file="X23_EMPLOYMENT_STATUS_data_table.rdata")
-# save(X24_INDUSTRY_OCCUPATION_data_table,file="X24_INDUSTRY_OCCUPATION_data_table.rdata")
-# save(X25_HOUSING_CHARACTERISTICS_data_table,file="X25_HOUSING_CHARACTERISTICS_data_table.rdata")
-# save(X27_HEALTH_INSURANCE_data_table,file="X27_HEALTH_INSURANCE_data_table.rdata")
-# save(X99_IMPUTATION_data_table,file="X99_IMPUTATION_data_table.rdata")
-# save(ACS_2016_5YR_BG_20_KANSAS_data_table,file="ACS_2016_5YR_BG_20_KANSAS_data_table.rdata")
-# 
-# 
+# save(BG_METADATA_2016_data_table,
+#      file="BG_METADATA_2016_data_table.rdata")
+# save(X00_COUNTS_data_table,
+#      file="X00_COUNTS_data_table.rdata")
+# save(X01_AGE_AND_SEX_data_table,
+#      file="X01_AGE_AND_SEX_data_table.rdata")
+# save(X02_RACE_data_table,
+#      file="X02_RACE_data_table.rdata")
+# save(X03_HISPANIC_OR_LATINO_ORIGIN_data_table,
+#      file="X03_HISPANIC_OR_LATINO_ORIGIN_data_table.rdata")
+# save(X07_MIGRATION_data_table,
+#      file="X07_MIGRATION_data_table.rdata")
+# save(X08_COMMUTING_data_table,
+#      file="X08_COMMUTING_data_table.rdata")
+# save(X09_CHILDREN_HOUSEHOLD_RELATIONSHIP_data_table,
+#      file="X09_CHILDREN_HOUSEHOLD_RELATIONSHIP_data_table.rdata")
+# save(X11_HOUSEHOLD_FAMILY_SUBFAMILIES_data_table,
+#      file="X11_HOUSEHOLD_FAMILY_SUBFAMILIES_data_table.rdata")
+# save(X12_MARITAL_STATUS_AND_HISTORY_data_table,
+#      file="X12_MARITAL_STATUS_AND_HISTORY_data_table.rdata")
+# save(X14_SCHOOL_ENROLLMENT_data_table,
+#      file="X14_SCHOOL_ENROLLMENT_data_table.rdata")
+# save(X15_EDUCATIONAL_ATTAINMENT_data_table,
+#      file="X15_EDUCATIONAL_ATTAINMENT_data_table.rdata")
+# save(X16_LANGUAGE_SPOKEN_AT_HOME_data_table,
+#      file="X16_LANGUAGE_SPOKEN_AT_HOME_data_table.rdata")
+# save(X17_POVERTY_data_table,
+#      file="X17_POVERTY_data_table.rdata")
+# save(X19_INCOME_data_table,
+#      file="X19_INCOME_data_table.rdata")
+# save(X20_EARNINGS_data_table,
+#      file="X20_EARNINGS_data_table.rdata")
+# save(X21_VETERAN_STATUS_data_table,
+#      file="X21_VETERAN_STATUS_data_table.rdata")
+# save(X22_FOOD_STAMPS_data_table,
+#      file="X22_FOOD_STAMPS_data_table.rdata")
+# save(X23_EMPLOYMENT_STATUS_data_table,
+#      file="X23_EMPLOYMENT_STATUS_data_table.rdata")
+# save(X24_INDUSTRY_OCCUPATION_data_table,
+#      file="X24_INDUSTRY_OCCUPATION_data_table.rdata")
+# save(X25_HOUSING_CHARACTERISTICS_data_table,
+#      file="X25_HOUSING_CHARACTERISTICS_data_table.rdata")
+# save(X27_HEALTH_INSURANCE_data_table,
+#      file="X27_HEALTH_INSURANCE_data_table.rdata")
+# save(X99_IMPUTATION_data_table,
+#      file="X99_IMPUTATION_data_table.rdata")
+# save(ACS_2016_5YR_BG_20_KANSAS_data_table,
+#      file="ACS_2016_5YR_BG_20_KANSAS_data_table.rdata")
+#
+#
+#
 # # load data tables
 # load(file="BG_METADATA_2016_data_table.rdata")
 # load(file="X00_COUNTS_data_table.rdata")
 # load(file="X01_AGE_AND_SEX_data_table.rdata")
 # load(file="X02_RACE_data_table.rdata")
-# load(file="X03_HISPANC_OR_LATINO_ORIGIN_data_table.rdata")
+# load(file="X03_HISPANIC_OR_LATINO_ORIGIN_data_table.rdata")
 # load(file="X07_MIGRATION_data_table.rdata")
 # load(file="X08_COMMUTING_data_table.rdata")
 # load(file="X09_CHILDREN_HOUSEHOLD_RELATIONSHIP_data_table.rdata")
@@ -252,33 +279,677 @@ load(file = "ks_uic_2018_09_04.rdata") # load UIC data
 # load(file="X27_HEALTH_INSURANCE_data_table.rdata")
 # load(file="X99_IMPUTATION_data_table.rdata")
 # load(file="ACS_2016_5YR_BG_20_KANSAS_data_table.rdata")
-#
 # 
-# # merge data tables if have infinite memory
-# # merge_data_tables<-function(x, y) x[y, on = "GEOID"]
-# # ACS_all_data_tables<-Reduce(merge_data_tables,list(X00_COUNTS_data_table,X01_AGE_AND_SEX_data_table,X02_RACE_data_table,X03_HISPANC_OR_LATINO_ORIGIN_data_table,X07_MIGRATION_data_table,X08_COMMUTING_data_table,X09_CHILDREN_HOUSEHOLD_RELATIONSHIP_data_table,X11_HOUSEHOLD_FAMILY_SUBFAMILIES_data_table,X12_MARITAL_STATUS_AND_HISTORY_data_table,X14_SCHOOL_ENROLLMENT_data_table,X15_EDUCATIONAL_ATTAINMENT_data_table,X16_LANGUAGE_SPOKEN_AT_HOME_data_table,X17_POVERTY_data_table,X19_INCOME_data_table,X20_EARNINGS_data_table,X21_VETERAN_STATUS_data_table,X22_FOOD_STAMPS_data_table,X23_EMPLOYMENT_STATUS_data_table,X24_INDUSTRY_OCCUPATION_data_table,X25_HOUSING_CHARACTERISTICS_data_table,X27_HEALTH_INSURANCE_data_table,X99_IMPUTATION_data_table))
+# # define merge function
+# merge_data_tables <- function(x, y) x[y, on = "GEOID"]
+# 
+# # perform the merge function en masse
+# acs_all_data_tables <- Reduce(
+#   merge_data_tables,
+#   list(X00_COUNTS_data_table,
+#        X01_AGE_AND_SEX_data_table,
+#        X02_RACE_data_table,
+#        X03_HISPANIC_OR_LATINO_ORIGIN_data_table,
+#        X07_MIGRATION_data_table,
+#        X08_COMMUTING_data_table,
+#        X09_CHILDREN_HOUSEHOLD_RELATIONSHIP_data_table,
+#        X11_HOUSEHOLD_FAMILY_SUBFAMILIES_data_table,
+#        X12_MARITAL_STATUS_AND_HISTORY_data_table,
+#        X14_SCHOOL_ENROLLMENT_data_table,
+#        X15_EDUCATIONAL_ATTAINMENT_data_table,
+#        X16_LANGUAGE_SPOKEN_AT_HOME_data_table,
+#        X17_POVERTY_data_table,
+#        X19_INCOME_data_table,
+#        X20_EARNINGS_data_table,
+#        X21_VETERAN_STATUS_data_table,
+#        X22_FOOD_STAMPS_data_table,
+#        X23_EMPLOYMENT_STATUS_data_table,
+#        X24_INDUSTRY_OCCUPATION_data_table,
+#        X25_HOUSING_CHARACTERISTICS_data_table,
+#        X27_HEALTH_INSURANCE_data_table,
+#        X99_IMPUTATION_data_table)
+#   )
+# 
+# # save compiled acs data table
+# save(acs_all_data_tables, 
+#      file = "acs_all_data_tables.rdata")
 
 
 
-#### make protected file to avoid issues ####
+
+
+
+
+#### load necessary files ####
+
+# load well data
+load(file = "ks_wells_2018_11_01.rdata")
+
+# load UIC data
+load(file = "ks_uic_2018_09_04.rdata")
+
+# # load ACS data
+# load(file = "BG_METADATA_2016.rdata")
+# load(file = "X00_COUNTS.rdata")
+# load(file = "X01_AGE_AND_SEX.rdata")
+# load(file = "X02_RACE.rdata")
+# load(file = "X03_HISPANIC_OR_LATINO_ORIGIN.rdata")
+# load(file = "X07_MIGRATION.rdata")
+# load(file = "X08_COMMUTING.rdata")
+# load(file = "X09_CHILDREN_HOUSEHOLD_RELATIONSHIP.rdata")
+# load(file = "X11_HOUSEHOLD_FAMILY_SUBFAMILIES.rdata")
+# load(file = "X12_MARITAL_STATUS_AND_HISTORY.rdata")
+# load(file = "X14_SCHOOL_ENROLLMENT.rdata")
+# load(file = "X15_EDUCATIONAL_ATTAINMENT.rdata")
+# load(file = "X16_LANGUAGE_SPOKEN_AT_HOME.rdata")
+# load(file = "X17_POVERTY.rdata")
+# load(file = "X19_INCOME.rdata")
+# load(file = "X20_EARNINGS.rdata")
+# load(file = "X21_VETERAN_STATUS.rdata")
+# load(file = "X22_FOOD_STAMPS.rdata")
+# load(file = "X23_EMPLOYMENT_STATUS.rdata")
+# load(file = "X24_INDUSTRY_OCCUPATION.rdata")
+# load(file = "X25_HOUSING_CHARACTERISTICS.rdata")
+# load(file = "X27_HEALTH_INSURANCE.rdata")
+# load(file = "X99_IMPUTATION.rdata")
+# load(file = "ACS_2016_5YR_BG_20_KANSAS.rdata")
+
+# load collected ACS data from TIGER attribute tables
+load(file = "acs_all_data_tables.rdata")
+
+# load ACS shapefile data from its attribute table
+load(file="ACS_2016_5YR_BG_20_KANSAS_data_table.rdata")
+
+# load ACS metadata
+load(file = "BG_METADATA_2016.rdata")
+
+
+
+#### census data ####
+
+# match "GEOID_Data" in ACS_2016_5YR_BG_20_KANSAS_data_table to "GEOID"
+
+# making working dataset
+ACS_2016_5YR_BG_20_KANSAS_data_table_working <-
+  ACS_2016_5YR_BG_20_KANSAS_data_table
+
+# convert factors with different levels to characters
+ACS_2016_5YR_BG_20_KANSAS_data_table_working$GEOID_Data <- 
+  as.character(ACS_2016_5YR_BG_20_KANSAS_data_table_working$GEOID_Data)
+
+# preserve the old GEOID column for posterity as "GEOID_simple"
+ACS_2016_5YR_BG_20_KANSAS_data_table_working$GEOID_simple <- 
+  ACS_2016_5YR_BG_20_KANSAS_data_table_working$GEOID
+
+# replace GEOID column in working data
+ACS_2016_5YR_BG_20_KANSAS_data_table_working$GEOID <- 
+  ACS_2016_5YR_BG_20_KANSAS_data_table_working$GEOID_Data
+
+# check type
+str(ACS_2016_5YR_BG_20_KANSAS_data_table_working$GEOID)
+
+# do the merge
+acs_2016_5_year_with_geography <- merge(acs_all_data_tables, 
+               ACS_2016_5YR_BG_20_KANSAS_data_table_working, 
+               by = "GEOID")
+
+# final full ACS data file saved here in .rdata format (12.7 GB)
+save(acs_2016_5_year_with_geography, 
+     file = "acs_2016_5_year_with_geography.rdata")
+
+# final full ACS data file saved here in portable .csv format
+write.csv(acs_2016_5_year_with_geography, 
+          file = "acs_2016_5_year_with_geography.csv")
+
+# save data key
+acs_2016_5_year_metadata <-   # rename the metadata
+  BG_METADATA_2016   
+save(acs_2016_5_year_metadata,   # save the metadata as an r file
+     file="acs_2016_5_year_metadata")
+write.csv(acs_2016_5_year_metadata,   # save the metadat as a .csv file
+          file="acs_2016_5_year_metadata.csv")
+
+# # load final data without regenerating
+# load(file="acs_2016_5_year_with_geography.rdata")
+# load(file="acs_metadata.rdata")
+
+# View variable names
+View(acs_2016_5_year_metadata)
+
+
+
+#### pull ACS data I need ####
+total_pop <- 
+  acs_2016_5_year_with_geography[
+    ,c(
+      "GEOID", 
+      "B01001e1"
+      )
+    ]
+sex_cat <- acs_2016_5_year_with_geography[
+  ,c(
+    "GEOID", 
+    "B01001e2", 
+    "B01001e26"
+    )
+  ]
+sex_age_cat <- acs_2016_5_year_with_geography[
+  ,c(
+    "GEOID",
+    "B01001e3",
+    "B01001e4",
+    "B01001e5",
+    "B01001e6",
+    "B01001e7",
+    "B01001e8",
+    "B01001e9",
+    "B01001e10",
+    "B01001e11",
+    "B01001e12",
+    "B01001e13",
+    "B01001e14",
+    "B01001e15",
+    "B01001e16",
+    "B01001e17",
+    "B01001e18",
+    "B01001e19",
+    "B01001e20",
+    "B01001e21",
+    "B01001e22",
+    "B01001e23",
+    "B01001e24",
+    "B01001e25",
+    "B01001e27", # 26 is total population of women and omitted
+    "B01001e28",
+    "B01001e29",
+    "B01001e30",
+    "B01001e31",
+    "B01001e32",
+    "B01001e33",
+    "B01001e34",
+    "B01001e35",
+    "B01001e36",
+    "B01001e37",
+    "B01001e38",
+    "B01001e39",
+    "B01001e40",
+    "B01001e41",
+    "B01001e42",
+    "B01001e43",
+    "B01001e44",
+    "B01001e45",
+    "B01001e46",
+    "B01001e47",
+    "B01001e48",
+    "B01001e49"
+    )
+  ]
+age_median <- acs_2016_5_year_with_geography[
+  ,c(
+    "GEOID",
+    "B01002e1",
+    "B01002e2",
+    "B01002e3"
+    )
+  ]
+race_cat <- acs_2016_5_year_with_geography[
+  ,c(
+    "GEOID",
+    "B03002e1",
+    "B03002e2",
+    "B03002e3",
+    "B03002e4",
+    "B03002e5",
+    "B03002e6",
+    "B03002e7",
+    "B03002e8",
+    "B03002e9",
+    "B03002e10",
+    "B03002e11",
+    "B03002e12",
+    "B03002e13",
+    "B03002e14",
+    "B03002e15",
+    "B03002e16",
+    "B03002e17",
+    "B03002e18",
+    "B03002e19",
+    "B03002e20",
+    "B03002e21")]
+education_cat <- acs_2016_5_year_with_geography[
+  ,c(
+    "GEOID", 
+    "B15003e1", 
+    "B15003e2", 
+    "B15003e3", 
+    "B15003e4", 
+    "B15003e5", 
+    "B15003e6", 
+    "B15003e7", 
+    "B15003e8", 
+    "B15003e9", 
+    "B15003e10", 
+    "B15003e11", 
+    "B15003e12", 
+    "B15003e13", 
+    "B15003e14", 
+    "B15003e15", 
+    "B15003e16", 
+    "B15003e17", 
+    "B15003e18", 
+    "B15003e19", 
+    "B15003e20", 
+    "B15003e21", 
+    "B15003e22", 
+    "B15003e23", 
+    "B15003e24", 
+    "B15003e25"
+    )
+  ]
+poverty_ratio_cat<-acs_2016_5_year_with_geography[
+  ,c(
+    "GEOID", 
+    "C17002e1", 
+    "C17002e2", 
+    "C17002e3", 
+    "C17002e4", 
+    "C17002e5", 
+    "C17002e6", 
+    "C17002e7", 
+    "C17002e8"
+     )
+  ]
+income_house_cat <- 
+  acs_2016_5_year_with_geography[
+    ,c(
+      "GEOID", 
+      "B19001e1", 
+      "B19001e2", 
+      "B19001e3", 
+      "B19001e4", 
+      "B19001e5", 
+      "B19001e6", 
+      "B19001e7", 
+      "B19001e8", 
+      "B19001e9", 
+      "B19001e10", 
+      "B19001e11", 
+      "B19001e12", 
+      "B19001e13", 
+      "B19001e14", 
+      "B19001e15", 
+      "B19001e16", 
+      "B19001e17"
+      )
+    ]
+income_house_median<-acs_2016_5_year_with_geography[
+  ,c(
+    "GEOID", 
+    "B19013e1"
+    )
+  ]
+earnings_sex_cat <- 
+  acs_2016_5_year_with_geography[
+    ,c(
+      "GEOID", 
+      "B20001e1", 
+      "B20001e2", 
+      "B20001e3", 
+      "B20001e4", 
+      "B20001e5", 
+      "B20001e6", 
+      "B20001e7", 
+      "B20001e8", 
+      "B20001e9", 
+      "B20001e10", 
+      "B20001e11", 
+      "B20001e12", 
+      "B20001e13", 
+      "B20001e14", 
+      "B20001e15", 
+      "B20001e16", 
+      "B20001e17", 
+      "B20001e18", 
+      "B20001e19", 
+      "B20001e20", 
+      "B20001e21", 
+      "B20001e22", 
+      "B20001e23", 
+      "B20001e24", 
+      "B20001e25", 
+      "B20001e26", 
+      "B20001e27", 
+      "B20001e28", 
+      "B20001e29", 
+      "B20001e30", 
+      "B20001e31", 
+      "B20001e32", 
+      "B20001e33", 
+      "B20001e34", 
+      "B20001e35", 
+      "B20001e36", 
+      "B20001e37", 
+      "B20001e38", 
+      "B20001e39", 
+      "B20001e40", 
+      "B20001e41", 
+      "B20001e42", 
+      "B20001e43"
+      )
+    ]
+earnings_median <- 
+  acs_2016_5_year_with_geography[
+    ,c(
+      "GEOID", 
+      "B20002e1", 
+      "B20002e2", 
+      "B20002e3"
+      )
+    ]
+employment_cat <- 
+  acs_2016_5_year_with_geography[
+    ,c(
+      "GEOID",
+      "B23025e1",
+      "B23025e2",
+      "B23025e3",
+      "B23025e4",
+      "B23025e5",
+      "B23025e6",
+      "B23025e7"
+      )
+    ]
+home_value_cat <- 
+  acs_2016_5_year_with_geography[
+    ,c(
+      "GEOID", 
+      "B25075e1", 
+      "B25075e2", 
+      "B25075e3", 
+      "B25075e4", 
+      "B25075e5", 
+      "B25075e6", 
+      "B25075e7", 
+      "B25075e8", 
+      "B25075e9", 
+      "B25075e10", 
+      "B25075e11", 
+      "B25075e12", 
+      "B25075e13", 
+      "B25075e14", 
+      "B25075e15", 
+      "B25075e16", 
+      "B25075e17", 
+      "B25075e18", 
+      "B25075e19", 
+      "B25075e20", 
+      "B25075e21", 
+      "B25075e22", 
+      "B25075e23", 
+      "B25075e24", 
+      "B25075e25", 
+      "B25075e26", 
+      "B25075e27"
+      )
+    ]
+health_insurance_cat <- 
+  acs_2016_5_year_with_geography[
+    ,c(
+      "GEOID", 
+      "B27010e1", 
+      "B27010e2", 
+      "B27010e3", 
+      "B27010e4", 
+      "B27010e5", 
+      "B27010e6", 
+      "B27010e7", 
+      "B27010e8", 
+      "B27010e9", 
+      "B27010e10", 
+      "B27010e11", 
+      "B27010e12", 
+      "B27010e13", 
+      "B27010e14", 
+      "B27010e15", 
+      "B27010e16", 
+      "B27010e17", 
+      "B27010e18", 
+      "B27010e19", 
+      "B27010e20", 
+      "B27010e21", 
+      "B27010e22", 
+      "B27010e23", 
+      "B27010e24", 
+      "B27010e25", 
+      "B27010e27", 
+      "B27010e28", 
+      "B27010e29", 
+      "B27010e30", 
+      "B27010e31", 
+      "B27010e32", 
+      "B27010e33", 
+      "B27010e34", 
+      "B27010e35", 
+      "B27010e36", 
+      "B27010e37", 
+      "B27010e38", 
+      "B27010e39", 
+      "B27010e40", 
+      "B27010e41", 
+      "B27010e42", 
+      "B27010e43", 
+      "B27010e44", 
+      "B27010e45", 
+      "B27010e46", 
+      "B27010e47", 
+      "B27010e48", 
+      "B27010e49", 
+      "B27010e50", 
+      "B27010e51", 
+      "B27010e52", 
+      "B27010e53", 
+      "B27010e54", 
+      "B27010e55", 
+      "B27010e56", 
+      "B27010e57", 
+      "B27010e58", 
+      "B27010e59", 
+      "B27010e60", 
+      "B27010e61", 
+      "B27010e62", 
+      "B27010e63", 
+      "B27010e64", 
+      "B27010e65", 
+      "B27010e66"
+      )
+    ]
+home_value_median <- 
+  acs_2016_5_year_with_geography[
+    ,c(
+      "GEOID", 
+      "B25077e1"
+      )
+    ]
+geography_area <- 
+  acs_2016_5_year_with_geography[
+    ,c(
+      "GEOID", 
+      "STATEFP", 
+      "COUNTYFP", 
+      "TRACTCE", 
+      "BLKGRPCE", 
+      "NAMELSAD", 
+      "MTFCC", 
+      "FUNCSTAT", 
+      "ALAND", 
+      "AWATER", 
+      "INTPTLAT", 
+      "INTPTLON", 
+      "Shape_Length", 
+      "Shape_Area", 
+      "GEOID_simple"
+      )
+    ]
+
+# merge all of the above together
+ftdm1 <- merge(total_pop, sex_cat)
+ftdm2 <- merge(ftdm1, sex_age_cat)
+ftdm3 <- merge(ftdm2, age_median)
+ftdm4 <- merge(ftdm3, race_cat)
+ftdm5 <- merge(ftdm4, education_cat)
+ftdm6 <- merge(ftdm5, poverty_ratio_cat)
+ftdm7 <- merge(ftdm6, income_house_cat)
+ftdm8 <- merge(ftdm7, income_house_median)
+ftdm9 <- merge(ftdm8, earnings_sex_cat)
+ftdm10 <- merge(ftdm9, earnings_median)
+ftdm11 <- merge(ftdm10, employment_cat)
+ftdm12 <- merge(ftdm11, home_value_cat)
+ftdm13 <- merge(ftdm12, home_value_median)
+ftdm14 <- merge(ftdm13, health_insurance_cat)
+select_acs_data <- merge(ftdm14, geography_area)
+
+# # View resulting dataframe with selected ACS variables
+# View(select_acs_data)
+
+# save select_acs_data
+save(select_acs_data,
+     file = "select_acs_data.rdata")
+
+# # load selected variables
+# load(file = "select_acs_data.rdata")
+
+
+### making variables ####
+# making variables
+# from Silva:
+# median household income (dollars), 
+# median household value (dollars), 
+# percent of population identifying as White only, 
+# population density (population per square mile), 
+# percent of population with a high school education/GED or higher, and 
+# population median age
+# from RMF:  age categories
+
+# make set to modify
+acs_constructed_variables <- select_acs_data
+
+# median household inome (renaming)
+acs_constructed_variables$median_household_income_B19013 <- 
+  acs_constructed_variables$B19013e1
+
+# median household value (renaming)
+acs_constructed_variables$median_household_value_B25077 <- 
+  acs_constructed_variables$B25077e1
+
+# percent white (renaming)
+acs_constructed_variables$percent_white_B03002 <- 
+  acs_constructed_variables$B03002e3/
+  acs_constructed_variables$B03002e1
+
+# population density (people/km2, ALAND in m2)
+acs_constructed_variables$population_density_B01001_ALAND <- 
+  (1000000*
+     acs_constructed_variables$B01001e1/
+     acs_constructed_variables$ALAND)
+
+# percent of population with high school education or more
+acs_constructed_variables$percent_high_school_plus_B15003 <- 
+  (
+    (
+      acs_constructed_variables$B15003e17 + 
+        acs_constructed_variables$B15003e18 + 
+        acs_constructed_variables$B15003e19 + 
+        acs_constructed_variables$B15003e20 + 
+        acs_constructed_variables$B15003e21 + 
+        acs_constructed_variables$B15003e22 + 
+        acs_constructed_variables$B15003e23 + 
+        acs_constructed_variables$B15003e24 + 
+        acs_constructed_variables$B15003e25
+      )
+    /acs_constructed_variables$B15003e1
+    )
+
+# median age
+acs_constructed_variables$median_age_B01002 <- 
+  acs_constructed_variables$B01002e1
+
+# age categories
+acs_constructed_variables$age_below_5 <- 
+  acs_constructed_variables$B01001e27 +   # women <5
+  acs_constructed_variables$B01001e3      # men <5
+acs_constructed_variables$age_5_to_19 <-
+  acs_constructed_variables$B01001e28 +   # women 5-9
+  acs_constructed_variables$B01001e29 +   # women 10-14
+  acs_constructed_variables$B01001e30 +   # women 15-17
+  acs_constructed_variables$B01001e31 +   # women 18-19
+  acs_constructed_variables$B01001e4 +   # men 5-9
+  acs_constructed_variables$B01001e5 +   # men 10-14
+  acs_constructed_variables$B01001e6 +   # men 15-17
+  acs_constructed_variables$B01001e7     # men 18-19
+acs_constructed_variables$age_20_to_64 <-
+  acs_constructed_variables$B01001e32 + 
+  acs_constructed_variables$B01001e33 + 
+  acs_constructed_variables$B01001e34 + 
+  acs_constructed_variables$B01001e35 + 
+  acs_constructed_variables$B01001e36 + 
+  acs_constructed_variables$B01001e37 + 
+  acs_constructed_variables$B01001e38 + 
+  acs_constructed_variables$B01001e39 + 
+  acs_constructed_variables$B01001e40 + 
+  acs_constructed_variables$B01001e41 + 
+  acs_constructed_variables$B01001e42 + 
+  acs_constructed_variables$B01001e43 + 
+  acs_constructed_variables$B01001e7 + 
+  acs_constructed_variables$B01001e8 + 
+  acs_constructed_variables$B01001e9 + 
+  acs_constructed_variables$B01001e10 + 
+  acs_constructed_variables$B01001e11 + 
+  acs_constructed_variables$B01001e12 + 
+  acs_constructed_variables$B01001e13 + 
+  acs_constructed_variables$B01001e14 + 
+  acs_constructed_variables$B01001e15 + 
+  acs_constructed_variables$B01001e16 + 
+  acs_constructed_variables$B01001e17 + 
+  acs_constructed_variables$B01001e18 + 
+  acs_constructed_variables$B01001e19
+acs_constructed_variables$age_65_plus <- 
+  acs_constructed_variables$B01001e44 + 
+  acs_constructed_variables$B01001e45 + 
+  acs_constructed_variables$B01001e46 + 
+  acs_constructed_variables$B01001e47 + 
+  acs_constructed_variables$B01001e48 + 
+  acs_constructed_variables$B01001e49 + 
+  acs_constructed_variables$B01001e20 + 
+  acs_constructed_variables$B01001e21 + 
+  acs_constructed_variables$B01001e22 + 
+  acs_constructed_variables$B01001e23 + 
+  acs_constructed_variables$B01001e24 + 
+  acs_constructed_variables$B01001e25
+  
+# save constructed variables
+save(acs_constructed_variables, 
+     file = "acs_constructed_variables.rdata")
+
+# make constructed variables into .csv
+write.csv(acs_constructed_variables, 
+          file = "acs_constructed_variables.csv")
+
+# load constructed variables to avoid the above
+load(file = "acs_constructed_variables.rdata")
+View(acs_constructed_variables)
+
+
+
+
+
+
+
+
+
+
+#### well data ####
 
 ks_clean <- ks_wells_2018_11_01 # make well data file for cleaning
-
-
-
-#### data analysis in UIC data ####
-
-# isolate individual well IDs present in UIC data
-kids <- unique(ks_uic_2018_09_04$KGS_ID)
-
-# make table of KS wells in UIC data
-ks_wells_in_uic_data_only  <-  subset(ks_clean, KID %in% kids)
-save(ks_wells_in_uic_data_only, 
-     file = "ks_wells_in_uic_data_only.rdata")
-
-# make table of statuses in UIC data
-uic_statuses <- table(ks_wells_in_uic_data_only$STATUS)
-write.csv(uic_statuses, file = "uic_statuses.csv")
 
 
 
@@ -953,12 +1624,15 @@ View(ks_bye_dup_API)
 #### dealing with API duplication based on 4-digit activity code
 
 # delete extraneous four digits
-ks_bye_dup_API$API_NUMBER_SIMPLE  <-  substr(ks_bye_dup_API$API_NUMBER, 0, 12)
+ks_bye_dup_API$API_NUMBER_SIMPLE <- 
+  substr(ks_bye_dup_API$API_NUMBER, 0, 12)
 View(ks_bye_dup_API)
 
 # find duplicate APIs without extraneous four digits
-ks_simple_API_index  <-  duplicated(ks_bye_dup_API$API_NUMBER_SIMPLE) | duplicated(ks_bye_dup_API$API_NUMBER_SIMPLE, fromLast = TRUE)
-ks_simple_API_dups <- ks_bye_dup_API[ks_simple_API_index, ]
+ks_simple_API_index <- 
+  duplicated(ks_bye_dup_API$API_NUMBER_SIMPLE) | duplicated(ks_bye_dup_API$API_NUMBER_SIMPLE, fromLast = TRUE)
+ks_simple_API_dups <- 
+  ks_bye_dup_API[ks_simple_API_index, ]
 View(ks_simple_API_dups)
 
 # remove duplicate APIs, keeping those last modified
@@ -1022,6 +1696,8 @@ load(file = "ks_join_results.rdata")
  
 
 ks_join_to_edit <- ks_join_results
+
+# remove columns not needed in the final analysis dataset
 ks_join_to_edit$API_NUMBER <- NULL
 ks_join_to_edit$LATITUDE <- NULL
 ks_join_to_edit$LONGITUDE <- NULL
@@ -1057,11 +1733,10 @@ save(ks_well_counts, file = "ks_well_counts.rdata")
 load(file = "ks_well_counts.rdata")
  
 # load ACS variables
-load(file = "ACS_constructed_variables.rdata")
-View(ACS_constructed_variables[,201:291])
+load(file = "acs_constructed_variables.rdata")
 
 # # limit ks block groups to ks
-# ks_acs <- ACS_constructed_variables[which(ACS_constructed_variables$STATEFP=='20'),]
+# ks_acs <- acs_constructed_variables[which(acs_constructed_variables$STATEFP=='20'),]
 # save(ks_acs, file = "ks_acs.rdata")
 load(file = "ks_acs.rdata")
 
