@@ -1238,7 +1238,6 @@ rows_requiring_comment_investigation_simple <-
   rows_requiring_comment_investigation[
     ,c("KID",
        "API_NUMBER",
-       "has_api",
        "activity",
        "well_type",
        "assignment_source",
@@ -1565,7 +1564,7 @@ ks_semi_final_wells_working$uic <-
          'in_uic',
          'not_in_uic')
 
-
+View(ks_semi_final_wells_working)
 
 # View(ks_uic)
 # kids<-unique(ks_uic$KGS_ID)
