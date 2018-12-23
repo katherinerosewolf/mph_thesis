@@ -1,0 +1,2069 @@
+# Oil and Gas Disposal Well Analysis for Kansas
+# Katherine Wolf
+# December 2018
+
+
+
+#### file requirements ####
+# to run this code straight through as currently commented, you will need
+# these files in the same folder:
+# ks_wells_2018_11_01.rdata   # well data
+# ks_uic_2018_09_04.rdata   # underground injection control data
+# rows_requiring_comment_investigation_simple_2018_11_29_back_to_r.csv
+
+
+
+#### check working directory ####
+
+getwd() # this directory should be the one with your data files in it!
+# if not, use "setwd()" to set the working directory
+
+
+
+#### load libraries ####
+
+library(data.table)
+library(ggplot2)
+library(plyr)
+library(dplyr)
+library(psych)
+library(tcltk2)
+library(bit64)
+library(reshape2)
+library(totalcensus)
+
+
+
+#### create necessary functions ####
+
+# notin function
+`%notin%`  <-  function(x,y) !(x %in% y) # define "not-in" function
+
+# function to force R to stop
+my_wait <- function() {
+  tt <- tktoplevel()
+  tkpack(tkbutton(
+    tt, 
+    text = 'continue', 
+    command = 
+      function()tkdestroy(tt)),
+          side='bottom')
+  tkbind(tt, '<Key>', 
+         function()tkdestroy(tt))
+    tkwait.window(tt)
+}
+
+
+# #### raw acs data import ####
+# 
+# variable_names <-
+#   readLines(
+#     "acs_2013_2017_data_documentation/comma_separated_variables.csv")
+# variable_names
+# 
+# variable_names_to_include <-
+#   readLines(
+#     "acs_2013_2017_data_documentation/variable_names_to_include.csv")
+# variable_names_to_include
+# 
+# variable_names_to_exclude <-
+#   readLines("acs_2013_2017_data_documentation/variable_names_to_exclude.csv"
+#             )
+# variable_names_to_exclude
+# 
+# true_variable_candidates <-
+#   variable_names[
+#     grepl(
+#       paste(
+#         variable_names_to_include,
+#         collapse="|"),
+#       variable_names)]
+# 
+# true_variable_candidates
+# 
+# variable_names_for_totalcensus <-
+#   true_variable_candidates[
+#     !grepl(
+#       paste(
+#         variable_names_to_exclude,
+#         collapse="|"),
+#       true_variable_candidates)]
+# 
+# additional_exclusions <-
+#   c(".5",
+#     "B15002A",
+#     "B15002B",
+#     "B15002C",
+#     "B15002D",
+#     "B15002E",
+#     "B15002F",
+#     "B15002G",
+#     "B15002H",
+#     "B15002I",
+#     "B21001A",
+#     "B21001B",
+#     "B21001C",
+#     "B21001D",
+#     "B21001E",
+#     "B21001F",
+#     "B21001G",
+#     "B21001H",
+#     "B21001I")
+# 
+# final_variable_names_for_totalcensus <-
+#   variable_names_for_totalcensus[
+#     !grepl(
+#       paste(
+#         additional_exclusions, 
+#         collapse="|"), 
+#       variable_names_for_totalcensus
+#       )
+#     ]
+# 
+# final_variable_names_for_totalcensus
+# 
+# # set_path_to_census("acs_2017_5_year")
+# 
+# acs_data_2013_2017_via_totalcensus <- read_acs5year(
+#   year = 2017,
+#   states = "KS",
+#   table_contents =
+#     final_variable_names_for_totalcensus,
+#   summary_level = "block group",
+#   with_margin = TRUE
+# )
+# 
+# # View(acs_data_2013_2017_via_totalcensus)
+# 
+# save(
+#   acs_data_2013_2017_via_totalcensus, 
+#   file = "acs_data_2013_2017_via_totalcensus.rdata"
+#   )
+# 
+# write.csv(
+#   acs_data_2013_2017_via_totalcensus, 
+#   file = "acs_data_2013_2017_via_totalcensus.csv"
+#   )
+
+load(
+  file = 
+    "acs_data_2013_2017_via_totalcensus.rdata") 
+
+# make working acs
+working_acs <- 
+  acs_data_2013_2017_via_totalcensus
+
+
+
+# #### raw data import ####
+# 
+# # well data import
+# ks_wells_2018_11_01 <- read.csv(file = "ks_wells_2018_11_01.txt", stringsAsFactors = FALSE) # import raw data
+# save(ks_wells_2018_11_01, file = "ks_wells_2018_11_01.rdata") # save as an rdata file
+# 
+# # UIC data import
+# ks_uic_2018_09_04 <- fread(file = "KS_UIC_archive_2018_09_04.txt") # import raw data
+# save(ks_uic_2018_09_04, file = "ks_uic_2018_09_04.rdata") # save as an rdata file
+
+
+
+#### load necessary files ####
+
+# load well data
+load(file = "ks_wells_2018_11_01.rdata")
+
+# load UIC data
+load(file = "ks_uic_2018_09_04.rdata")
+
+# load ACS shapefile data from its attribute table
+
+working_acs <- as.data.frame(working_acs)
+
+working_acs
+
+#### pull ACS data I need ####
+total_pop <- 
+  working_acs[
+    ,c(
+      "GEOID", 
+      "B01001_001",
+      "B01001_001_margin"
+      )
+    ]
+sex_cat <- acs_2016_5_year_with_geography[
+  ,c(
+    "GEOID", 
+    "B01001_002", 
+    "B01001_026"
+    )
+  ]
+sex_age_cat <- acs_2016_5_year_with_geography[
+  ,c(
+    "GEOID",
+    "B01001_003",
+    "B01001_004",
+    "B01001_005",
+    "B01001_006",
+    "B01001_007",
+    "B01001_008",
+    "B01001_009",
+    "B01001_010",
+    "B01001_011",
+    "B01001_012",
+    "B01001_013",
+    "B01001_014",
+    "B01001_015",
+    "B01001_016",
+    "B01001_017",
+    "B01001_018",
+    "B01001_019",
+    "B01001_020",
+    "B01001_021",
+    "B01001_022",
+    "B01001_023",
+    "B01001_024",
+    "B01001_025",
+    "B01001_027", # 26 is total population of women and omitted
+    "B01001_028",
+    "B01001_029",
+    "B01001_030",
+    "B01001_031",
+    "B01001_032",
+    "B01001_033",
+    "B01001_034",
+    "B01001_035",
+    "B01001_036",
+    "B01001_037",
+    "B01001_038",
+    "B01001_039",
+    "B01001_040",
+    "B01001_041",
+    "B01001_042",
+    "B01001_043",
+    "B01001_044",
+    "B01001_045",
+    "B01001_046",
+    "B01001_047",
+    "B01001_048",
+    "B01001_049"
+    )
+  ]
+age_median <- acs_2016_5_year_with_geography[
+  ,c(
+    "GEOID",
+    "B01002_001",
+    "B01002_002",
+    "B01002_003"
+    )
+  ]
+race_cat <- acs_2016_5_year_with_geography[
+  ,c(
+    "GEOID",
+    "B03002_001",
+    "B03002_002",
+    "B03002_003",
+    "B03002_004",
+    "B03002_005",
+    "B03002_006",
+    "B03002_007",
+    "B03002_008",
+    "B03002_009",
+    "B03002_010",
+    "B03002_011",
+    "B03002_012",
+    "B03002_013",
+    "B03002_014",
+    "B03002_015",
+    "B03002_016",
+    "B03002_017",
+    "B03002_018",
+    "B03002_019",
+    "B03002_020",
+    "B03002_021")]
+education_cat <- acs_2016_5_year_with_geography[
+  ,c(
+    "GEOID", 
+    "B15003_001", 
+    "B15003_002", 
+    "B15003_003", 
+    "B15003_004", 
+    "B15003_005", 
+    "B15003_006", 
+    "B15003_007", 
+    "B15003_008", 
+    "B15003_009", 
+    "B15003_010", 
+    "B15003_011", 
+    "B15003_012", 
+    "B15003_013", 
+    "B15003_014", 
+    "B15003_015", 
+    "B15003_016", 
+    "B15003_017", 
+    "B15003_018", 
+    "B15003_019", 
+    "B15003_020", 
+    "B15003_021", 
+    "B15003_022", 
+    "B15003_023", 
+    "B15003_024", 
+    "B15003_025"
+    )
+  ]
+poverty_ratio_cat<-acs_2016_5_year_with_geography[
+  ,c(
+    "GEOID", 
+    "C17002_001", 
+    "C17002_002", 
+    "C17002_003", 
+    "C17002_004", 
+    "C17002_005", 
+    "C17002_006", 
+    "C17002_007", 
+    "C17002_008"
+     )
+  ]
+income_house_cat <- 
+  acs_2016_5_year_with_geography[
+    ,c(
+      "GEOID", 
+      "B19001_001", 
+      "B19001_002", 
+      "B19001_003", 
+      "B19001_004", 
+      "B19001_005", 
+      "B19001_006", 
+      "B19001_007", 
+      "B19001_008", 
+      "B19001_009", 
+      "B19001_010", 
+      "B19001_011", 
+      "B19001_012", 
+      "B19001_013", 
+      "B19001_014", 
+      "B19001_015", 
+      "B19001_016", 
+      "B19001_017"
+      )
+    ]
+income_house_median<-acs_2016_5_year_with_geography[
+  ,c(
+    "GEOID", 
+    "B19013_001"
+    )
+  ]
+earnings_sex_cat <- 
+  acs_2016_5_year_with_geography[
+    ,c(
+      "GEOID", 
+      "B20001_001", 
+      "B20001_002", 
+      "B20001_003", 
+      "B20001_004", 
+      "B20001_005", 
+      "B20001_006", 
+      "B20001_007", 
+      "B20001_008", 
+      "B20001_009", 
+      "B20001_010", 
+      "B20001_011", 
+      "B20001_012", 
+      "B20001_013", 
+      "B20001_014", 
+      "B20001_015", 
+      "B20001_016", 
+      "B20001_017", 
+      "B20001_018", 
+      "B20001_019", 
+      "B20001_020", 
+      "B20001_021", 
+      "B20001_022", 
+      "B20001_023", 
+      "B20001_024", 
+      "B20001_025", 
+      "B20001_026", 
+      "B20001_027", 
+      "B20001_028", 
+      "B20001_029", 
+      "B20001_030", 
+      "B20001_031", 
+      "B20001_032", 
+      "B20001_033", 
+      "B20001_034", 
+      "B20001_035", 
+      "B20001_036", 
+      "B20001_037", 
+      "B20001_038", 
+      "B20001_039", 
+      "B20001_040", 
+      "B20001_041", 
+      "B20001_042", 
+      "B20001_043"
+      )
+    ]
+earnings_median <- 
+  acs_2016_5_year_with_geography[
+    ,c(
+      "GEOID", 
+      "B20002_001", 
+      "B20002_002", 
+      "B20002_003"
+      )
+    ]
+employment_cat <- 
+  acs_2016_5_year_with_geography[
+    ,c(
+      "GEOID",
+      "B23025_001",
+      "B23025_002",
+      "B23025_003",
+      "B23025_004",
+      "B23025_005",
+      "B23025_006",
+      "B23025_007"
+      )
+    ]
+home_value_cat <- 
+  acs_2016_5_year_with_geography[
+    ,c(
+      "GEOID", 
+      "B25075_001", 
+      "B25075_002", 
+      "B25075_003", 
+      "B25075_004", 
+      "B25075_005", 
+      "B25075_006", 
+      "B25075_007", 
+      "B25075_008", 
+      "B25075_009", 
+      "B25075_010", 
+      "B25075_011", 
+      "B25075_012", 
+      "B25075_013", 
+      "B25075_014", 
+      "B25075_015", 
+      "B25075_016", 
+      "B25075_017", 
+      "B25075_018", 
+      "B25075_019", 
+      "B25075_020", 
+      "B25075_021", 
+      "B25075_022", 
+      "B25075_023", 
+      "B25075_024", 
+      "B25075_025", 
+      "B25075_026", 
+      "B25075_027"
+      )
+    ]
+health_insurance_cat <- 
+  acs_2016_5_year_with_geography[
+    ,c(
+      "GEOID", 
+      "B27010_001", 
+      "B27010_002", 
+      "B27010_003", 
+      "B27010_004", 
+      "B27010_005", 
+      "B27010_006", 
+      "B27010_007", 
+      "B27010_008", 
+      "B27010_009", 
+      "B27010_010", 
+      "B27010_011", 
+      "B27010_012", 
+      "B27010_013", 
+      "B27010_014", 
+      "B27010_015", 
+      "B27010_016", 
+      "B27010_017", 
+      "B27010_018", 
+      "B27010_019", 
+      "B27010_020", 
+      "B27010_021", 
+      "B27010_022", 
+      "B27010_023", 
+      "B27010_024", 
+      "B27010_025", 
+      "B27010_027", 
+      "B27010_028", 
+      "B27010_029", 
+      "B27010_030", 
+      "B27010_031", 
+      "B27010_032", 
+      "B27010_033", 
+      "B27010_034", 
+      "B27010_035", 
+      "B27010_036", 
+      "B27010_037", 
+      "B27010_038", 
+      "B27010_039", 
+      "B27010_040", 
+      "B27010_041", 
+      "B27010_042", 
+      "B27010_043", 
+      "B27010_044", 
+      "B27010_045", 
+      "B27010_046", 
+      "B27010_047", 
+      "B27010_048", 
+      "B27010_049", 
+      "B27010_050", 
+      "B27010_051", 
+      "B27010_052", 
+      "B27010_053", 
+      "B27010_054", 
+      "B27010_055", 
+      "B27010_056", 
+      "B27010_057", 
+      "B27010_058", 
+      "B27010_059", 
+      "B27010_060", 
+      "B27010_061", 
+      "B27010_062", 
+      "B27010_063", 
+      "B27010_064", 
+      "B27010_065", 
+      "B27010_066"
+      )
+    ]
+home_value_median <- 
+  acs_2016_5_year_with_geography[
+    ,c(
+      "GEOID", 
+      "B25077_001"
+      )
+    ]
+geography_area <- 
+  acs_2016_5_year_with_geography[
+    ,c(
+      "GEOID", 
+      "STATEFP", 
+      "COUNTYFP", 
+      "TRACTCE", 
+      "BLKGRPCE", 
+      "NAMELSAD", 
+      "MTFCC", 
+      "FUNCSTAT", 
+      "ALAND", 
+      "AWATER", 
+      "INTPTLAT", 
+      "INTPTLON", 
+      "Shape_Length", 
+      "Shape_Area", 
+      "GEOID_simple"
+      )
+    ]
+
+
+
+
+# merge all of the above together
+ftdm1 <- merge(total_pop, sex_cat)
+ftdm2 <- merge(ftdm1, sex_age_cat)
+ftdm3 <- merge(ftdm2, age_median)
+ftdm4 <- merge(ftdm3, race_cat)
+ftdm5 <- merge(ftdm4, education_cat)
+ftdm6 <- merge(ftdm5, poverty_ratio_cat)
+ftdm7 <- merge(ftdm6, income_house_cat)
+ftdm8 <- merge(ftdm7, income_house_median)
+ftdm9 <- merge(ftdm8, earnings_sex_cat)
+ftdm10 <- merge(ftdm9, earnings_median)
+ftdm11 <- merge(ftdm10, employment_cat)
+ftdm12 <- merge(ftdm11, home_value_cat)
+ftdm13 <- merge(ftdm12, home_value_median)
+ftdm14 <- merge(ftdm13, health_insurance_cat)
+select_acs_data <- merge(ftdm14, geography_area)
+
+# # View resulting dataframe with selected ACS variables
+# View(select_acs_data)
+
+# save select_acs_data
+save(select_acs_data,
+     file = "select_acs_data.rdata")
+
+# # load selected variables
+# load(file = "select_acs_data.rdata")
+
+
+### making variables ####
+# making variables
+# from Silva:
+# median household income (dollars), 
+# median household value (dollars), 
+# percent of population identifying as White only, 
+# population density (population per square mile), 
+# percent of population with a high school education/GED or higher, and 
+# population median age
+# from RMF:  age categories
+
+# make set to modify
+acs_constructed_variables <- select_acs_data
+
+
+
+
+
+
+# unemployment rate
+data_for_analysis$employment_16_plus_total_S2301e1 <- 
+  data_for_analysis$S2301e1
+data_for_analysis$employment_16_plus_margin_S2301m1 <- 
+  data_for_analysis$S2301m1
+data_for_analysis$unemployment_rate_S2301e4 <- 
+  data_for_analysis$S2301e4
+data_for_analysis$unemployment_rate_margin_S2301m4 <- 
+  data_for_analysis$S2301m4
+
+
+# linguistic isolation
+data_for_analysis$ling_iso_total_households_S1602e1 <- 
+  data_for_analysis$S1602e1
+data_for_analysis$ling_iso_total_households_S1602m1 <- 
+  data_for_analysis$S1602m1
+
+data_for_analysis$ling_iso_number_S1602e3 <- 
+  data_for_analysis$S1602e3
+data_for_analysis$ling_iso_number_margin_S1602m3 <- 
+  data_for_analysis$S1602m3
+
+data_for_analysis$ling_iso_percent_S1602e4 <- 
+  data_for_analysis$S1602e4
+data_for_analysis$ling_iso_percent_margin_S1602m4 <- 
+  data_for_analysis$S1602m4
+
+
+# housing tenure
+data_for_analysis$housing_tenure_total_B25003e1 <- 
+  data_for_analysis$B25003e1
+data_for_analysis$housing_tenure_total_margin_B25003m1 <- 
+  data_for_analysis$B25003m1
+
+data_for_analysis$owner_occupy_number_B25003e2 <- 
+  data_for_analysis$B25003e2
+data_for_analysis$owner_occupy_margin_B25003m2 <- 
+  data_for_analysis$B25003m2
+
+data_for_analysis$renter_occupy_number_B25003e3 <- 
+  data_for_analysis$B25003e3
+data_for_analysis$renter_occupy_margin_B25003m3 <- 
+  data_for_analysis$B25003m3
+
+data_for_analysis$owner_occupy_percent_B25003e2e1 <- 
+  data_for_analysis$owner_occupy_number_B25003e2/
+  data_for_analysis$housing_tenure_total_B25003e1
+
+data_for_analysis$renter_occupy_percent_B25003e3e1 <- 
+  data_for_analysis$renter_occupy_number_B25003e3/
+  data_for_analysis$housing_tenure_total_B25003e1
+
+
+# age below 5
+data_for_analysis$age_total_B01001e1 <- 
+  data_for_analysis$B01001e1
+data_for_analysis$age_total_margin_B010001m1 <- 
+  data_for_analysis$B01001m1
+
+data_for_analysis$age_below_5_number_B01001e3e27 <- 
+  (data_for_analysis$B01001e3 + 
+     data_for_analysis$B01001e27)
+
+data_for_analysis$age_over_5_number_B01001 <- 
+  (data_for_analysis$B01001e4 + 
+     data_for_analysis$B01001e5 + 
+     data_for_analysis$B01001e6 + 
+     data_for_analysis$B01001e7 + 
+     data_for_analysis$B01001e8 + 
+     data_for_analysis$B01001e9 + 
+     data_for_analysis$B01001e10 + 
+     data_for_analysis$B01001e11 + 
+     data_for_analysis$B01001e12 + 
+     data_for_analysis$B01001e13 + 
+     data_for_analysis$B01001e14 + 
+     data_for_analysis$B01001e15 + 
+     data_for_analysis$B01001e16 + 
+     data_for_analysis$B01001e17 + 
+     data_for_analysis$B01001e18 + 
+     data_for_analysis$B01001e19 + 
+     data_for_analysis$B01001e20 + 
+     data_for_analysis$B01001e21 + 
+     data_for_analysis$B01001e22 + 
+     data_for_analysis$B01001e23 + 
+     data_for_analysis$B01001e24 + 
+     data_for_analysis$B01001e25 +
+     data_for_analysis$B01001e28 + 
+     data_for_analysis$B01001e29 + 
+     data_for_analysis$B01001e30 + 
+     data_for_analysis$B01001e31 + 
+     data_for_analysis$B01001e32 + 
+     data_for_analysis$B01001e33 + 
+     data_for_analysis$B01001e34 + 
+     data_for_analysis$B01001e35 + 
+     data_for_analysis$B01001e36 + 
+     data_for_analysis$B01001e37 + 
+     data_for_analysis$B01001e38 + 
+     data_for_analysis$B01001e39 + 
+     data_for_analysis$B01001e40 + 
+     data_for_analysis$B01001e41 + 
+     data_for_analysis$B01001e42 + 
+     data_for_analysis$B01001e43 + 
+     data_for_analysis$B01001e44 + 
+     data_for_analysis$B01001e45 + 
+     data_for_analysis$B01001e46 + 
+     data_for_analysis$B01001e47 + 
+     data_for_analysis$B01001e48 + 
+     data_for_analysis$B01001e49)
+
+data_for_analysis$age_below_5_percent_B01001e3e27 <- 
+  data_for_analysis$age_below_5_number_B01001e3e27/
+  data_for_analysis$age_total_B01001e1
+
+
+
+
+
+
+# median household inome (renaming)
+acs_constructed_variables$median_household_income_B19013 <- 
+  acs_constructed_variables$B19013e1
+
+# median household value (renaming)
+acs_constructed_variables$median_household_value_B25077 <- 
+  acs_constructed_variables$B25077e1
+
+# percent white (renaming)
+acs_constructed_variables$percent_white_B03002 <- 
+  acs_constructed_variables$B03002e3/
+  acs_constructed_variables$B03002e1
+
+# population density (people/km2, ALAND in m2)
+acs_constructed_variables$population_density_B01001_ALAND <- 
+  (1000000*
+     acs_constructed_variables$B01001e1/
+     acs_constructed_variables$ALAND)
+
+# percent of population with high school education or more
+acs_constructed_variables$percent_high_school_plus_B15003 <- 
+  (
+    (
+      acs_constructed_variables$B15003e17 + 
+        acs_constructed_variables$B15003e18 + 
+        acs_constructed_variables$B15003e19 + 
+        acs_constructed_variables$B15003e20 + 
+        acs_constructed_variables$B15003e21 + 
+        acs_constructed_variables$B15003e22 + 
+        acs_constructed_variables$B15003e23 + 
+        acs_constructed_variables$B15003e24 + 
+        acs_constructed_variables$B15003e25
+      )
+    /acs_constructed_variables$B15003e1
+    )
+
+# median age
+acs_constructed_variables$median_age_B01002 <- 
+  acs_constructed_variables$B01002e1
+
+# age categories
+acs_constructed_variables$age_below_5 <- 
+  acs_constructed_variables$B01001e27 +   # women <5
+  acs_constructed_variables$B01001e3      # men <5
+acs_constructed_variables$age_5_to_19 <-
+  acs_constructed_variables$B01001e28 +   # women 5-9
+  acs_constructed_variables$B01001e29 +   # women 10-14
+  acs_constructed_variables$B01001e30 +   # women 15-17
+  acs_constructed_variables$B01001e31 +   # women 18-19
+  acs_constructed_variables$B01001e4 +   # men 5-9
+  acs_constructed_variables$B01001e5 +   # men 10-14
+  acs_constructed_variables$B01001e6 +   # men 15-17
+  acs_constructed_variables$B01001e7     # men 18-19
+acs_constructed_variables$age_20_to_64 <-
+  acs_constructed_variables$B01001e32 + 
+  acs_constructed_variables$B01001e33 + 
+  acs_constructed_variables$B01001e34 + 
+  acs_constructed_variables$B01001e35 + 
+  acs_constructed_variables$B01001e36 + 
+  acs_constructed_variables$B01001e37 + 
+  acs_constructed_variables$B01001e38 + 
+  acs_constructed_variables$B01001e39 + 
+  acs_constructed_variables$B01001e40 + 
+  acs_constructed_variables$B01001e41 + 
+  acs_constructed_variables$B01001e42 + 
+  acs_constructed_variables$B01001e43 + 
+  acs_constructed_variables$B01001e7 + 
+  acs_constructed_variables$B01001e8 + 
+  acs_constructed_variables$B01001e9 + 
+  acs_constructed_variables$B01001e10 + 
+  acs_constructed_variables$B01001e11 + 
+  acs_constructed_variables$B01001e12 + 
+  acs_constructed_variables$B01001e13 + 
+  acs_constructed_variables$B01001e14 + 
+  acs_constructed_variables$B01001e15 + 
+  acs_constructed_variables$B01001e16 + 
+  acs_constructed_variables$B01001e17 + 
+  acs_constructed_variables$B01001e18 + 
+  acs_constructed_variables$B01001e19
+acs_constructed_variables$age_65_plus <- 
+  acs_constructed_variables$B01001e44 + 
+  acs_constructed_variables$B01001e45 + 
+  acs_constructed_variables$B01001e46 + 
+  acs_constructed_variables$B01001e47 + 
+  acs_constructed_variables$B01001e48 + 
+  acs_constructed_variables$B01001e49 + 
+  acs_constructed_variables$B01001e20 + 
+  acs_constructed_variables$B01001e21 + 
+  acs_constructed_variables$B01001e22 + 
+  acs_constructed_variables$B01001e23 + 
+  acs_constructed_variables$B01001e24 + 
+  acs_constructed_variables$B01001e25
+  
+# save constructed variables
+save(acs_constructed_variables, 
+     file = "acs_constructed_variables.rdata")
+
+# make constructed variables into .csv
+write.csv(acs_constructed_variables, 
+          file = "acs_constructed_variables.csv")
+
+# load constructed variables to avoid the above
+load(file = "acs_constructed_variables.rdata")
+# View(acs_constructed_variables)
+
+
+
+
+
+
+
+
+
+
+#### well data ####
+ks_clean <- ks_wells_2018_11_01 # make well data file for cleaning
+
+
+
+#### formatting changes in main well data ####
+
+# convert dates to dates
+ks_clean$permit_as_date  <-  
+  as.Date(ks_clean$PERMIT, "%d-%b-%Y") # permit date
+ks_clean$spud_as_date  <-  
+  as.Date(ks_clean$SPUD, "%d-%b-%Y") # spud date
+ks_clean$completion_as_date  <-  
+  as.Date(ks_clean$COMPLETION, "%d-%b-%Y") # completion date
+ks_clean$plugging_as_date  <-  
+  as.Date(ks_clean$PLUGGING, "%d-%b-%Y") # plugging date
+ks_clean$modified_as_date  <-  
+  as.Date(ks_clean$MODIFIED, "%d-%b-%Y") # modified date
+ks_clean$API_NUMBER  <-  
+  as.character(ks_clean$API_NUMBER) # make API into a character
+
+
+
+#### add analysis categories ####
+
+# categorizing the well as SWD ('swd'), INJ ('inj'), or Class I ('ci')
+ks_clean$well_type <- NA
+
+# categorizing the well as in the uic database ('yes') or no ('no')
+ks_clean$uic <- NA
+
+# categorizing the well as active ('active'), inactive ('inactive'), 
+# drilled ('drill'), future ('future'), never drilled or used as a 
+# saltwater disposal well ('ab_loc'), or canceled midway through drilling
+# or conversion or hole lost ('midway')
+ks_clean$activity <- NA
+
+# categorizing the well as plugged ('has_plug_status') 
+# or unknown ('no_plug_status') by STATUS or STATUS2
+ks_clean$plug_status <- NA
+
+# categorizing the well as plugged or not by plugging_as_date
+ks_clean$plug_date_binary <- NA
+
+# categorizing as plugged or not by the above two categories
+ks_clean$plug_overall <- NA
+
+# classifying as having or not having an api ('yes' or 'no')
+ks_clean$has_api <- NA
+
+# whether the well was classified via either
+# (1) a STATUS of "SWD" or "SWD-P&A" ('status');
+# (2) a status2 of "Converted to SWD Well" ('status2'); or
+# (3) manual comment review ('comments')
+ks_clean$assignment_source <- NA
+
+# classifying the detailed well type (see data documentation for possible values)
+ks_clean$detailed_well_type <- NA
+
+# raw notes on manual well assignments
+ks_clean$assignment_notes <- NA
+
+# whether the comments of the intial well have already been reviewed ('yes', 'NA')
+ks_clean$comments_examined <- NA
+
+# whether I reviewed documents from the Kansas Geological Society ('yes', 'no')
+ks_clean$kgs_available_documents_verified <- NA
+
+save(ks_clean, 
+     file = "ks_clean.rdata") # save results of all these conversions
+
+
+
+##### counting duplicates #####
+
+# count unique APIs
+number_of_unique_APIs <- length(unique(ks_clean$API_NUMBER))
+save(number_of_unique_APIs, file = "number_of_unique_APIs.rdata")
+
+# raw well count
+raw_well_count <- nrow(ks_clean)
+save(raw_well_count, file = "raw_well_count.rdata")
+
+# overall counts by API
+ks_by_API_count <- table(ks_clean$API_NUMBER)
+save(ks_by_API_count, file = "ks_by_API_count.rdata")
+
+# view rows with duplicated APIs
+index <- 
+  duplicated(ks_clean$API_NUMBER) | duplicated(ks_clean$API_NUMBER, 
+                                               fromLast = TRUE)
+ks_API_dups <- ks_clean[index,]
+save(ks_API_dups, file = "ks_API_dups.rdata")
+
+# view counts of duplicates per API
+ks_API_dup_counts <- table(ks_API_dups$API_NUMBER)
+save(ks_API_dup_counts, file = "ks_dup_API_count.rdata")
+
+# count unique KIDs
+unique_KID_count <- length(unique(ks_clean$KID))
+save(unique_KID_count, file = "unique_KID_count.rdata")
+
+# counts by well status for rows without APIs
+ks_wells_no_API <- 
+  ks_clean[which(ks_clean$API_NUMBER == ""),] # isolate rows for wells sans APIs
+save(ks_wells_no_API, 
+     file = "ks_wells_no_API.rdata") # save the above
+ks_wells_no_API_by_status <- 
+  table(ks_wells_no_API$STATUS) # table of counts of wells sans API by status
+save(ks_wells_no_API_by_status, 
+     file = "ks_wells_no_API_by_status.rdata") # save table of counts
+
+
+
+##### checking ambiguous wells for inclusion or exclusion #####
+
+# get counts by well status1 (main status)
+ks_well_counts_by_status1 <- 
+  table(ks_clean$STATUS) # get counts
+ks_well_counts_by_status1 <- 
+  as.data.frame(ks_well_counts_by_status1) # convert to dataframe
+save(ks_well_counts_by_status1, 
+     file = "ks_well_counts_by_status1.rdata")
+write.csv(ks_well_counts_by_status1, 
+          file = "ks_well_counts_by_status1.csv") # write for excel file
+
+# get counts by well status2
+ks_well_counts_by_status2 <- 
+  table(ks_clean$STATUS2)
+ks_well_counts_by_status2 <- 
+  as.data.frame(ks_well_counts_by_status2) # convert to dataframe
+save(ks_well_counts_by_status2, 
+     file = "ks_well_counts_by_status2.rdata")
+write.csv(ks_well_counts_by_status2, 
+          file = "ks_well_counts_by_status2.csv")
+
+# make vectors of status1s and status2s
+ks_all_status1s <- 
+  sort(unique(ks_clean$STATUS)) # vector of all STATUS values
+ks_all_status2s <- 
+  sort(unique(ks_clean$STATUS2)) # vector of all STATUS2 values
+save(ks_all_status1s, 
+     file = "ks_all_status1s.rdata")
+save(ks_all_status2s, # save status1s to file
+     file = "ks_all_status2s.rdata") # save status2s to file
+write.csv(ks_all_status1s, 
+          file = "ks_all_status1s.csv") # csv of status1s for excel
+write.csv(ks_all_status2s, 
+          file = "ks_all_status2s.csv") # csv of status2s for excel
+
+# make vectors of status1s for further investigation or not
+ks_status1_check_further <- 
+  sort(c("INTENT",
+         "OTHER()",
+         "OTHER(NULL)",
+         "OTHER(OTHER)",
+         "OTHER(TA)",
+         "OTHER(TEMP ABD)",
+         "OTHER-P&A()",
+         "OTHER-P&A(TA)"))
+
+ks_potential_disposal_include_status1s <- 
+  sort(c("OTHER()",
+         "OTHER(1O&1SWD)",
+         "OTHER(CBM/SWD)",
+         "OTHER(CLASS ONE (OLD))",
+         "OTHER(CLASS1)",
+         "OTHER(NHDW)",
+         "OTHER(NULL)",
+         "OTHER(OIL,SWD)",
+         "OTHER(OTHER)",
+         "OTHER(SWD-P&A)",
+         "OTHER(TA)",
+         "OTHER(TEMP ABD)",
+         "OTHER-P&A()",
+         "OTHER-P&A(CLASS ONE (OLD))",
+         "OTHER-P&A(OIL-SWD)",
+         "OTHER-P&A(TA)",
+         "SWD",
+         "SWD-P&A"))
+
+ks_definitely_include_status1s <- 
+  sort(c("OTHER(1O&1SWD)",
+         "OTHER(CBM/SWD)",
+         "OTHER(CLASS ONE (OLD))",
+         "OTHER(CLASS1)",
+         "OTHER(NHDW)",
+         "OTHER(OIL,SWD)",
+         "OTHER(SWD-P&A)",
+         "OTHER-P&A(CLASS ONE (OLD))",
+         "OTHER-P&A(OIL-SWD)",
+         "SWD",
+         "SWD-P&A"))
+
+ks_potential_disposal_exclude_status1s <- 
+  sort(c("INTENT",
+         "INJ",
+         "INJ-P&A",
+         "OTHER(INJ or EOR)",
+         "OTHER-P&A(INJ OR )",
+         "OTHER-P&A(INJ or EOR)",
+         "CBM",
+         "CBM-P&A",
+         "D&A",
+         "EOR",
+         "EOR-P&A",
+         "GAS",
+         "GAS-P&A",
+         "LOC",
+         "O&G",
+         "O&G-P&A",
+         "OIL",
+         "OIL-P&A",
+         "OTHER-P&A(2 OIL)",
+         "OTHER-P&A(CATH)",
+         "OTHER-P&A(COREHOLE)",
+         "OTHER-P&A(GAS-INJ)",
+         "OTHER-P&A(GAS-STG)",
+         "OTHER-P&A(GSW)",
+         "OTHER-P&A(LH)",
+         "OTHER-P&A(OBS)",
+         "OTHER-P&A(OIL&GAS-INJ)",
+         "OTHER-P&A(SHUT-IN)",
+         "OTHER-P&A(STRAT)",
+         "OTHER-P&A(WATER)",
+         "OTHER(2OIL)",
+         "OTHER(ABD LOC)",
+         "OTHER(CATH)",
+         "OTHER(COREHOLE)",
+         "OTHER(GAS-INJ)",
+         "OTHER(GAS-STG)",
+         "OTHER(GAS INJ)",
+         "OTHER(GAS SHUT-IN)",
+         "OTHER(GSW)",
+         "OTHER(HELIUM)",
+         "OTHER(LH)",
+         "OTHER(Monitor)",
+         "OTHER(MONITOR)",
+         "OTHER(OBS)",
+         "OTHER(OBSERVATION)",
+         "OTHER(OIL&GAS-INJ)",
+         "OTHER(Oil)",
+         "OTHER(OIL/GAS)",
+         "OTHER(SHUT-IN)",
+         "OTHER(STRAT)",
+         "OTHER(WATER)"))
+
+# check lengths of vectors
+length(ks_potential_disposal_include_status1s) # count included statii
+length(ks_potential_disposal_exclude_status1s) # count excluded statii
+length(ks_all_status1s) # above two numbers should sum to this number
+
+
+
+#### selecting rows based on status2 ####
+# make vector of status2s to include regardless of status1
+ks_potential_disposal_include_status2s <- 
+  sort(c("Converted to SWD Well")) 
+
+# vector of status2s that don't guarantee inclusion
+ks_potential_disposal_exclude_status2s <- 
+  setdiff(ks_all_status2s,
+          ks_potential_disposal_include_status2s)
+ks_potential_disposal_exclude_status2s
+
+
+
+#### investigating rows based on comments ####
+ks_potential_disposal_comments <-   # make vector of just comments
+  ks_clean$COMMENTS
+
+# below identifies rows with comments containing the strings 
+# "swd", "disp", "salt", "class", or "waste"
+positions_of_possible_comments_to_include <-
+  grep("swd|disp|salt|class|waste", 
+       ks_potential_disposal_comments, 
+       ignore.case = TRUE)
+
+comments_to_review <-   # makes vector of identified comments
+  ks_clean$COMMENTS[positions_of_possible_comments_to_include]
+
+# makes .csv file of identified comments
+write.csv(comments_to_review,   # makes .csv file of identified comments
+          file = "comments_to_review.csv")
+
+# makes dataframe of entire rows matching comments
+rows_requiring_comment_investigation <-
+  ks_clean[which(ks_clean$COMMENTS %in% comments_to_review),]
+
+# make dataframe of most relevant columns of entire rows matching comments
+rows_requiring_comment_investigation_simple <- 
+  rows_requiring_comment_investigation[
+    ,c("KID",
+       "API_NUMBER",
+       "activity",
+       "well_type",
+       "assignment_source",
+       "detailed_well_type",
+       "assignment_notes",
+       "comments_examined",
+       "kgs_available_documents_verified",
+       "STATUS",
+       "STATUS2",
+       "COMMENTS"
+       )
+    ]
+
+# make .csv files of rows matching comments and simple rows matching comments
+write.csv(rows_requiring_comment_investigation,
+          file = "rows_requiring_comment_investigation.csv")
+write.csv(rows_requiring_comment_investigation_simple, 
+          file = "rows_requiring_comment_investigation_simple.csv")
+
+
+
+#### manual well assignment space ####
+# cat("Please assign the ambiguous wells manually in an Excel file.  Afterward, find the window that just opened and click on the 'continue' button to continue the program.  The next prompt asks you to choose the file with the well assignments.")
+# my_wait() # runs function to force the program to wait for input
+
+# # import manual assignments
+# manual_well_assignment_csv_file <- # asks user to choose the correct .csv file
+#   file.choose()
+# 
+# raw_manual_well_assignments_dataframe <- # converts above .csv to a dataframe
+#   read.csv(manual_well_assignment_csv_file)
+
+raw_manual_well_assignments_dataframe <- # converts above .csv to a dataframe
+  read.csv(
+    file = 
+      "rows_requiring_comment_investigation_simple_2018_11_29_back_to_r.csv")
+
+# View(raw_manual_well_assignments_dataframe) # view the import
+
+
+
+#### creating the semi-final well list #### 
+# This section combines all the manually assigned wells as well as the wells
+# pulled due solely due to their STATUS or STATUS2.
+
+# pull well KIDs identified manually or by status1 or status2
+kids_from_manual_assignments <-   # KIDs of manually added wells
+  ks_clean$KID[which(ks_clean$KID %in% 
+                       raw_manual_well_assignments_dataframe$KID)]
+
+kids_status1s <-   # KIDs of wells IDed via status1
+  ks_clean$KID[which(ks_clean$STATUS %in% 
+                       ks_definitely_include_status1s)]
+
+kids_status2s <-   # KIDs of wells IDed via status2
+  ks_clean$KID[which(ks_clean$STATUS2 %in% 
+                       ks_potential_disposal_include_status2s)]
+
+# length(kids_from_manual_assignments) # count of manual KIDs
+# length(kids_status1s)  # count of status1 KIDs
+# length(kids_status2s)  # count of status2 KIDs
+
+# combine the lists
+kids_semi_final_list <- c(kids_from_manual_assignments, 
+                         kids_status1s,
+                         kids_status2s)
+
+# convert the list of three vectors into just one vector
+kids_semi_final_list <- 
+  unlist(kids_semi_final_list)
+
+kids_semi_final_list <-   # delete duplicates
+  unique(kids_semi_final_list)   
+
+ks_semi_final_wells <-   # make dataframe of data from selected wells
+  ks_clean[which(ks_clean$KID %in% 
+                   kids_semi_final_list),]
+
+# View(ks_semi_final_wells)
+
+# save data to disk
+save(ks_semi_final_wells, file = "ks_semi_final_wells.rdata")
+write.csv(ks_semi_final_wells, file = "ks_semi_final_wells.csv")
+
+
+
+#### create working semi-final dataset ####
+
+ks_semi_final_wells_working <-   # make safe working dataset
+  ks_semi_final_wells
+
+
+# status1s
+
+ks_semi_final_status1s <-   # make vector of status1s in semi-final dataset
+  sort(unique(ks_semi_final_wells$STATUS))
+
+# View(ks_semi_final_status1s)   # view vector of status1s
+
+# View(table(ks_semi_final_wells_working$STATUS))   # view table of status1s
+
+write.csv(ks_semi_final_status1s,   # write .csv of status1s
+          file = "ks_semi_final_status1s.csv")
+
+
+# status2s
+
+ks_semi_final_status2s <-   # make vector of status2s in semi-final dataset
+  sort(unique(ks_semi_final_wells$STATUS2))
+
+# View(ks_semi_final_status2s)   # view vector of status2s
+
+# View(table(ks_semi_final_wells_working$STATUS2))   # view table of status2s
+
+write.csv(ks_semi_final_status2s,   # write .csv of status2s
+          file = "ks_semi_final_status2s.csv")
+
+
+
+#### CATEGORY ASSIGNMENTS IN SEMI-FINAL DATASET ####
+
+#### assign has api ####
+# assign it
+ks_semi_final_wells_working$has_api <-
+  ifelse(ks_semi_final_wells_working$API_NUMBER == "", "no", "yes")
+
+# View(ks_semi_final_wells_working)
+
+
+
+#### assign well_type ####
+
+# View(table(ks_semi_final_wells_working$STATUS)) view possible status1s
+
+# ks_definitely_include_status1s <- # reminder of status1s chosen to keep
+#   sort(c("OTHER(1O&1SWD)",
+#          "OTHER(CBM/SWD)",
+#          "OTHER(CLASS ONE (OLD))",
+#          "OTHER(CLASS1)",
+#          "OTHER(NHDW)",
+#          "OTHER(OIL,SWD)",
+#          "OTHER(SWD-P&A)",
+#          "OTHER-P&A(CLASS ONE (OLD))",
+#          "OTHER-P&A(OIL-SWD)",
+#          "SWD",
+#          "SWD-P&A"))
+
+swd_status1s <-   # make vector of status1s that mean swd well
+  sort(c("OTHER(1O&1SWD)",
+         "OTHER(CBM/SWD)",
+         "OTHER(OIL,SWD)",
+         "OTHER(SWD-P&A)",
+         "OTHER-P&A(OIL-SWD)",
+         "SWD",
+         "SWD-P&A"))
+
+class1_status1s <-   # make vector of status1s that mean class1 well
+  sort(c("OTHER(CLASS ONE (OLD))",
+         "OTHER(CLASS1)",
+         "OTHER(NHDW)",
+         "OTHER-P&A(CLASS ONE (OLD))"))
+
+swd_status2s <-   # make vector of status2s that mean swd well
+  sort(c("Converted to SWD Well"))
+
+ks_semi_final_wells_working <-   # assign class1
+  within(ks_semi_final_wells_working, 
+         well_type[STATUS %in% class1_status1s] <- 'class1')
+
+ks_semi_final_wells_working <-   # assign swd
+  within(ks_semi_final_wells_working, 
+         well_type[STATUS %in% swd_status1s | 
+                     STATUS2 %in% swd_status2s] <- 'swd')
+
+
+
+#### assign activity ####
+
+# assign inactive statuses
+inactive_status1s <-   # make vector of pa status1s
+  sort(c("EOR-P&A",
+         "GAS-P&A",
+         "INJ-P&A",
+         "O&G-P&A",
+         "OIL-P&A",
+         "OTHER-P&A(CLASS ONE (OLD))",
+         "OTHER-P&A(LH)",
+         "OTHER-P&A(OIL-SWD)",
+         "OTHER-P&A(OIL&GAS-INJ)",
+         "OTHER-P&A(STRAT)",
+         "OTHER-P&A(TA)",
+         "OTHER-P&A(WATER)",
+         "OTHER(SWD-P&A)",
+         "SWD-P&A",
+         "D&A",
+         "OTHER(LH)",
+         "OTHER(TA)"))
+
+inactive_status2s <-   # make vector of pa status2s
+  sort(c("Approved for Plugging - CP-1 Received",
+         "Expired Plugging Application (CP-1)",
+         "Inactive Well",
+         "Injection Authorization Terminated",
+         "Injection Authorization Terminated - INACTIVE CODE",
+         "KCC Fee Fund Plugging",
+         "Plugged and Abandoned",
+         "Re-Plugged (non Fee-Fund)",
+         "Unplugged Former Injection Well"))
+
+ks_semi_final_wells_working <-   # assign inactive wells
+  within(ks_semi_final_wells_working, 
+         activity[STATUS %in% inactive_status1s |
+                    STATUS2 %in% inactive_status2s] <- 'inactive')
+
+
+# assign future statuses
+future_status2s <-   # make vector of future status2s
+  sort(c("Approved Intent to Drill",
+         "DEVELOPMENT",
+         "ON LIST",
+         "Pending Injection Application"))
+
+ks_semi_final_wells_working <-   # assign inactive wells
+  within(ks_semi_final_wells_working, 
+         activity[STATUS %in% future_status2s] <- 'future')
+
+
+# assign cancel statuses
+cancel_status2s <-   # make vector of cancel status2s
+  sort(c("Cancelled API Number",
+         "Expired Intent to Drill (C-1)",
+         "UIC Application Denied",
+         "UIC Application Dismissed",
+         "UIC Application Withdrawn"))
+
+ks_semi_final_wells_working <-   # assign cancel wells
+  within(ks_semi_final_wells_working, 
+         activity[STATUS %in% cancel_status2s] <- 'ab_loc')
+
+
+# assign drill statuses
+drill_status2s <-   # make vector of drill status2s
+  sort(c("Spudded",
+         "Well Drilled"))
+
+ks_semi_final_wells_working <-   # assign drill wells
+  within(ks_semi_final_wells_working, 
+         activity[STATUS %in% drill_status2s] <- 'drill')
+
+
+
+#### assign plug ####
+
+# assign plug_status
+plug_status1s <-   # make vector of plug status1s
+  sort(c("EOR-P&A",
+         "GAS-P&A",
+         "INJ-P&A",
+         "O&G-P&A",
+         "OIL-P&A",
+         "OTHER-P&A(CLASS ONE (OLD))",
+         "OTHER-P&A(LH)",
+         "OTHER-P&A(OIL-SWD)",
+         "OTHER-P&A(OIL&GAS-INJ)",
+         "OTHER-P&A(STRAT)",
+         "OTHER-P&A(TA)",
+         "OTHER-P&A(WATER)",
+         "OTHER(SWD-P&A)",
+         "SWD-P&A"))
+
+plug_status2s <-   # make vector of plug status2s
+  sort(c("Plugged and Abandoned",
+         "Re-Plugged (non Fee-Fund)"))
+
+ks_semi_final_wells_working <-   # assign plugged by status
+  within(ks_semi_final_wells_working,
+         plug_status[STATUS %in% plug_status1s | 
+                       STATUS2 %in% plug_status2s] <-
+           'has_plug_status')
+
+ks_semi_final_wells_working <-   # assign rest to not status
+  within(ks_semi_final_wells_working,
+         plug_status[is.na(plug_status)] <-
+           'no_plug_status')
+
+# assign plug_date
+ks_semi_final_wells_working <-   # assign plugged by date
+  within(ks_semi_final_wells_working, 
+         plug_date_binary[!is.na(plugging_as_date)] <-
+           'has_plug_date')
+
+ks_semi_final_wells_working <-   # assign rest to no plug date
+  within(ks_semi_final_wells_working,
+         plug_date_binary[is.na(plug_date_binary)] <-
+           'no_plug_date')
+
+# assign overall plugged
+ks_semi_final_wells_working <-   # assign overall plug
+  within(ks_semi_final_wells_working,
+         plug_overall[plug_status == 
+                        "has_plug_status" | 
+                       plug_date_binary == "has_plug_date"] <-
+           'plugged')
+
+ks_semi_final_wells_working <-   # assign overall plug
+  within(ks_semi_final_wells_working,
+         plug_overall[is.na(plug_overall)] <-
+           'not_plugged')
+
+
+
+#### assign UIC status ####
+
+uic_kids <-   # pull KIDs of uic wells in UIC database
+  unique(ks_uic_2018_09_04$KGS_ID)
+
+# assign wells as in or not in the uic
+ks_semi_final_wells_working$uic <-   
+  ifelse(ks_semi_final_wells_working$KID %in% uic_kids,
+         'in_uic',
+         'not_in_uic')
+
+# View(ks_uic)
+# kids<-unique(ks_uic$KGS_ID)
+# kids
+#
+# ks_wells_in_uic_data_only <- subset(ks_clean, KID %in% kids)
+# View(ks_wells_in_uic_data_only)
+# uic_statuses<-table(ks_wells_in_uic_data_only$STATUS)
+# View(uic_statuses)
+# write.csv(uic_statuses,file="uic_statuses.csv")
+
+
+#### deal with comments ####
+ks_semi_final_wells_working <- # merge manual assignments with large dataset
+  merge(ks_semi_final_wells_working, 
+        raw_manual_well_assignments_dataframe, 
+        by = "KID", 
+        all.x = TRUE, 
+        all.y = TRUE)
+
+
+
+#### QUICK AND DIRTY START ####
+#### NOTE: FROM HERE (AND IN MANUAL ASSIGNMENTS)
+#### THINGS ARE QUICK AND DIRTY TO GET RESULTS BY 12/15/2018
+#### FIX BY FINAL DEADLINE
+
+ks_semi_final_wells_working$is_swd <- NA # make variable for is/is not swd
+
+ks_semi_final_wells_working <- # identify manually assigned swd wells
+  within(ks_semi_final_wells_working, 
+         is_swd[well_type == 'swd'] <- 'swd')
+
+ks_semi_final_wells_working <- # identify manually assigned swd wells
+  within(ks_semi_final_wells_working, 
+         is_swd[man_well_type 
+                %in% 
+                  c('swd', 
+                    'prob_swd', 
+                    'prob_swd_class1', 
+                    'prob_swd_may_class1')] <- 'swd')
+
+# drop non-swd wells
+ks_swd_only <- 
+  subset(ks_semi_final_wells_working, 
+         is_swd == 'swd')
+
+# assign manual activity statuses
+ks_swd_only$man_activity <-   # force man_activity to character
+  as.character(ks_swd_only$man_activity)
+
+ks_swd_only$activity <-   # apply manual activity assignments
+  with(ks_swd_only, 
+       ifelse(!is.na(man_activity), man_activity, activity))
+
+ks_swd_only$activity <-   # make NAs active
+  with(ks_swd_only, 
+       ifelse(is.na(activity), 'active', activity))
+
+ks_swd_only$activity <-   # make unknowns active
+  with(ks_swd_only, 
+       ifelse(activity == 'unknown', 'active', activity))
+  
+
+
+#### handling duplicates ####
+
+#### deleting those with duplicate APIs
+
+# fix API number
+ks_swd_only$API_NUMBER <- 
+  ks_swd_only$API_NUMBER.x
+
+# make dataset without wells without apis
+ks_only_apis <- 
+  ks_swd_only[!(is.na(ks_swd_only$API_NUMBER) | 
+                  ks_swd_only$API_NUMBER==""),]
+
+# find duplicate APIs
+ks_final_index  <-   # make index of API duplicates
+  duplicated(ks_only_apis$API_NUMBER) | 
+  duplicated(ks_only_apis$API_NUMBER, 
+             fromLast = TRUE)
+
+ks_API_dups <-   # make dataframe of duplicates
+  ks_only_apis[ks_final_index, ]
+View(ks_API_dups)
+
+# remove duplicate APIs, keeping those last modified
+ks_bye_dup_API <- 
+  subset(ks_only_apis, 
+         ave(modified_as_date, API_NUMBER, FUN = max) == modified_as_date)
+# View(ks_bye_dup_API)
+
+
+# find duplicated latitudes and longitudes
+ks_lat_long_dup_index <- 
+  duplicated(ks_bye_dup_API[c("LATITUDE","LONGITUDE")]) | 
+  duplicated(ks_bye_dup_API[c("LATITUDE","LONGITUDE")], fromLast = TRUE)
+ks_lat_long_dup <- ks_bye_dup_API[ks_lat_long_dup_index, ]
+# View(ks_lat_long_dup)
+
+# fix statuses DO THIS EARLIER ON CODE CLEANUP
+ks_bye_dup_API$STATUS <- 
+  ks_bye_dup_API$STATUS.x
+
+ks_bye_dup_API$STATUS2 <-
+  ks_bye_dup_API$STATUS.x
+
+# order rows in a hierarchy by which ones I think are true # fix later
+order_of_STATUSes <- 
+  c("SWD", 
+    "SWD-P&A", 
+    "OTHER(OIL,SWD)", 
+    "OTHER(CBM/SWD)", 
+    "OTHER(1O&1SWD)", 
+    "OTHER-P&A(OIL-SWD)", 
+    "OTHER(SWD-P&A)", 
+    "OTHER-P&A(LH)", 
+    "OTHER(LH)", 
+    "LOC", 
+    "GAS-P&A", 
+    "OIL-P&A", 
+    "GAS", 
+    "OIL", 
+    "D&A", 
+    "O&G", 
+    "OTHER(CLASS1)", 
+    "OTHER(TA)", 
+    "O&G-P&A", 
+    "EOR", 
+    "INJ-P&A", 
+    "INJ", 
+    "OTHER-P&A(WATER)", 
+    "CBM", 
+    "OTHER-P&A(OIL&GAS-INJ)", 
+    "OTHER(STRAT)", 
+    "OTHER()", 
+    "OTHER(OIL&GAS-INJ)",
+    "OTHER(WATER)", 
+    "OTHER-P&A(TA)", 
+    "OTHER(OBS)", 
+    "OTHER(GAS-INJ)", 
+    "EOR-P&A" 
+    )
+
+View(unique(ks_bye_dup_API$STATUS))
+
+# order dataframe by statuses
+ks_ordered <- 
+  ks_bye_dup_API[order(factor(ks_bye_dup_API$STATUS, 
+                              levels = order_of_STATUSes)),]
+
+# View(ks_ordered)
+
+# remove duplicates
+# check whether I should even do this
+ks_data_for_counting <- 
+  ks_bye_dup_API[!duplicated(ks_ordered[,c("LATITUDE","LONGITUDE")]),]
+
+# View(ks_data_for_counting)
+
+
+# calling it the final thesis data
+ks_final_thesis_data <- 
+  ks_data_for_counting
+save(ks_final_thesis_data, 
+     file = "ks_final_thesis_data.rdata")
+# View(ks_final_thesis_data)
+
+# get number of wells by activity status
+table(ks_final_thesis_data$well_type, 
+      ks_final_thesis_data$activity)
+
+# get number of wells by type (not useful for quick and dirty)
+table(ks_final_thesis_data$well_type)
+ 
+ks_set_for_mapping <- 
+  ks_final_thesis_data[,c("KID", 
+                          "API_NUMBER", 
+                          "LATITUDE", 
+                          "LONGITUDE", 
+                          "well_type")]
+# View(ks_set_for_mapping)
+write.csv2(ks_set_for_mapping, file = "ks_set_for_mapping.csv")
+
+#### HERE PAUSE AND DO SPATIAL JOIN IN ARCGIS ####
+
+# import mapping results back
+ks_join_results <- read.csv(file = "well_join_2018_12_15.txt", 
+                            stringsAsFactors = FALSE)
+
+# View(ks_join_results)
+save(ks_join_results, 
+     file = "ks_join_results.rdata")
+
+# # load needed files if starting from here
+load(file = 
+       "ks_final_thesis_data.rdata")
+load(file = 
+       "ks_join_results.rdata")
+ 
+
+ks_join_to_edit <- ks_join_results
+
+# remove columns not needed in the final analysis dataset
+ks_join_to_edit$API_NUMBER <- NULL
+ks_join_to_edit$LATITUDE <- NULL
+ks_join_to_edit$LONGITUDE <- NULL
+ks_join_to_edit$well_type <- NULL
+ks_join_to_edit$Join_Count <- NULL
+ks_join_to_edit$OBJECTID_1 <- NULL
+ks_join_to_edit$TARGET_FID <- NULL
+ 
+ks_wells_and_block_groups <- merge(x = ks_final_thesis_data, 
+                                   y = ks_join_to_edit, by = "KID", all.x = TRUE)
+View(ks_wells_and_block_groups)
+
+ks_wells_and_block_groups$swd <- 1
+
+ks_well_counts <- aggregate(
+  ks_wells_and_block_groups$swd ~ GEOID_Data, 
+  ks_wells_and_block_groups, 
+  sum)
+View(ks_well_counts)
+
+# rename GEOID_Data to GEOID in well data
+ks_well_counts$GEOID <- 
+  ks_well_counts$GEOID_Data
+save(ks_well_counts, 
+     file = "ks_well_counts.rdata")
+load(file = "ks_well_counts.rdata")
+ 
+# load ACS variables
+load(file = 
+       "acs_constructed_variables.rdata")
+
+# merge well counts and acs!  hey-o!
+KS_FINAL_DATASET <- merge(ks_well_counts, 
+                          acs_constructed_variables, 
+                          by = "GEOID", 
+                          all = TRUE)
+View(KS_FINAL_DATASET)
+save(KS_FINAL_DATASET, 
+     file = "KS_FINAL_DATASET.rdata")
+write.csv(KS_FINAL_DATASET, 
+          file = "KS_FINAL_DATASET.csv")
+
+
+
+#### Analyses! ####
+
+# load files if starting from here
+# load(file = "KS_FINAL_DATASET.rdata")
+ks_analysis_dataset <- KS_FINAL_DATASET
+# View(ks_analysis_dataset)
+
+
+
+#### swd well block groups only ####
+
+# make variable for sum of swd wells per block group
+ks_analysis_dataset$any_swd_sum <- 
+  ks_analysis_dataset[,c("ks_wells_and_block_groups$swd")]
+str(ks_analysis_dataset$any_swd_sum)
+ks_analysis_dataset <- 
+  within(ks_analysis_dataset,any_swd_sum[is.na(ks_analysis_dataset$any_swd_sum)] 
+         <- 0)
+ks_analysis_dataset[,c("ks_wells_and_block_groups$swd")] <- NULL
+# View(ks_analysis_dataset)
+
+# make new binary variable for have versus not have swd
+ks_analysis_dataset$any_swd_binary <- NA
+ks_analysis_dataset <- within(ks_analysis_dataset, any_swd_binary[any_swd_sum == 0] <- 'no')
+ks_analysis_dataset <- within(ks_analysis_dataset, any_swd_binary[any_swd_sum > 0] <- 'yes')
+table(ks_analysis_dataset$any_swd_binary)
+
+names(ks_analysis_dataset)
+
+# drop 12 without people
+ks_analysis_dataset <- ks_analysis_dataset %>%
+  filter(population_density_B01001_ALAND > 0)
+
+#### correlation matrix of ACS variables ####
+names(ks_analysis_dataset) # get variable names
+
+# make dataframe for the correlation dataset
+correlation_matrix_data  <-  ks_analysis_dataset[,c("median_household_income_B19013","median_household_value_B25077","percent_white_B03002","population_density_B01001_ALAND","percent_high_school_plus_B15003","median_age_B01002","any_swd_sum","any_swd_binary","GEOID_simple")]
+
+# create the correlation matrix
+correlation_matrix  <-  round(cor(correlation_matrix_data[,1:6], use = "pairwise.complete.obs"),2) # rounds to 2 decimal places
+
+# view and write to file
+View(correlation_matrix)
+write.csv(correlation_matrix, file = "correlation_matrix.csv")
+
+# count observations going into the correlation matrix
+counts_pairwise_correlations  <-  count.pairwise(correlation_matrix_data[,1:6], y = NULL,diagonal=TRUE)
+
+# view and write to file
+View(counts_pairwise_correlations)
+write.csv(counts_pairwise_correlations, file = "counts_pairwise_correlations.csv")
+
+
+
+#### make pretty heatmap ####
+cormat <- correlation_matrix
+
+library(reshape2)
+melted_cormat <- melt(cormat)
+head(melted_cormat)
+
+ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + 
+  geom_tile()
+
+# Get lower triangle of the correlation matrix
+get_lower_tri<-function(cormat){
+  cormat[upper.tri(cormat)] <- NA
+  return(cormat)
+}
+# Get upper triangle of the correlation matrix
+get_upper_tri <- function(cormat){
+  cormat[lower.tri(cormat)]<- NA
+  return(cormat)
+}
+
+upper_tri <- get_upper_tri(cormat)
+upper_tri
+
+# Melt the correlation matrix
+library(reshape2)
+melted_cormat <- melt(upper_tri, na.rm = TRUE)
+# Heatmap
+library(ggplot2)
+ggheatmap <- ggplot(data = melted_cormat, aes(Var2, Var1, fill = value))+
+  geom_tile(color = "white")+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(-1,1), space = "Lab", 
+                       name="Pearson\nCorrelation") +
+  theme_minimal()+ 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, 
+                                   size = 12, hjust = 1))+
+  coord_fixed()
+
+reorder_cormat <- function(cormat){
+  # Use correlation between variables as distance
+  dd <- as.dist((1-cormat)/2)
+  hc <- hclust(dd)
+  cormat <-cormat[hc$order, hc$order]
+}
+
+# Reorder the correlation matrix
+cormat <- reorder_cormat(cormat)
+upper_tri <- get_upper_tri(cormat)
+# Melt the correlation matrix
+melted_cormat <- melt(upper_tri, na.rm = TRUE)
+# Create a ggheatmap
+ggheatmap <- ggplot(melted_cormat, aes(Var2, Var1, fill = value))+
+  geom_tile(color = "white")+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white",
+                       midpoint = 0, limit = c(-1,1), space = "Lab",
+                       name="Pearson\nCorrelation") +
+  theme_minimal()+ # minimal theme
+  theme(axis.text.x = element_text(angle = 45, vjust = 1,
+                                   size = 12, hjust = 1))+
+  coord_fixed()
+# Print the heatmap
+print(ggheatmap)
+
+ggheatmap + 
+  geom_text(aes(Var2, Var1, label = value), color = "black", size = 4) +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    axis.ticks = element_blank(),
+    legend.justification = c(1, 0),
+    legend.position = c(0.6, 0.7),
+    legend.direction = "horizontal")+
+  guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
+                               title.position = "top", title.hjust = 0.5))
+
+ggheatmap + 
+  geom_text(aes(Var2, Var1, label = value), color = "black", size = 3) +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    axis.ticks = element_blank(),
+    legend.justification = c(1, 0),
+    legend.position = c(0.6, 0.7),
+    legend.direction = "horizontal")+
+  guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
+                               title.position = "top", title.hjust = 0.5))
+
+print(ggheatmap)
+
+
+
+
+
+
+
+
+
+
+
+
+#### checking normality ####
+
+par(mfrow=c(2,2))
+
+# income
+density_hh_income <- 
+  density(ks_analysis_dataset$median_household_income_B19013, 
+          na.rm = TRUE)
+plot(density_hh_income, main = "Median Household Income Density Plot")
+
+density_household_value <- 
+  density(ks_analysis_dataset$median_household_value_B25077, na.rm = TRUE)
+plot(density_household_value, 
+     main = "Median Household Value Density Plot")
+
+density_percent_white <- 
+  density(ks_analysis_dataset$percent_white_B03002, na.rm = TRUE)
+plot(density_percent_white, 
+     main = "Percent White Density Plot")
+
+density_pop_density <- 
+  density(ks_analysis_dataset$population_density_B01001_ALAND, na.rm = TRUE)
+plot(density_pop_density, 
+     main = "Population Density Density Plot")
+
+density_percent_high_school <- 
+  density(ks_analysis_dataset$percent_high_school_plus_B15003, na.rm = TRUE)
+plot(density_percent_high_school, 
+     main = "Percent Completed High School Density Plot")
+
+density_median_age <- 
+  density(ks_analysis_dataset$median_age_B01002, na.rm = TRUE)
+plot(density_median_age, main = "Median Age Density Plot")
+
+density_swd <- 
+  density(ks_analysis_dataset$any_swd_sum, na.rm = TRUE)
+plot(density_swd, 
+     main = "Number of Disposal Wells per Block Group Density Plot")
+
+
+
+#### analysis by presence and absence of swd ####
+# number of block groups with and without swd wells
+table(ks_analysis_dataset$any_swd_binary)
+
+
+
+# #### HAVE NOT RUN PAST HERE WITH THE CURRENT DATA 2018-12-15 ####
+# 
+# ## median household income
+# # median
+# aggregate(median_household_income_B19013~any_swd_binary, data=ks_analysis_dataset, FUN=median)
+# median(ks_analysis_dataset$median_household_income_B19013, na.rm = TRUE)
+# 
+# # interquartile range
+# aggregate(median_household_income_B19013~any_swd_binary, data=ks_analysis_dataset, FUN=quantile)
+# quantile(ks_analysis_dataset$median_household_income_B19013, na.rm = TRUE)
+# 
+# # missings
+# table(is.na(ks_analysis_dataset$median_household_income_B19013))
+# aggregate(median_household_income_B19013~any_swd_binary, data=ks_analysis_dataset, FUN=length)
+# 
+# # t test
+# t.test(ks_analysis_dataset$median_household_income_B19013[ks_analysis_dataset$any_swd_binary=="yes"], ks_analysis_dataset$median_household_income_B19013[ks_analysis_dataset$any_swd_binary=="no"])
+# 
+# 
+# ## median household value
+# # median
+# aggregate(median_household_value_B25077~any_swd_binary, data=ks_analysis_dataset, FUN=median)
+# median(ks_analysis_dataset$median_household_value_B25077, na.rm = TRUE)
+# 
+# # interquartile range
+# aggregate(median_household_value_B25077~any_swd_binary, data=ks_analysis_dataset, FUN=quantile)
+# quantile(ks_analysis_dataset$median_household_value_B25077, na.rm = TRUE)
+# 
+# # missings
+# table(is.na(ks_analysis_dataset$median_household_value_B25077))
+# aggregate(median_household_value_B25077~any_swd_binary, data=ks_analysis_dataset, FUN=length)
+# 
+# # t test
+# t.test(ks_analysis_dataset$median_household_value_B25077[ks_analysis_dataset$any_swd_binary=="yes"], ks_analysis_dataset$median_household_value_B25077[ks_analysis_dataset$any_swd_binary=="no"])
+# 
+# 
+# ## percent white
+# # median
+# aggregate(percent_white_B03002~any_swd_binary, data=ks_analysis_dataset, FUN=median)
+# median(ks_analysis_dataset$percent_white_B03002, na.rm = TRUE)
+# 
+# # interquartile range
+# aggregate(percent_white_B03002~any_swd_binary, data=ks_analysis_dataset, FUN=quantile)
+# quantile(ks_analysis_dataset$percent_white_B03002, na.rm = TRUE)
+# 
+# # missings
+# table(is.na(ks_analysis_dataset$percent_white_B03002))
+# aggregate(percent_white_B03002~any_swd_binary, data=ks_analysis_dataset, FUN=length)
+# 
+# # t test
+# t.test(ks_analysis_dataset$percent_white_B03002[ks_analysis_dataset$any_swd_binary=="yes"], ks_analysis_dataset$percent_white_B03002[ks_analysis_dataset$any_swd_binary=="no"])
+# 
+# 
+# ## population density
+# # median
+# aggregate(population_density_B01001_ALAND~any_swd_binary, data=ks_analysis_dataset, FUN=median)
+# median(ks_analysis_dataset$population_density_B01001_ALAND, na.rm = TRUE)
+# 
+# # interquartile range
+# aggregate(population_density_B01001_ALAND~any_swd_binary, data=ks_analysis_dataset, FUN=quantile)
+# quantile(ks_analysis_dataset$population_density_B01001_ALAND, na.rm = TRUE)
+# 
+# # missings
+# table(is.na(ks_analysis_dataset$population_density_B01001_ALAND))
+# 
+# # t test
+# t.test(ks_analysis_dataset$population_density_B01001_ALAND[ks_analysis_dataset$any_swd_binary=="yes"], ks_analysis_dataset$population_density_B01001_ALAND[ks_analysis_dataset$any_swd_binary=="no"])
+# 
+# 
+# ## percent high school or more
+# # median
+# aggregate(percent_high_school_plus_B15003~any_swd_binary, data=ks_analysis_dataset, FUN=median)
+# median(ks_analysis_dataset$percent_high_school_plus_B15003, na.rm = TRUE)
+# 
+# # interquartile range
+# aggregate(percent_high_school_plus_B15003~any_swd_binary, data=ks_analysis_dataset, FUN=quantile)
+# quantile(ks_analysis_dataset$percent_high_school_plus_B15003, na.rm = TRUE)
+# 
+# # missings
+# table(is.na(ks_analysis_dataset$percent_high_school_plus_B15003))
+# aggregate(percent_high_school_plus_B15003~any_swd_binary, data=ks_analysis_dataset, FUN=length)
+# 
+# # t test
+# t.test(ks_analysis_dataset$percent_high_school_plus_B15003[ks_analysis_dataset$any_swd_binary=="yes"], ks_analysis_dataset$percent_high_school_plus_B15003[ks_analysis_dataset$any_swd_binary=="no"])
+# 
+# 
+# ## median age
+# # median
+# aggregate(median_age_B01002~any_swd_binary, data=ks_analysis_dataset, FUN=median)
+# median(ks_analysis_dataset$median_age_B01002, na.rm = TRUE)
+# 
+# # interquartile range
+# aggregate(median_age_B01002~any_swd_binary, data=ks_analysis_dataset, FUN=quantile)
+# quantile(ks_analysis_dataset$median_age_B01002, na.rm = TRUE)
+# 
+# # missings
+# table(is.na(ks_analysis_dataset$median_age_B01002))
+# aggregate(median_age_B01002~any_swd_binary, data=ks_analysis_dataset, FUN=length)
+# 
+# # t test
+# t.test(ks_analysis_dataset$median_age_B01002[ks_analysis_dataset$any_swd_binary=="yes"], ks_analysis_dataset$median_age_B01002[ks_analysis_dataset$any_swd_binary=="no"])
+# 
+# 
+# 
+# #### Poisson
+# poisson_model <- glm(formula = any_swd_sum ~ median_household_value_B25077 + percent_white_B03002 + population_density_B01001_ALAND + percent_high_school_plus_B15003 + median_age_B01002, family = "poisson", data = ks_analysis_dataset)
+# summary(poisson_model)
+# 
+# poisson_model <- glm(formula = any_swd_sum ~ median_household_income_B19013 + median_household_value_B25077 + percent_white_B03002 + population_density_B01001_ALAND + percent_high_school_plus_B15003 + median_age_B01002, family = "poisson", data = ks_analysis_dataset)
+# summary(poisson_model)
+# confint(poisson_model)
+# 
+# ks_analysis_dataset <- within(ks_analysis_dataset, any_swd_binary[ks_analysis_dataset$any_swd_binary == "yes"]  <-  1)
+# ks_analysis_dataset <- within(ks_analysis_dataset, any_swd_binary[ks_analysis_dataset$any_swd_binary == "no"]  <-  0)
+# View(ks_analysis_dataset$any_swd_binary)
+# ks_analysis_dataset$any_swd_binary <- as.numeric(ks_analysis_dataset$any_swd_binary)
+# View(ks_analysis_dataset$any_swd_binary)
+# 
+# #### logistic model r
+# logistic_model <- glm(formula = any_swd_binary ~ median_household_income_B19013 + median_household_value_B25077 + percent_white_B03002 + population_density_B01001_ALAND + percent_high_school_plus_B15003 + median_age_B01002, family = "binomial", data = ks_analysis_dataset)
+# summary(logistic_model)
+# confint(logistic_model)
+# 
+# 
+# 
+# 
+# write.csv(ks_analysis_dataset, file = "ks_analysis_dataset.csv")
+# 
+# #### old code removed that I might need later ####
+# 
+# # ks_semi_final_wells_working <- within(ks_semi_final_wells_working, well_type[man_well_type == 'class1'] <- 'class1')
+# # ks_semi_final_wells_working <- within(ks_semi_final_wells_working, well_type[man_well_type == 'swd_class1'] <- 'swd_class1')
+# # ks_semi_final_wells_working <- within(ks_semi_final_wells_working, activity[man_activity == 'pa'] <- 'pa')
+# # ks_semi_final_wells_working <- within(ks_semi_final_wells_working, activity[man_activity == 'never_completed'] <- 'never_completed')
+# # ks_semi_final_wells_working <- within(ks_semi_final_wells_working, other[STATUS %in% c("SWD","SWD-P&A")] <- 'no')
+# # 
+# # # assign not-others to "yes"
+# # ks_semi_final_wells_working$other[is.na(ks_semi_final_wells_working$other)]  <-  "yes"
+# # ks_semi_final_wells_working$activity[is.na(ks_semi_final_wells_working$activity)]  <-  "not_pa"
+# # ks_semi_final_wells_working$manual[is.na(ks_semi_final_wells_working$man_well_type)] <- "no"
+# # ks_semi_final_wells_working$manual[is.na(ks_semi_final_wells_working$manual)] <- "yes"
+# # 
+# # View(ks_semi_final_wells_working)
+# # 
+# # View(table(ks_semi_final_wells_working$well_type,ks_semi_final_wells_working$has_api))
+# # 
+# # save(ks_semi_final_wells_working, file = "ks_semi_final_wells_working.rdata")
+# 
+# 
+# 
+# 
+# # # drop never-completeds
+# # no_never_complete <- subset(true_no_dup_API, !(activity == "never_completed"))
+# # View(no_never_complete)
+# 
+# 
