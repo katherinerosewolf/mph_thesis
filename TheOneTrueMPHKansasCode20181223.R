@@ -54,96 +54,96 @@ my_wait <- function() {
 }
 
 
-# #### raw acs data import ####
-# 
-# variable_names <-
-#   readLines(
-#     "acs_2013_2017_data_documentation/comma_separated_variables.csv")
-# variable_names
-# 
-# variable_names_to_include <-
-#   readLines(
-#     "acs_2013_2017_data_documentation/variable_names_to_include.csv")
-# variable_names_to_include
-# 
-# variable_names_to_exclude <-
-#   readLines("acs_2013_2017_data_documentation/variable_names_to_exclude.csv"
-#             )
-# variable_names_to_exclude
-# 
-# true_variable_candidates <-
-#   variable_names[
-#     grepl(
-#       paste(
-#         variable_names_to_include,
-#         collapse="|"),
-#       variable_names)]
-# 
-# true_variable_candidates
-# 
-# variable_names_for_totalcensus <-
-#   true_variable_candidates[
-#     !grepl(
-#       paste(
-#         variable_names_to_exclude,
-#         collapse="|"),
-#       true_variable_candidates)]
-# 
-# additional_exclusions <-
-#   c(".5",
-#     "B15002A",
-#     "B15002B",
-#     "B15002C",
-#     "B15002D",
-#     "B15002E",
-#     "B15002F",
-#     "B15002G",
-#     "B15002H",
-#     "B15002I",
-#     "B21001A",
-#     "B21001B",
-#     "B21001C",
-#     "B21001D",
-#     "B21001E",
-#     "B21001F",
-#     "B21001G",
-#     "B21001H",
-#     "B21001I")
-# 
-# final_variable_names_for_totalcensus <-
-#   variable_names_for_totalcensus[
-#     !grepl(
-#       paste(
-#         additional_exclusions, 
-#         collapse="|"), 
-#       variable_names_for_totalcensus
-#       )
-#     ]
-# 
-# final_variable_names_for_totalcensus
-# 
-# # set_path_to_census("acs_2017_5_year")
-# 
-# acs_data_2013_2017_via_totalcensus <- read_acs5year(
-#   year = 2017,
-#   states = "KS",
-#   table_contents =
-#     final_variable_names_for_totalcensus,
-#   summary_level = "block group",
-#   with_margin = TRUE
-# )
-# 
-# # View(acs_data_2013_2017_via_totalcensus)
-# 
-# save(
-#   acs_data_2013_2017_via_totalcensus, 
-#   file = "acs_data_2013_2017_via_totalcensus.rdata"
-#   )
-# 
-# write.csv(
-#   acs_data_2013_2017_via_totalcensus, 
-#   file = "acs_data_2013_2017_via_totalcensus.csv"
-#   )
+#### raw acs data import ####
+
+variable_names <-
+  readLines(
+    "acs_2013_2017_data_documentation/comma_separated_variables.csv")
+variable_names
+
+variable_names_to_include <-
+  readLines(
+    "acs_2013_2017_data_documentation/variable_names_to_include.csv")
+variable_names_to_include
+
+variable_names_to_exclude <-
+  readLines("acs_2013_2017_data_documentation/variable_names_to_exclude.csv"
+            )
+variable_names_to_exclude
+
+true_variable_candidates <-
+  variable_names[
+    grepl(
+      paste(
+        variable_names_to_include,
+        collapse="|"),
+      variable_names)]
+
+true_variable_candidates
+
+variable_names_for_totalcensus <-
+  true_variable_candidates[
+    !grepl(
+      paste(
+        variable_names_to_exclude,
+        collapse="|"),
+      true_variable_candidates)]
+
+additional_exclusions <-
+  c("\\.",
+    "B15002A",
+    "B15002B",
+    "B15002C",
+    "B15002D",
+    "B15002E",
+    "B15002F",
+    "B15002G",
+    "B15002H",
+    "B15002I",
+    "B21001A",
+    "B21001B",
+    "B21001C",
+    "B21001D",
+    "B21001E",
+    "B21001F",
+    "B21001G",
+    "B21001H",
+    "B21001I")
+
+final_variable_names_for_totalcensus <-
+  variable_names_for_totalcensus[
+    !grepl(
+      paste(
+        additional_exclusions,
+        collapse="|"),
+      variable_names_for_totalcensus
+      )
+    ]
+
+final_variable_names_for_totalcensus
+
+# set_path_to_census("acs_2017_5_year")
+
+acs_data_2013_2017_via_totalcensus <- read_acs5year(
+  year = 2017,
+  states = "KS",
+  table_contents =
+    final_variable_names_for_totalcensus,
+  summary_level = "block group",
+  with_margin = TRUE
+)
+
+# View(acs_data_2013_2017_via_totalcensus)
+
+save(
+  acs_data_2013_2017_via_totalcensus,
+  file = "acs_data_2013_2017_via_totalcensus.rdata"
+  )
+
+write.csv(
+  acs_data_2013_2017_via_totalcensus,
+  file = "acs_data_2013_2017_via_totalcensus.csv"
+  )
 
 load(
   file = 
@@ -179,7 +179,7 @@ load(file = "ks_uic_2018_09_04.rdata")
 
 working_acs <- as.data.frame(working_acs)
 
-working_acs
+
 
 #### pull ACS data I need ####
 total_pop <- 
@@ -296,6 +296,7 @@ sex_age_cat <- working_acs[
     "B01001_049_margin"
   )
   ]
+
 age_median <- working_acs[
   ,c(
     "GEOID",
@@ -307,6 +308,7 @@ age_median <- working_acs[
     "B01002_003_margin"
   )
   ]
+
 race_cat <- working_acs[
   ,c(
     "GEOID",
@@ -432,78 +434,139 @@ income_house_cat <-
   working_acs[
     ,c(
       "GEOID", 
-      "B19001_001", 
+      "B19001_001",
+      "B19001_001_margin", 
       "B19001_002", 
+      "B19001_002_margin", 
       "B19001_003", 
+      "B19001_003_margin", 
       "B19001_004", 
+      "B19001_004_margin", 
       "B19001_005", 
+      "B19001_005_margin", 
       "B19001_006", 
+      "B19001_006_margin", 
       "B19001_007", 
+      "B19001_007_margin", 
       "B19001_008", 
+      "B19001_008_margin", 
       "B19001_009", 
+      "B19001_009_margin", 
       "B19001_010", 
+      "B19001_010_margin", 
       "B19001_011", 
-      "B19001_012", 
-      "B19001_013", 
-      "B19001_014", 
-      "B19001_015", 
+      "B19001_011_margin", 
+      "B19001_012",  
+      "B19001_012_margin",
+      "B19001_013",
+      "B19001_013_margin", 
+      "B19001_014",  
+      "B19001_014_margin",
+      "B19001_015",
+      "B19001_015_margin", 
       "B19001_016", 
-      "B19001_017"
+      "B19001_016_margin", 
+      "B19001_017", 
+      "B19001_017_margin"
     )
     ]
 income_house_median<-working_acs[
   ,c(
     "GEOID", 
-    "B19013_001"
+    "B19013_001", 
+    "B19013_001_margin"
   )
   ]
 earnings_sex_cat <- 
   working_acs[
     ,c(
       "GEOID", 
-      "B20001_001", 
+      "B20001_001",
+      "B20001_001_margin", 
       "B20001_002", 
+      "B20001_002_margin", 
       "B20001_003", 
+      "B20001_003_margin", 
       "B20001_004", 
+      "B20001_004_margin", 
       "B20001_005", 
+      "B20001_005_margin", 
       "B20001_006", 
+      "B20001_006_margin", 
       "B20001_007", 
+      "B20001_007_margin", 
       "B20001_008", 
+      "B20001_008_margin", 
       "B20001_009", 
+      "B20001_009_margin", 
       "B20001_010", 
+      "B20001_010_margin", 
       "B20001_011", 
+      "B20001_011_margin", 
       "B20001_012", 
+      "B20001_012_margin", 
       "B20001_013", 
+      "B20001_013_margin", 
       "B20001_014", 
+      "B20001_014_margin", 
       "B20001_015", 
+      "B20001_015_margin", 
       "B20001_016", 
+      "B20001_016_margin", 
       "B20001_017", 
+      "B20001_017_margin", 
       "B20001_018", 
+      "B20001_018_margin", 
       "B20001_019", 
+      "B20001_019_margin", 
       "B20001_020", 
+      "B20001_020_margin", 
       "B20001_021", 
+      "B20001_021_margin", 
       "B20001_022", 
+      "B20001_022_margin", 
       "B20001_023", 
+      "B20001_023_margin", 
       "B20001_024", 
-      "B20001_025", 
-      "B20001_026", 
-      "B20001_027", 
+      "B20001_024_margin",
+      "B20001_025",
+      "B20001_025_margin", 
+      "B20001_026",
+      "B20001_026_margin",
+      "B20001_027",
+      "B20001_027_margin", 
       "B20001_028", 
+      "B20001_028_margin", 
       "B20001_029", 
+      "B20001_029_margin", 
       "B20001_030", 
+      "B20001_030_margin", 
       "B20001_031", 
+      "B20001_031_margin", 
       "B20001_032", 
+      "B20001_032_margin", 
       "B20001_033", 
+      "B20001_033_margin", 
       "B20001_034", 
+      "B20001_034_margin", 
       "B20001_035", 
+      "B20001_035_margin", 
       "B20001_036", 
+      "B20001_036_margin", 
       "B20001_037", 
+      "B20001_037_margin", 
       "B20001_038", 
+      "B20001_038_margin", 
       "B20001_039", 
+      "B20001_039_margin", 
       "B20001_040", 
+      "B20001_040_margin", 
       "B20001_041", 
+      "B20001_041_margin", 
       "B20001_042", 
-      "B20001_043"
+      "B20001_042_margin", 
+      "B20001_043", 
+      "B20001_043_margin"
     )
     ]
 earnings_median <- 
@@ -511,8 +574,11 @@ earnings_median <-
     ,c(
       "GEOID", 
       "B20002_001", 
+      "B20002_001_margin", 
       "B20002_002", 
-      "B20002_003"
+      "B20002_002_margin", 
+      "B20002_003",
+      "B20002_003_margin" 
     )
     ]
 employment_cat <- 
@@ -520,45 +586,79 @@ employment_cat <-
     ,c(
       "GEOID",
       "B23025_001",
+      "B23025_001_margin",
       "B23025_002",
+      "B23025_002_margin",
       "B23025_003",
+      "B23025_003_margin",
       "B23025_004",
+      "B23025_004_margin",
       "B23025_005",
+      "B23025_005_margin",
       "B23025_006",
-      "B23025_007"
+      "B23025_006_margin",
+      "B23025_007",
+      "B23025_007_margin"
     )
     ]
 home_value_cat <- 
   working_acs[
     ,c(
       "GEOID", 
-      "B25075_001", 
+      "B25075_001",
+      "B25075_001_margin", 
       "B25075_002", 
+      "B25075_002_margin", 
       "B25075_003", 
+      "B25075_003_margin", 
       "B25075_004", 
+      "B25075_004_margin", 
       "B25075_005", 
+      "B25075_005_margin", 
       "B25075_006", 
+      "B25075_006_margin", 
       "B25075_007", 
+      "B25075_007_margin", 
       "B25075_008", 
+      "B25075_008_margin", 
       "B25075_009", 
+      "B25075_009_margin", 
       "B25075_010", 
+      "B25075_010_margin", 
       "B25075_011", 
+      "B25075_011_margin", 
       "B25075_012", 
+      "B25075_012_margin", 
       "B25075_013", 
+      "B25075_013_margin", 
       "B25075_014", 
+      "B25075_014_margin", 
       "B25075_015", 
+      "B25075_015_margin", 
       "B25075_016", 
+      "B25075_016_margin", 
       "B25075_017", 
+      "B25075_017_margin", 
       "B25075_018", 
+      "B25075_018_margin", 
       "B25075_019", 
+      "B25075_019_margin", 
       "B25075_020", 
+      "B25075_020_margin", 
       "B25075_021", 
+      "B25075_021_margin", 
       "B25075_022", 
+      "B25075_022_margin", 
       "B25075_023", 
+      "B25075_023_margin", 
       "B25075_024", 
+      "B25075_024_margin", 
       "B25075_025", 
+      "B25075_025_margin", 
       "B25075_026", 
-      "B25075_027"
+      "B25075_026_margin", 
+      "B25075_027", 
+      "B25075_027_margin"
     )
     ]
 health_insurance_cat <- 
@@ -566,101 +666,197 @@ health_insurance_cat <-
     ,c(
       "GEOID", 
       "B27010_001", 
+      "B27010_001_margin", 
       "B27010_002", 
+      "B27010_002_margin", 
       "B27010_003", 
+      "B27010_003_margin", 
       "B27010_004", 
+      "B27010_004_margin", 
       "B27010_005", 
+      "B27010_005_margin", 
       "B27010_006", 
+      "B27010_006_margin", 
       "B27010_007", 
+      "B27010_007_margin", 
       "B27010_008", 
+      "B27010_008_margin", 
       "B27010_009", 
+      "B27010_009_margin", 
       "B27010_010", 
+      "B27010_010_margin", 
       "B27010_011", 
+      "B27010_011_margin", 
       "B27010_012", 
+      "B27010_012_margin", 
       "B27010_013", 
+      "B27010_013_margin", 
       "B27010_014", 
+      "B27010_014_margin", 
       "B27010_015", 
+      "B27010_015_margin", 
       "B27010_016", 
-      "B27010_017", 
+      "B27010_016_margin", 
+      "B27010_017",
+      "B27010_017_margin", 
       "B27010_018", 
+      "B27010_018_margin", 
       "B27010_019", 
+      "B27010_019_margin", 
       "B27010_020", 
+      "B27010_020_margin", 
       "B27010_021", 
+      "B27010_021_margin", 
       "B27010_022", 
+      "B27010_022_margin", 
       "B27010_023", 
+      "B27010_023_margin", 
       "B27010_024", 
+      "B27010_024_margin", 
       "B27010_025", 
+      "B27010_025_margin", 
       "B27010_027", 
+      "B27010_027_margin", 
       "B27010_028", 
+      "B27010_028_margin", 
       "B27010_029", 
+      "B27010_029_margin", 
       "B27010_030", 
+      "B27010_030_margin", 
       "B27010_031", 
+      "B27010_031_margin", 
       "B27010_032", 
+      "B27010_032_margin", 
       "B27010_033", 
+      "B27010_033_margin", 
       "B27010_034", 
+      "B27010_034_margin", 
       "B27010_035", 
+      "B27010_035_margin", 
       "B27010_036", 
+      "B27010_036_margin", 
       "B27010_037", 
+      "B27010_037_margin", 
       "B27010_038", 
+      "B27010_038_margin", 
       "B27010_039", 
+      "B27010_039_margin", 
       "B27010_040", 
+      "B27010_040_margin", 
       "B27010_041", 
+      "B27010_041_margin", 
       "B27010_042", 
+      "B27010_042_margin", 
       "B27010_043", 
+      "B27010_043_margin", 
       "B27010_044", 
-      "B27010_045", 
-      "B27010_046", 
-      "B27010_047", 
-      "B27010_048", 
+      "B27010_044_margin", 
+      "B27010_045",  
+      "B27010_045_margin",
+      "B27010_046",
+      "B27010_046_margin", 
+      "B27010_047",  
+      "B27010_047_margin",
+      "B27010_048",
+      "B27010_048_margin", 
       "B27010_049", 
+      "B27010_049_margin", 
       "B27010_050", 
+      "B27010_050_margin", 
       "B27010_051", 
+      "B27010_051_margin", 
       "B27010_052", 
+      "B27010_052_margin", 
       "B27010_053", 
+      "B27010_053_margin", 
       "B27010_054", 
+      "B27010_054_margin", 
       "B27010_055", 
+      "B27010_055_margin", 
       "B27010_056", 
+      "B27010_056_margin", 
       "B27010_057", 
+      "B27010_057_margin", 
       "B27010_058", 
+      "B27010_058_margin", 
       "B27010_059", 
-      "B27010_060", 
+      "B27010_059_margin", 
+      "B27010_060",  
+      "B27010_060_margin",
       "B27010_061", 
-      "B27010_062", 
+      "B27010_061_margin",
+      "B27010_062",
+      "B27010_062_margin", 
       "B27010_063", 
+      "B27010_063_margin", 
       "B27010_064", 
+      "B27010_064_margin", 
       "B27010_065", 
-      "B27010_066"
+      "B27010_065_margin", 
+      "B27010_066", 
+      "B27010_066_margin"
     )
     ]
 home_value_median <- 
   working_acs[
     ,c(
       "GEOID", 
-      "B25077_001"
+      "B25077_001", 
+      "B25077_001_margin"
     )
     ]
-unemployment_rate <- 
+unemployment_rate <- # divide 5 by 3
   working_acs[
     ,c(
       "GEOID", 
-      "S2301_001",
-      "S2301_001_margin", 
-      "S2301_004", 
-      "S2301_004_margin"
+      "B23025_001",
+      "B23025_001_margin", 
+      "B23025_002",
+      "B23025_002_margin", 
+      "B23025_003",
+      "B23025_003_margin", 
+      "B23025_004", 
+      "B23025_004_margin",
+      "B23025_005",
+      "B23025_005_margin", 
+      "B23025_006",
+      "B23025_006_margin", 
+      "B23025_007",
+      "B23025_007_margin"
     )
     ]
 ling_iso <- 
   working_acs[
     ,c(
       "GEOID", 
-      "S1602_001",
-      "S1602_001_margin", 
-      "S1602_002",
-      "S1602_002_margin", 
-      "S1602_003",
-      "S1602_003_margin", 
-      "S1602_004",
-      "S1602_004_margin"
+      "C16002_001", 
+      "C16002_001_margin", 
+      "C16002_002", 
+      "C16002_002_margin", 
+      "C16002_003", 
+      "C16002_003_margin", 
+      "C16002_004", 
+      "C16002_004_margin", 
+      "C16002_005", 
+      "C16002_005_margin", 
+      "C16002_006", 
+      "C16002_006_margin", 
+      "C16002_007", 
+      "C16002_007_margin", 
+      "C16002_008", 
+      "C16002_008_margin", 
+      "C16002_009", 
+      "C16002_009_margin", 
+      "C16002_010", 
+      "C16002_010_margin", 
+      "C16002_011", 
+      "C16002_011_margin", 
+      "C16002_012", 
+      "C16002_012_margin", 
+      "C16002_013", 
+      "C16002_013_margin", 
+      "C16002_014", 
+      "C16002_014_margin"
     )
     ]
 housing_tenure <- 
@@ -671,9 +867,11 @@ housing_tenure <-
       "B25003_002", 
       "B25003_002_margin", 
       "B25003_003", 
-      "B25003_003_margin",
+      "B25003_003_margin"
     )
     ]
+
+names(working_acs)
 geography_area <- 
   working_acs[
     ,c(
@@ -694,7 +892,6 @@ geography_area <-
       "GEOID_simple"
     )
     ]
-
 
 
 
