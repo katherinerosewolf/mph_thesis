@@ -54,120 +54,140 @@ my_wait <- function() {
 }
 
 
-#### raw acs data import ####
-
-variable_names <-
-  readLines(
-    "acs_2013_2017_data_documentation/comma_separated_variables.csv")
-variable_names
-
-variable_names_to_include <-
-  readLines(
-    "acs_2013_2017_data_documentation/variable_names_to_include.csv")
-variable_names_to_include
-
-variable_names_to_exclude <-
-  readLines("acs_2013_2017_data_documentation/variable_names_to_exclude.csv"
-            )
-variable_names_to_exclude
-
-true_variable_candidates <-
-  variable_names[
-    grepl(
-      paste(
-        variable_names_to_include,
-        collapse="|"),
-      variable_names)]
-
-true_variable_candidates
-
-variable_names_for_totalcensus <-
-  true_variable_candidates[
-    !grepl(
-      paste(
-        variable_names_to_exclude,
-        collapse="|"),
-      true_variable_candidates)]
-
-additional_exclusions <-
-  c("\\.",
-    "B15002A",
-    "B15002B",
-    "B15002C",
-    "B15002D",
-    "B15002E",
-    "B15002F",
-    "B15002G",
-    "B15002H",
-    "B15002I",
-    "B21001A",
-    "B21001B",
-    "B21001C",
-    "B21001D",
-    "B21001E",
-    "B21001F",
-    "B21001G",
-    "B21001H",
-    "B21001I")
-
-final_variable_names_for_totalcensus <-
-  variable_names_for_totalcensus[
-    !grepl(
-      paste(
-        additional_exclusions,
-        collapse="|"),
-      variable_names_for_totalcensus
-      )
-    ]
-
-final_variable_names_for_totalcensus
-
-# set_path_to_census("acs_2017_5_year")
-
-acs_data_2013_2017_via_totalcensus <- read_acs5year(
-  year = 2017,
-  states = "KS",
-  table_contents =
-    final_variable_names_for_totalcensus,
-  summary_level = "block group",
-  with_margin = TRUE
-)
-
-# View(acs_data_2013_2017_via_totalcensus)
-
-save(
-  acs_data_2013_2017_via_totalcensus,
-  file = "acs_data_2013_2017_via_totalcensus.rdata"
-  )
-
-write.csv(
-  acs_data_2013_2017_via_totalcensus,
-  file = "acs_data_2013_2017_via_totalcensus.csv"
-  )
-
-load(
-  file = 
-    "acs_data_2013_2017_via_totalcensus.rdata") 
-
-# make working acs
-working_acs <- 
-  acs_data_2013_2017_via_totalcensus
-
-
-
-# #### raw data import ####
+# #### raw acs data import ####
 # 
-# # well data import
+# variable_names <-
+#   readLines(
+#     "acs_2013_2017_data_supplements/comma_separated_variables.csv")
+# variable_names
+# 
+# variable_names_to_include <-
+#   readLines(
+#     "acs_2013_2017_data_supplements/variable_names_to_include.csv")
+# variable_names_to_include
+# 
+# variable_names_to_exclude <-
+#   readLines("acs_2013_2017_data_supplements/variable_names_to_exclude.csv"
+#             )
+# variable_names_to_exclude
+# 
+# true_variable_candidates <-
+#   variable_names[
+#     grepl(
+#       paste(
+#         variable_names_to_include,
+#         collapse="|"),
+#       variable_names)]
+# 
+# true_variable_candidates
+# 
+# variable_names_for_totalcensus <-
+#   true_variable_candidates[
+#     !grepl(
+#       paste(
+#         variable_names_to_exclude,
+#         collapse="|"),
+#       true_variable_candidates)]
+# 
+# additional_exclusions <-
+#   c("\\.",
+#     "B15002A",
+#     "B15002B",
+#     "B15002C",
+#     "B15002D",
+#     "B15002E",
+#     "B15002F",
+#     "B15002G",
+#     "B15002H",
+#     "B15002I",
+#     "B21001A",
+#     "B21001B",
+#     "B21001C",
+#     "B21001D",
+#     "B21001E",
+#     "B21001F",
+#     "B21001G",
+#     "B21001H",
+#     "B21001I")
+# 
+# final_variable_names_for_totalcensus <-
+#   variable_names_for_totalcensus[
+#     !grepl(
+#       paste(
+#         additional_exclusions,
+#         collapse="|"),
+#       variable_names_for_totalcensus
+#       )
+#     ]
+# 
+# final_variable_names_for_totalcensus
+# 
+# # set_path_to_census("acs_2013_2017_data")
+# 
+# acs_data_2013_2017_via_totalcensus <- 
+#   read_acs5year(
+#     year = 2017, 
+#     states = "KS", 
+#     table_contents = 
+#       final_variable_names_for_totalcensus, 
+#     summary_level = "block group", 
+#     with_margin = TRUE
+# )
+# 
+# # View(acs_data_2013_2017_via_totalcensus)
+# 
+# save(
+#   acs_data_2013_2017_via_totalcensus,
+#   file = "acs_data_2013_2017_via_totalcensus.rdata"
+#   )
+# 
+# write.csv(
+#   acs_data_2013_2017_via_totalcensus,
+#   file = "acs_data_2013_2017_via_totalcensus.csv"
+#   )
+#
+#
+#
+# #### raw well data import ####
+# 
 # ks_wells_2018_11_01 <- read.csv(file = "ks_wells_2018_11_01.txt", stringsAsFactors = FALSE) # import raw data
 # save(ks_wells_2018_11_01, file = "ks_wells_2018_11_01.rdata") # save as an rdata file
 # 
-# # UIC data import
+#
+#
+# #### UIC data import ####
+#
 # ks_uic_2018_09_04 <- fread(file = "KS_UIC_archive_2018_09_04.txt") # import raw data
 # save(ks_uic_2018_09_04, file = "ks_uic_2018_09_04.rdata") # save as an rdata file
+#
+#
+#
+# #### ks blockgroup from geodatabase shapefile import ####
+# 
+# ks_tiger_table <- # import raw data
+#   fread(
+#     "ks_2017_bg_gdb_table_export.txt",
+#     colClasses =
+#       list(character = 'GEOID'
+#       )
+#     )
+# 
+# View(ks_tiger_table)
+# 
+# # fix GEOID to match ACS data
+# ks_tiger_table$GEOID <-
+#   paste0('15000US',
+#          ks_tiger_table$GEOID
+#          )
+# 
+# # save as .rdata file
+# save(ks_tiger_table,
+#      file = "ks_tiger_table.rdata"
+#      )
 
 
 
-#### load necessary files ####
+#### load necessary files to start here ####
 
 # load well data
 load(file = "ks_wells_2018_11_01.rdata")
@@ -176,12 +196,24 @@ load(file = "ks_wells_2018_11_01.rdata")
 load(file = "ks_uic_2018_09_04.rdata")
 
 # load ACS shapefile data from its attribute table
+load(file = "ks_tiger_table.rdata")
 
-working_acs <- as.data.frame(working_acs)
+# load raw acs data
+load(file = "acs_data_2013_2017_via_totalcensus.rdata") 
 
 
 
 #### pull ACS data I need ####
+
+# make working acs
+working_acs <- 
+  acs_data_2013_2017_via_totalcensus
+
+# convert from dataframe to data table
+working_acs <- 
+  as.data.frame(working_acs)
+
+# pull data from various categories
 total_pop <- 
   working_acs[
     ,c(
@@ -871,28 +903,8 @@ housing_tenure <-
     )
     ]
 
-names(working_acs)
-geography_area <- 
-  working_acs[
-    ,c(
-      "GEOID", 
-      "STATEFP", 
-      "COUNTYFP", 
-      "TRACTCE", 
-      "BLKGRPCE", 
-      "NAMELSAD", 
-      "MTFCC", 
-      "FUNCSTAT", 
-      "ALAND", 
-      "AWATER", 
-      "INTPTLAT", 
-      "INTPTLON", 
-      "Shape_Length", 
-      "Shape_Area", 
-      "GEOID_simple"
-    )
-    ]
 
+#### START HERE FIX CATEGORIES, ADD GEOGRAPHY ####
 
 
 # merge all of the above together
