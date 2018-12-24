@@ -1,7 +1,0 @@
-"","median_household_income_B19013","median_household_value_B25077","percent_white_B03002","population_density_B01001_ALAND","percent_high_school_plus_B15003","median_age_B01002"
-"median_household_income_B19013",1,0.82,0.35,-0.12,0.44,0.21
-"median_household_value_B25077",0.82,1,0.25,0.01,0.42,0.14
-"percent_white_B03002",0.35,0.25,1,-0.41,0.66,0.46
-"population_density_B01001_ALAND",-0.12,0.01,-0.41,1,-0.19,-0.43
-"percent_high_school_plus_B15003",0.44,0.42,0.66,-0.19,1,0.25
-"median_age_B01002",0.21,0.14,0.46,-0.43,0.25,1
