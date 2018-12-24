@@ -613,7 +613,7 @@ earnings_median <-
       "B20002_003_margin" 
     )
     ]
-employment_cat <- 
+employment_cat <- # divide 5 by 3
   working_acs[
     ,c(
       "GEOID",
@@ -837,26 +837,6 @@ home_value_median <-
       "B25077_001_margin"
     )
     ]
-unemployment_rate <- # divide 5 by 3
-  working_acs[
-    ,c(
-      "GEOID", 
-      "B23025_001",
-      "B23025_001_margin", 
-      "B23025_002",
-      "B23025_002_margin", 
-      "B23025_003",
-      "B23025_003_margin", 
-      "B23025_004", 
-      "B23025_004_margin",
-      "B23025_005",
-      "B23025_005_margin", 
-      "B23025_006",
-      "B23025_006_margin", 
-      "B23025_007",
-      "B23025_007_margin"
-    )
-    ]
 ling_iso <- 
   working_acs[
     ,c(
@@ -894,6 +874,7 @@ ling_iso <-
 housing_tenure <- 
   working_acs[
     ,c(
+      "GEOID", 
       "B25003_001", 
       "B25003_001_margin", 
       "B25003_002", 
@@ -903,36 +884,59 @@ housing_tenure <-
     )
     ]
 
+# make list of all categories
+variables_of_interest <- 
+  list(total_pop, 
+       sex_cat, 
+       sex_age_cat, 
+       age_median, 
+       race_cat, 
+       education_cat, 
+       poverty_ratio_cat, 
+       income_house_cat, 
+       income_house_median, 
+       earnings_sex_cat, 
+       earnings_median, 
+       employment_cat, 
+       home_value_cat, 
+       home_value_median, 
+       health_insurance_cat, 
+       ling_iso, 
+       housing_tenure)
 
-#### START HERE FIX CATEGORIES, ADD GEOGRAPHY ####
+#### merge different subset data together ####
+
+# define merge function
+merge_dataframes <- 
+  function(x, y) full_join(x, y, by = "GEOID")
+
+# perform the merge function en masse
+acs_select <- 
+  Reduce(
+    merge_dataframes, 
+    variables_of_interest
+  )
+
+# save select acs data
+save(acs_select, 
+     file = "acs_select.rdata")
+
+# merge select acs data with geography
+acs_select_geo <- 
+  full_join(ks_tiger_table, 
+            acs_select, 
+            by = "GEOID")
+View(acs_select_geo)
+
+# save acs_select_geo
+save(acs_select_geo, 
+     file = "acs_select_geo.rdata")
 
 
-# merge all of the above together
-ftdm1 <- merge(total_pop, sex_cat)
-ftdm2 <- merge(ftdm1, sex_age_cat)
-ftdm3 <- merge(ftdm2, age_median)
-ftdm4 <- merge(ftdm3, race_cat)
-ftdm5 <- merge(ftdm4, education_cat)
-ftdm6 <- merge(ftdm5, poverty_ratio_cat)
-ftdm7 <- merge(ftdm6, income_house_cat)
-ftdm8 <- merge(ftdm7, income_house_median)
-ftdm9 <- merge(ftdm8, earnings_sex_cat)
-ftdm10 <- merge(ftdm9, earnings_median)
-ftdm11 <- merge(ftdm10, employment_cat)
-ftdm12 <- merge(ftdm11, home_value_cat)
-ftdm13 <- merge(ftdm12, home_value_median)
-ftdm14 <- merge(ftdm13, health_insurance_cat)
-select_acs_data <- merge(ftdm14, geography_area)
 
-# # View resulting dataframe with selected ACS variables
-# View(select_acs_data)
 
-# save select_acs_data
-save(select_acs_data,
-     file = "select_acs_data.rdata")
 
-# # load selected variables
-# load(file = "select_acs_data.rdata")
+#### START HERE FIX CATEGORIES ####
 
 
 ### making variables ####
@@ -946,8 +950,6 @@ save(select_acs_data,
 # population median age
 # from RMF:  age categories
 
-# make set to modify
-acs_constructed_variables <- select_acs_data
 
 
 
