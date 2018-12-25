@@ -926,7 +926,7 @@ acs_select_geo <-
   full_join(ks_tiger_table, 
             acs_select, 
             by = "GEOID")
-View(acs_select_geo)
+# View(acs_select_geo)
 
 # save acs_select_geo
 save(acs_select_geo, 
@@ -934,10 +934,9 @@ save(acs_select_geo,
 
 
 
-
-
 #### START HERE FIX CATEGORIES ####
-
+acs_geo_cats <-   # make data for sorting into categories
+  acs_select_geo
 
 ### making variables ####
 # making variables
@@ -951,233 +950,216 @@ save(acs_select_geo,
 # from RMF:  age categories
 
 
-
-
-
-
-
-# unemployment rate
-data_for_analysis$employment_16_plus_total_S2301e1 <- 
-  data_for_analysis$S2301e1
-data_for_analysis$employment_16_plus_margin_S2301m1 <- 
-  data_for_analysis$S2301m1
-data_for_analysis$unemployment_rate_S2301e4 <- 
-  data_for_analysis$S2301e4
-data_for_analysis$unemployment_rate_margin_S2301m4 <- 
-  data_for_analysis$S2301m4
-
-
-# linguistic isolation
-data_for_analysis$ling_iso_total_households_S1602e1 <- 
-  data_for_analysis$S1602e1
-data_for_analysis$ling_iso_total_households_S1602m1 <- 
-  data_for_analysis$S1602m1
-
-data_for_analysis$ling_iso_number_S1602e3 <- 
-  data_for_analysis$S1602e3
-data_for_analysis$ling_iso_number_margin_S1602m3 <- 
-  data_for_analysis$S1602m3
-
-data_for_analysis$ling_iso_percent_S1602e4 <- 
-  data_for_analysis$S1602e4
-data_for_analysis$ling_iso_percent_margin_S1602m4 <- 
-  data_for_analysis$S1602m4
-
-
-# housing tenure
-data_for_analysis$housing_tenure_total_B25003e1 <- 
-  data_for_analysis$B25003e1
-data_for_analysis$housing_tenure_total_margin_B25003m1 <- 
-  data_for_analysis$B25003m1
-
-data_for_analysis$owner_occupy_number_B25003e2 <- 
-  data_for_analysis$B25003e2
-data_for_analysis$owner_occupy_margin_B25003m2 <- 
-  data_for_analysis$B25003m2
-
-data_for_analysis$renter_occupy_number_B25003e3 <- 
-  data_for_analysis$B25003e3
-data_for_analysis$renter_occupy_margin_B25003m3 <- 
-  data_for_analysis$B25003m3
-
-data_for_analysis$owner_occupy_percent_B25003e2e1 <- 
-  data_for_analysis$owner_occupy_number_B25003e2/
-  data_for_analysis$housing_tenure_total_B25003e1
-
-data_for_analysis$renter_occupy_percent_B25003e3e1 <- 
-  data_for_analysis$renter_occupy_number_B25003e3/
-  data_for_analysis$housing_tenure_total_B25003e1
-
-
-# age below 5
-data_for_analysis$age_total_B01001e1 <- 
-  data_for_analysis$B01001e1
-data_for_analysis$age_total_margin_B010001m1 <- 
-  data_for_analysis$B01001m1
-
-data_for_analysis$age_below_5_number_B01001e3e27 <- 
-  (data_for_analysis$B01001e3 + 
-     data_for_analysis$B01001e27)
-
-data_for_analysis$age_over_5_number_B01001 <- 
-  (data_for_analysis$B01001e4 + 
-     data_for_analysis$B01001e5 + 
-     data_for_analysis$B01001e6 + 
-     data_for_analysis$B01001e7 + 
-     data_for_analysis$B01001e8 + 
-     data_for_analysis$B01001e9 + 
-     data_for_analysis$B01001e10 + 
-     data_for_analysis$B01001e11 + 
-     data_for_analysis$B01001e12 + 
-     data_for_analysis$B01001e13 + 
-     data_for_analysis$B01001e14 + 
-     data_for_analysis$B01001e15 + 
-     data_for_analysis$B01001e16 + 
-     data_for_analysis$B01001e17 + 
-     data_for_analysis$B01001e18 + 
-     data_for_analysis$B01001e19 + 
-     data_for_analysis$B01001e20 + 
-     data_for_analysis$B01001e21 + 
-     data_for_analysis$B01001e22 + 
-     data_for_analysis$B01001e23 + 
-     data_for_analysis$B01001e24 + 
-     data_for_analysis$B01001e25 +
-     data_for_analysis$B01001e28 + 
-     data_for_analysis$B01001e29 + 
-     data_for_analysis$B01001e30 + 
-     data_for_analysis$B01001e31 + 
-     data_for_analysis$B01001e32 + 
-     data_for_analysis$B01001e33 + 
-     data_for_analysis$B01001e34 + 
-     data_for_analysis$B01001e35 + 
-     data_for_analysis$B01001e36 + 
-     data_for_analysis$B01001e37 + 
-     data_for_analysis$B01001e38 + 
-     data_for_analysis$B01001e39 + 
-     data_for_analysis$B01001e40 + 
-     data_for_analysis$B01001e41 + 
-     data_for_analysis$B01001e42 + 
-     data_for_analysis$B01001e43 + 
-     data_for_analysis$B01001e44 + 
-     data_for_analysis$B01001e45 + 
-     data_for_analysis$B01001e46 + 
-     data_for_analysis$B01001e47 + 
-     data_for_analysis$B01001e48 + 
-     data_for_analysis$B01001e49)
-
-data_for_analysis$age_below_5_percent_B01001e3e27 <- 
-  data_for_analysis$age_below_5_number_B01001e3e27/
-  data_for_analysis$age_total_B01001e1
-
-
-
-
-
-
-# median household inome (renaming)
-acs_constructed_variables$median_household_income_B19013 <- 
-  acs_constructed_variables$B19013e1
-
-# median household value (renaming)
-acs_constructed_variables$median_household_value_B25077 <- 
-  acs_constructed_variables$B25077e1
-
-# percent white (renaming)
-acs_constructed_variables$percent_white_B03002 <- 
-  acs_constructed_variables$B03002e3/
-  acs_constructed_variables$B03002e1
+# total population
+acs_geo_cats$population_total_B01001_001 <-
+  acs_geo_cats$B01001_001
 
 # population density (people/km2, ALAND in m2)
-acs_constructed_variables$population_density_B01001_ALAND <- 
+acs_geo_cats$population_density_B01001_001_ALAND <- 
   (1000000*
-     acs_constructed_variables$B01001e1/
-     acs_constructed_variables$ALAND)
+     acs_geo_cats$B01001_001/
+     acs_geo_cats$ALAND)
 
-# percent of population with high school education or more
-acs_constructed_variables$percent_high_school_plus_B15003 <- 
-  (
-    (
-      acs_constructed_variables$B15003e17 + 
-        acs_constructed_variables$B15003e18 + 
-        acs_constructed_variables$B15003e19 + 
-        acs_constructed_variables$B15003e20 + 
-        acs_constructed_variables$B15003e21 + 
-        acs_constructed_variables$B15003e22 + 
-        acs_constructed_variables$B15003e23 + 
-        acs_constructed_variables$B15003e24 + 
-        acs_constructed_variables$B15003e25
-    )
-    /acs_constructed_variables$B15003e1
-  )
+# median household income
+acs_geo_cats$median_household_income_B19013_001 <-
+  acs_geo_cats$B19013_001
 
 # median age
-acs_constructed_variables$median_age_B01002 <- 
-  acs_constructed_variables$B01002e1
+acs_geo_cats$median_age_B01002_001 <- 
+  acs_geo_cats$B01002_001
+
+# ages
+acs_geo_cats$age_under_5_B01001_003_027 <- 
+  acs_geo_cats$B01001_003 + acs_geo_cats$B01001_027
+acs_geo_cats$age_5_to_9_B01001_004_028 <- 
+  acs_geo_cats$B01001_004 + acs_geo_cats$B01001_028
+acs_geo_cats$age_10_to_14_B01001_005_029 <- 
+  acs_geo_cats$B01001_005 + acs_geo_cats$B01001_029 
+acs_geo_cats$age_15_to_17_B01001_006_030 <- 
+  acs_geo_cats$B01001_006 + acs_geo_cats$B01001_030 
+acs_geo_cats$age_18_to_19_B01001_007_031 <- 
+  acs_geo_cats$B01001_007 + acs_geo_cats$B01001_031 
+acs_geo_cats$age_20_B01001_008_032 <- 
+  acs_geo_cats$B01001_008 + acs_geo_cats$B01001_032 
+acs_geo_cats$age_21_B01001_009_033 <- 
+  acs_geo_cats$B01001_009 + acs_geo_cats$B01001_033 
+acs_geo_cats$age_22_to_24_B01001_010_034 <- 
+  acs_geo_cats$B01001_010 + acs_geo_cats$B01001_034 
+acs_geo_cats$age_25_to_29_B01001_011_035 <- 
+  acs_geo_cats$B01001_011 + acs_geo_cats$B01001_035 
+acs_geo_cats$age_30_to_34_B01001_012_036 <- 
+  acs_geo_cats$B01001_012 + acs_geo_cats$B01001_036 
+acs_geo_cats$age_35_to_39_B01001_013_037 <- 
+  acs_geo_cats$B01001_013 + acs_geo_cats$B01001_037 
+acs_geo_cats$age_40_to_44_B01001_014_038 <- 
+  acs_geo_cats$B01001_014 + acs_geo_cats$B01001_038 
+acs_geo_cats$age_45_to_49_B01001_015_039 <- 
+  acs_geo_cats$B01001_015 + acs_geo_cats$B01001_039 
+acs_geo_cats$age_50_to_54_B01001_016_040 <- 
+  acs_geo_cats$B01001_016 + acs_geo_cats$B01001_040 
+acs_geo_cats$age_55_to_59_B01001_017_041 <- 
+  acs_geo_cats$B01001_017 + acs_geo_cats$B01001_041 
+acs_geo_cats$age_60_to_61_B01001_018_042 <- 
+  acs_geo_cats$B01001_018 + acs_geo_cats$B01001_042 
+acs_geo_cats$age_62_to_64_B01001_019_043 <- 
+  acs_geo_cats$B01001_019 + acs_geo_cats$B01001_043
+acs_geo_cats$age_65_to_66_B01001_020_044 <- 
+  acs_geo_cats$B01001_020 + acs_geo_cats$B01001_044 
+acs_geo_cats$age_67_to_69_B01001_021_045 <- 
+  acs_geo_cats$B01001_021 + acs_geo_cats$B01001_045 
+acs_geo_cats$age_70_to_74_B01001_022_046 <- 
+  acs_geo_cats$B01001_022 + acs_geo_cats$B01001_046 
+acs_geo_cats$age_75_to_79_B01001_023_047 <- 
+  acs_geo_cats$B01001_023 + acs_geo_cats$B01001_047 
+acs_geo_cats$age_80_to_84_B01001_024_048 <- 
+  acs_geo_cats$B01001_024 + acs_geo_cats$B01001_048 
+acs_geo_cats$age_85_to_inf_B01001_025_049 <- 
+  acs_geo_cats$B01001_025 + acs_geo_cats$B01001_049 
+
+# unemployment rate
+acs_geo_cats$unemployment_B23025_005_003 <- 
+  acs_geo_cats$B23025_005/
+  acs_geo_cats$B23025_003
+
+# median household value (renaming)
+acs_geo_cats$median_household_value_B25077_001 <- 
+  acs_geo_cats$B25077_001
+
+# percent white (renaming)
+acs_geo_cats$white_non_hisp_lat_percent_B03002_003_001 <- 
+  acs_geo_cats$B03002_003/
+  acs_geo_cats$B03002_001
+
+# percent of population with high school education or more
+acs_geo_cats$percent_high_school_plus_B15003_017_to_025 <- 
+  (
+    (
+      acs_geo_cats$B15003_017 + 
+        acs_geo_cats$B15003_018 + 
+        acs_geo_cats$B15003_019 + 
+        acs_geo_cats$B15003_020 + 
+        acs_geo_cats$B15003_021 + 
+        acs_geo_cats$B15003_022 + 
+        acs_geo_cats$B15003_023 + 
+        acs_geo_cats$B15003_024 + 
+        acs_geo_cats$B15003_025
+    )
+    /acs_geo_cats$B15003_001
+  )
+
+# linguistic isolation
+acs_geo_cats$ling_iso_total_households_C16002_001 <-
+  acs_geo_cats$C16002_001
+acs_geo_cats <- 
+  acs_geo_cats %>% 
+  mutate(
+    limited_english_percent_C16002_004_007_010_013_001 <- 
+      (C16002_004 + 
+         C16002_007 + 
+         C16002_010 + 
+         C16002_013) / 
+      C16002_001)
+
+# housing tenure
+acs_geo_cats$housing_total_occupied_B25003_001 <- 
+  acs_geo_cats$B25003_001
+acs_geo_cats$housing_owner_occupied_B25003_002 <-
+  acs_geo_cats$B25003_002
+acs_geo_cats$housing_renter_occupied_B25003_003 <-
+  acs_geo_cats$B25003_003
+acs_geo_cats$owner_occupy_percent_B25003_002_001 <-
+  acs_geo_cats$B25003_002 / 
+  acs_geo_cats$B25003_001
+acs_geo_cats$renter_occupy_percent_B25003_003_001 <-
+  acs_geo_cats$B25003_003 / 
+  acs_geo_cats$B25003_001
+
+# percent below poverty
+
+# percent female
+
+# percent health insurance
+
+# percent Native
+
+
+# sex_cat
+# poverty_ratio_cat
+# earnings_sex_cat, 
+# earnings_median, 
+# health_insurance_cat
+
+
+
+
+
+
+
 
 # age categories
-acs_constructed_variables$age_below_5 <- 
-  acs_constructed_variables$B01001e27 +   # women <5
-  acs_constructed_variables$B01001e3      # men <5
-acs_constructed_variables$age_5_to_19 <-
-  acs_constructed_variables$B01001e28 +   # women 5-9
-  acs_constructed_variables$B01001e29 +   # women 10-14
-  acs_constructed_variables$B01001e30 +   # women 15-17
-  acs_constructed_variables$B01001e31 +   # women 18-19
-  acs_constructed_variables$B01001e4 +   # men 5-9
-  acs_constructed_variables$B01001e5 +   # men 10-14
-  acs_constructed_variables$B01001e6 +   # men 15-17
-  acs_constructed_variables$B01001e7     # men 18-19
-acs_constructed_variables$age_20_to_64 <-
-  acs_constructed_variables$B01001e32 + 
-  acs_constructed_variables$B01001e33 + 
-  acs_constructed_variables$B01001e34 + 
-  acs_constructed_variables$B01001e35 + 
-  acs_constructed_variables$B01001e36 + 
-  acs_constructed_variables$B01001e37 + 
-  acs_constructed_variables$B01001e38 + 
-  acs_constructed_variables$B01001e39 + 
-  acs_constructed_variables$B01001e40 + 
-  acs_constructed_variables$B01001e41 + 
-  acs_constructed_variables$B01001e42 + 
-  acs_constructed_variables$B01001e43 + 
-  acs_constructed_variables$B01001e7 + 
-  acs_constructed_variables$B01001e8 + 
-  acs_constructed_variables$B01001e9 + 
-  acs_constructed_variables$B01001e10 + 
-  acs_constructed_variables$B01001e11 + 
-  acs_constructed_variables$B01001e12 + 
-  acs_constructed_variables$B01001e13 + 
-  acs_constructed_variables$B01001e14 + 
-  acs_constructed_variables$B01001e15 + 
-  acs_constructed_variables$B01001e16 + 
-  acs_constructed_variables$B01001e17 + 
-  acs_constructed_variables$B01001e18 + 
-  acs_constructed_variables$B01001e19
-acs_constructed_variables$age_65_plus <- 
-  acs_constructed_variables$B01001e44 + 
-  acs_constructed_variables$B01001e45 + 
-  acs_constructed_variables$B01001e46 + 
-  acs_constructed_variables$B01001e47 + 
-  acs_constructed_variables$B01001e48 + 
-  acs_constructed_variables$B01001e49 + 
-  acs_constructed_variables$B01001e20 + 
-  acs_constructed_variables$B01001e21 + 
-  acs_constructed_variables$B01001e22 + 
-  acs_constructed_variables$B01001e23 + 
-  acs_constructed_variables$B01001e24 + 
-  acs_constructed_variables$B01001e25
+acs_geo_cats$age_below_5 <- 
+  acs_geo_cats$B01001e27 +   # women <5
+  acs_geo_cats$B01001e3      # men <5
+acs_geo_cats$age_5_to_19 <-
+  acs_geo_cats$B01001e28 +   # women 5-9
+  acs_geo_cats$B01001e29 +   # women 10-14
+  acs_geo_cats$B01001e30 +   # women 15-17
+  acs_geo_cats$B01001e31 +   # women 18-19
+  acs_geo_cats$B01001e4 +   # men 5-9
+  acs_geo_cats$B01001e5 +   # men 10-14
+  acs_geo_cats$B01001e6 +   # men 15-17
+  acs_geo_cats$B01001e7     # men 18-19
+acs_geo_cats$age_20_to_64 <-
+  acs_geo_cats$B01001e32 + 
+  acs_geo_cats$B01001e33 + 
+  acs_geo_cats$B01001e34 + 
+  acs_geo_cats$B01001e35 + 
+  acs_geo_cats$B01001e36 + 
+  acs_geo_cats$B01001e37 + 
+  acs_geo_cats$B01001e38 + 
+  acs_geo_cats$B01001e39 + 
+  acs_geo_cats$B01001e40 + 
+  acs_geo_cats$B01001e41 + 
+  acs_geo_cats$B01001e42 + 
+  acs_geo_cats$B01001e43 + 
+  acs_geo_cats$B01001e7 + 
+  acs_geo_cats$B01001e8 + 
+  acs_geo_cats$B01001e9 + 
+  acs_geo_cats$B01001e10 + 
+  acs_geo_cats$B01001e11 + 
+  acs_geo_cats$B01001e12 + 
+  acs_geo_cats$B01001e13 + 
+  acs_geo_cats$B01001e14 + 
+  acs_geo_cats$B01001e15 + 
+  acs_geo_cats$B01001e16 + 
+  acs_geo_cats$B01001e17 + 
+  acs_geo_cats$B01001e18 + 
+  acs_geo_cats$B01001e19
+acs_geo_cats$age_65_plus <- 
+  acs_geo_cats$B01001e44 + 
+  acs_geo_cats$B01001e45 + 
+  acs_geo_cats$B01001e46 + 
+  acs_geo_cats$B01001e47 + 
+  acs_geo_cats$B01001e48 + 
+  acs_geo_cats$B01001e49 + 
+  acs_geo_cats$B01001e20 + 
+  acs_geo_cats$B01001e21 + 
+  acs_geo_cats$B01001e22 + 
+  acs_geo_cats$B01001e23 + 
+  acs_geo_cats$B01001e24 + 
+  acs_geo_cats$B01001e25
 
 # save constructed variables
-save(acs_constructed_variables, 
-     file = "acs_constructed_variables.rdata")
+save(acs_geo_cats, 
+     file = "acs_geo_cats.rdata")
 
 # make constructed variables into .csv
-write.csv(acs_constructed_variables, 
-          file = "acs_constructed_variables.csv")
+write.csv(acs_geo_cats, 
+          file = "acs_geo_cats.csv")
 
 # load constructed variables to avoid the above
-load(file = "acs_constructed_variables.rdata")
-# View(acs_constructed_variables)
+load(file = "acs_geo_cats.rdata")
+# View(acs_geo_cats)
 
 
 
@@ -2038,11 +2020,11 @@ load(file = "ks_well_counts.rdata")
 
 # load ACS variables
 load(file = 
-       "acs_constructed_variables.rdata")
+       "acs_geo_cats.rdata")
 
 # merge well counts and acs!  hey-o!
 KS_FINAL_DATASET <- merge(ks_well_counts, 
-                          acs_constructed_variables, 
+                          acs_geo_cats, 
                           by = "GEOID", 
                           all = TRUE)
 View(KS_FINAL_DATASET)
