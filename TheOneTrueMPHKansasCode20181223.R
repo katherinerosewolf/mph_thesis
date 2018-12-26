@@ -1153,9 +1153,33 @@ acs_geo_cats$renter_occupy_percent_B25003_003_001 <-
 # percent below poverty
 acs_geo_cats$pop_for_pov_C17002_001 <- 
   acs_geo_cats$C17002_001
+acs_geo_cats$number_below_0p5_pov_C17002_002 <- 
+  acs_geo_cats$C17002_002
+acs_geo_cats$number_0p5_to_0p99_pov_C17002_003 <- 
+  acs_geo_cats$C17002_003
+acs_geo_cats$number_1p0_to_1p24_pov_C17002_004 <- 
+  acs_geo_cats$C17002_004
+acs_geo_cats$number_1p25_to_1p49_pov_C17002_005 <- 
+  acs_geo_cats$C17002_005
+acs_geo_cats$number_1p5_to_1p84_pov_C17002_006 <- 
+  acs_geo_cats$C17002_006
+acs_geo_cats$number_1p85_to_1p99_pov_C17002_007 <- 
+  acs_geo_cats$C17002_007
+acs_geo_cats$number_2p0_plus_pov_C17002_008 <- 
+  acs_geo_cats$C17002_008
+
 acs_geo_cats$percent_below_poverty_C17002_002_003_001 <- 
-  (acs_geo_cats$C17002_002 + acs_geo_cats$C17002_003) / 
+  (acs_geo_cats$C17002_002 + 
+     acs_geo_cats$C17002_003) / 
   acs_geo_cats$pop_for_pov_C17002_001
+
+acs_geo_cats$percent_below_150_poverty_C17002_002_to_005_001 <- 
+  (acs_geo_cats$C17002_002 + 
+     acs_geo_cats$C17002_003 + 
+     acs_geo_cats$C17002_004 + 
+     acs_geo_cats$C17002_005) / 
+  acs_geo_cats$pop_for_pov_C17002_001
+
 acs_geo_cats$percent_below_200_poverty_C17002_002_to_007_001 <- 
   (acs_geo_cats$C17002_002 + 
      acs_geo_cats$C17002_003 + 
@@ -1175,11 +1199,18 @@ acs_geo_cats$percent_female <-
   acs_geo_cats$population_total_B01001_001
 
 # percent health insurance
+acs_geo_cats$total_pop_health_insurance_B27010_001 <- 
+  acs_geo_cats$B27010_001
+acs_geo_cats$no_health_insurance_percent_B27010_ <- 
+  (acs_geo_cats$B27010_017 + 
+     acs_geo_cats$B27010_033 + 
+     acs_geo_cats$B27010_050 + 
+     acs_geo_cats$B27010_066) / 
+  acs_geo_cats$pop_health_insurance_B27010_001
 
 # percent Native
 
 
-# sex_cat
 # poverty_ratio_cat
 # earnings_sex_cat, 
 # earnings_median, 
