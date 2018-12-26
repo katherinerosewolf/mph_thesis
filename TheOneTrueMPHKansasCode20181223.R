@@ -441,9 +441,10 @@ education_cat <- working_acs[
     "B15003_025_margin"
   )
   ]
-poverty_ratio_cat<-working_acs[
+poverty_ratio_cat <- 
+  working_acs[
   ,c(
-    "GEOID", 
+    "GEOID",
     "C17002_001",
     "C17002_001_margin", 
     "C17002_002", 
@@ -1016,6 +1017,81 @@ acs_geo_cats$age_80_to_84_B01001_024_048 <-
 acs_geo_cats$age_85_to_inf_B01001_025_049 <- 
   acs_geo_cats$B01001_025 + acs_geo_cats$B01001_049 
 
+acs_geo_cats$age_0_to_17 <- 
+  acs_geo_cats$age_under_5_B01001_003_027 + 
+  acs_geo_cats$age_5_to_9_B01001_004_028 + 
+  acs_geo_cats$age_10_to_14_B01001_005_029 + 
+  acs_geo_cats$age_15_to_17_B01001_006_030
+
+acs_geo_cats$age_0_to_19 <- 
+  acs_geo_cats$age_under_5_B01001_003_027 + 
+  acs_geo_cats$age_5_to_9_B01001_004_028 + 
+  acs_geo_cats$age_10_to_14_B01001_005_029 + 
+  acs_geo_cats$age_15_to_17_B01001_006_030 +
+  acs_geo_cats$age_18_to_19_B01001_007_031
+
+acs_geo_cats$age_0_to_14 <- 
+  acs_geo_cats$age_under_5_B01001_003_027 + 
+  acs_geo_cats$age_5_to_9_B01001_004_028 + 
+  acs_geo_cats$age_10_to_14_B01001_005_029
+
+acs_geo_cats$age_10_to_17 <- 
+  acs_geo_cats$age_10_to_14_B01001_005_029 + 
+  acs_geo_cats$age_15_to_17_B01001_006_030
+  
+acs_geo_cats$age_15_to_64 <- 
+  acs_geo_cats$age_15_to_17_B01001_006_030 +
+  acs_geo_cats$age_18_to_19_B01001_007_031 + 
+  acs_geo_cats$age_20_B01001_008_032 + 
+  acs_geo_cats$age_21_B01001_009_033 + 
+  acs_geo_cats$age_22_to_24_B01001_010_034 + 
+  acs_geo_cats$age_25_to_29_B01001_011_035 + 
+  acs_geo_cats$age_30_to_34_B01001_012_036 + 
+  acs_geo_cats$age_35_to_39_B01001_013_037 + 
+  acs_geo_cats$age_40_to_44_B01001_014_038 + 
+  acs_geo_cats$age_45_to_49_B01001_015_039 + 
+  acs_geo_cats$age_50_to_54_B01001_016_040 + 
+  acs_geo_cats$age_55_to_59_B01001_017_041 + 
+  acs_geo_cats$age_60_to_61_B01001_018_042 + 
+  acs_geo_cats$age_62_to_64_B01001_019_043
+  
+acs_geo_cats$age_18_to_64 <- 
+  acs_geo_cats$age_18_to_19_B01001_007_031 + 
+  acs_geo_cats$age_20_B01001_008_032 + 
+  acs_geo_cats$age_21_B01001_009_033 + 
+  acs_geo_cats$age_22_to_24_B01001_010_034 + 
+  acs_geo_cats$age_25_to_29_B01001_011_035 + 
+  acs_geo_cats$age_30_to_34_B01001_012_036 + 
+  acs_geo_cats$age_35_to_39_B01001_013_037 + 
+  acs_geo_cats$age_40_to_44_B01001_014_038 + 
+  acs_geo_cats$age_45_to_49_B01001_015_039 + 
+  acs_geo_cats$age_50_to_54_B01001_016_040 + 
+  acs_geo_cats$age_55_to_59_B01001_017_041 + 
+  acs_geo_cats$age_60_to_61_B01001_018_042 + 
+  acs_geo_cats$age_62_to_64_B01001_019_043
+
+acs_geo_cats$age_20_to_64 <- 
+  acs_geo_cats$age_20_B01001_008_032 + 
+  acs_geo_cats$age_21_B01001_009_033 + 
+  acs_geo_cats$age_22_to_24_B01001_010_034 + 
+  acs_geo_cats$age_25_to_29_B01001_011_035 + 
+  acs_geo_cats$age_30_to_34_B01001_012_036 + 
+  acs_geo_cats$age_35_to_39_B01001_013_037 + 
+  acs_geo_cats$age_40_to_44_B01001_014_038 + 
+  acs_geo_cats$age_45_to_49_B01001_015_039 + 
+  acs_geo_cats$age_50_to_54_B01001_016_040 + 
+  acs_geo_cats$age_55_to_59_B01001_017_041 + 
+  acs_geo_cats$age_60_to_61_B01001_018_042 + 
+  acs_geo_cats$age_62_to_64_B01001_019_043
+
+acs_geo_cats$age_65_plus <- 
+  acs_geo_cats$age_65_to_66_B01001_020_044 + 
+  acs_geo_cats$age_67_to_69_B01001_021_045 + 
+  acs_geo_cats$age_70_to_74_B01001_022_046 + 
+  acs_geo_cats$age_75_to_79_B01001_023_047 + 
+  acs_geo_cats$age_80_to_84_B01001_024_048 + 
+  acs_geo_cats$age_85_to_inf_B01001_025_049
+
 # unemployment rate
 acs_geo_cats$unemployment_B23025_005_003 <- 
   acs_geo_cats$B23025_005/
@@ -1075,8 +1151,28 @@ acs_geo_cats$renter_occupy_percent_B25003_003_001 <-
   acs_geo_cats$B25003_001
 
 # percent below poverty
+acs_geo_cats$pop_for_pov_C17002_001 <- 
+  acs_geo_cats$C17002_001
+acs_geo_cats$percent_below_poverty_C17002_002_003_001 <- 
+  (acs_geo_cats$C17002_002 + acs_geo_cats$C17002_003) / 
+  acs_geo_cats$pop_for_pov_C17002_001
+acs_geo_cats$percent_below_200_poverty_C17002_002_to_007_001 <- 
+  (acs_geo_cats$C17002_002 + 
+     acs_geo_cats$C17002_003 + 
+     acs_geo_cats$C17002_004 + 
+     acs_geo_cats$C17002_005 + 
+     acs_geo_cats$C17002_006 + 
+     acs_geo_cats$C17002_007) / 
+  acs_geo_cats$pop_for_pov_C17002_001
 
 # percent female
+acs_geo_cats$number_female$B01001_026 <- 
+  acs_geo_cats$B01001_026
+acs_geo_cats$number_male$B01001_002 <-
+  acs_geo_cats$B01001_002
+acs_geo_cats$percent_female <- 
+  acs_geo_cats$number_female$B01001_026 /
+  acs_geo_cats$population_total_B01001_001
 
 # percent health insurance
 
