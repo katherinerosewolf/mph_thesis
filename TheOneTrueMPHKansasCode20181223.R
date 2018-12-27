@@ -1456,12 +1456,12 @@ save(ks_by_API_count, file = "ks_by_API_count.rdata")
 index <- 
   duplicated(ks_clean$API_NUMBER) | duplicated(ks_clean$API_NUMBER, 
                                                fromLast = TRUE)
-ks_API_dups <- ks_clean[index,]
-save(ks_API_dups, file = "ks_API_dups.rdata")
+ks_api_dups_all_wells <- ks_clean[index,]
+save(ks_api_dups_all_wells, file = "ks_api_dups_all_wells.rdata")
 
 # view counts of duplicates per API
-ks_API_dup_counts <- table(ks_API_dups$API_NUMBER)
-save(ks_API_dup_counts, file = "ks_dup_API_count.rdata")
+ks_api_dup_counts <- table(ks_api_dups_all_wells$API_NUMBER)
+save(ks_api_dup_counts, file = "ks_dup_API_count.rdata")
 
 # count unique KIDs
 unique_KID_count <- length(unique(ks_clean$KID))
@@ -1990,16 +1990,33 @@ ks_semi_final_wells_working$uic <-
 
 
 #### deal with comments ####
+
+# isolate those wells from the comments that will actually help
+ks_manual_wells_useful_columns <- 
+  raw_manual_well_assignments_dataframe[
+    ,c("KID", 
+       "man_activity", 
+       "man_plug_status", 
+       "man_well_type",	
+       "man_assignment_source",	
+       "man_detailed_well_type",	
+       "man_assignment_notes", 
+       "man_comments_examined",	
+       "man_kgs_available_documents_verified"
+       )
+  ]
+
+
+
+
 ks_semi_final_wells_working <- # merge manual assignments with large dataset
   merge(ks_semi_final_wells_working, 
-        raw_manual_well_assignments_dataframe, 
+        ks_manual_wells_useful_columns, 
         by = "KID", 
         all.x = TRUE, 
         all.y = TRUE)
 
-#### here starting 2018-12-26 ####
-
-
+#### CHECK INJECTION AUTHORIZATION TERMINATED!!!
 
 ks_semi_final_wells_working$is_swd <-   # make variable for is/is not swd
   NA 
@@ -2008,14 +2025,22 @@ ks_semi_final_wells_working <-   # identify manually assigned swd wells
   within(ks_semi_final_wells_working, 
          is_swd[well_type == 'swd'] <- 'swd')
 
-ks_semi_final_wells_working <- # identify manually assigned swd wells
+ks_semi_final_wells_working <-   # identify manually assigned swd wells
   within(ks_semi_final_wells_working, 
          is_swd[man_well_type 
                 %in% 
                   c('swd', 
                     'prob_swd', 
-                    'prob_swd_class1', 
-                    'prob_swd_may_class1')] <- 'swd')
+                    'prob_swd_prob_class1', 
+                    'prob_swd_may_class1', 
+                    'prob_c1_to_prob_swd', 
+                    'def_c1_to_prob_swd', 
+                    'prob_swd_to_prob_c1', 
+                    'may_c1_to_prob_swd'
+                    )
+                ] <- 
+           'swd'
+         )
 
 # drop non-swd wells
 ks_swd_only <- 
@@ -2038,15 +2063,11 @@ ks_swd_only$activity <-   # make unknowns active
   with(ks_swd_only, 
        ifelse(activity == 'unknown', 'active', activity))
 
-
-
 #### handling duplicates ####
 
-#### deleting those with duplicate APIs
+#### deleting those with duplicate APIs ####
 
-# fix API number
-ks_swd_only$API_NUMBER <- 
-  ks_swd_only$API_NUMBER.x
+#### start here 2018-12-27 ####
 
 # make dataset without wells without apis
 ks_only_apis <- 
@@ -2059,9 +2080,22 @@ ks_final_index  <-   # make index of API duplicates
   duplicated(ks_only_apis$API_NUMBER, 
              fromLast = TRUE)
 
-ks_API_dups <-   # make dataframe of duplicates
+ks_api_swd_dups <-   # make dataframe of duplicates
   ks_only_apis[ks_final_index, ]
-View(ks_API_dups)
+View(ks_api_swd_dups)
+
+save(ks_api_swd_dups, 
+     file = "ks_api_swd_dups.rdata")
+
+write.csv(ks_api_swd_dups, 
+          file = "ks_api_swd_dups.csv")
+
+#### review duplicate APIs manually here ####
+
+kids_duplicate_apis_to_keep <- 
+  c("",   # reason
+    "", 
+    "",)
 
 # remove duplicate APIs, keeping those last modified
 ks_bye_dup_API <- 
