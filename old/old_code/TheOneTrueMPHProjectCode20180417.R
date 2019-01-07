@@ -1153,7 +1153,7 @@ ks_wells_and_block_groups <- within(ks_wells_and_block_groups, ci_other_post2000
 ks_wells_and_block_groups <- within(ks_wells_and_block_groups, ci_other_pre2000_active[swd_inj_ci == 'c1' & other == 'yes' & permit_spud_post_2000 == 'no' & current_active == 'presumed_active']<-'yes')
 ks_wells_and_block_groups <- within(ks_wells_and_block_groups, ci_other_pre2000_pa[swd_inj_ci == 'c1' & other == 'yes' & permit_spud_post_2000 == 'no' & current_active == 'plugged_abandoned']<-'yes')
 
-View(ks_wells_and_block_groups)
+# View(ks_wells_and_block_groups)
 
 
 swd_norm_post2000_active<-aggregate(swd_norm_post2000_active~GEOID_Data,ks_wells_and_block_groups,length)
@@ -1202,7 +1202,7 @@ ks_well_counts<-Reduce(function(dtf1, dtf2) merge(dtf1, dtf2, by = "GEOID_Data",
          ci_other_pre2000_active,
          ci_other_pre2000_pa   
        ))
-View(ks_well_counts)
+# View(ks_well_counts)
 
 sum(colSums(ks_well_counts[2:16],na.rm = TRUE)) # equaled 19,995 by some miracle
 

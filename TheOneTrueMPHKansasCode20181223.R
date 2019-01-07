@@ -1559,7 +1559,7 @@ ks_working_with_block_groups <-
        by = "KID", 
        type = "full")
 
-View(ks_working_with_block_groups)
+# View(ks_working_with_block_groups)
 
 
 
@@ -2500,7 +2500,7 @@ ks_only_apis$modified_propogate[
         ks_only_apis$KID)] <- 
   ks_lat_long_dup$modified_propogate
 
-View(ks_only_apis)
+# View(ks_only_apis)
 
 # remove all rows marked as duplicates
 ks_dups_gone <-   
@@ -2528,7 +2528,7 @@ View(ks_swd_full_for_map)
 ks_wells_and_block_groups <- 
   ks_swd_full_for_map
 
-View(ks_wells_and_block_groups)
+# View(ks_wells_and_block_groups)
 
 # assigning overall plug status
 
@@ -2588,7 +2588,7 @@ ks_wells_and_block_groups$activity <-   # make plugged unknowns inactive
        ifelse(activity == 'unknown' & 
                 plug_overall == 'plugged', 'inactive', activity))
 
-View(ks_wells_and_block_groups)
+# View(ks_wells_and_block_groups)
 table(ks_wells_and_block_groups$activity)
 
 
@@ -2685,12 +2685,39 @@ ks_wells_and_block_groups$completed_after_2010[
   is.na(ks_wells_and_block_groups$completed_after_2010)] <- "no"
 
 
+
+# make variable for true SWD well
+ks_wells_and_block_groups$extant_swd <- 1
+ks_wells_and_block_groups$post_2000 <- NA
+
+
+
+table(ks_wells_and_block_groups$activity)
+
+# exclude abandoned locations and midways from total SWD list
+ks_wells_and_block_groups <- 
+  within(ks_wells_and_block_groups, 
+         extant_swd[activity %in% 
+                      c("midway", 
+                        "ab_loc", 
+                        "future")] <- 0)
+
+sum(ks_wells_and_block_groups$extant_swd)
+
+View(ks_wells_and_block_groups)
+
+
+
+
+
 #### TO DO
-# figure out how to propogate and incorporate UIC data
+# figure out how to propogate and incorporate UIC data?
 # confirm relevant years
 # MAKE FINAL DAMN DATASET
 
 #### correlation analysis of socioeconomic variables
+
+# cutoffs: completed since 2000
 
 
 
