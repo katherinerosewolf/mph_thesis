@@ -23,15 +23,21 @@ getwd() # this directory should be the one with your data files in it!
 #### load libraries ####
 
 library(data.table)
+library(extrafont)
 library(ggplot2)
 library(plyr)
 library(dplyr)
 library(psych)
 library(tcltk2)
-library(bit64)
 library(reshape2)
 library(totalcensus)
 library(tidyverse)
+
+
+
+#### load fonts ####
+font_import()
+loadfonts(device = "win")
 
 
 
@@ -218,1154 +224,1161 @@ load(file = "acs_data_2013_2017_via_totalcensus.rdata")
 
 
 
-# #### pull ACS data I need ####
-# 
-# # make working acs
-# working_acs <-
-#   acs_data_2013_2017_via_totalcensus
-# 
-# # convert from dataframe to data table
-# working_acs <-
-#   as.data.frame(working_acs)
-# 
-# # pull data from various categories
-# total_pop <-
-#   working_acs[
-#     ,c(
-#       "GEOID",
-#       "B01001_001",
-#       "B01001_001_margin"
-#     )
-#     ]
-# sex_cat <- working_acs[
-#   ,c(
-#     "GEOID",
-#     "B01001_002",
-#     "B01001_002_margin",
-#     "B01001_026",
-#     "B01001_026_margin"
-#   )
-#   ]
-# sex_age_cat <- working_acs[
-#   ,c(
-#     "GEOID",
-#     "B01001_003",
-#     "B01001_003_margin",
-#     "B01001_004",
-#     "B01001_004_margin",
-#     "B01001_005",
-#     "B01001_005_margin",
-#     "B01001_006",
-#     "B01001_006_margin",
-#     "B01001_007",
-#     "B01001_007_margin",
-#     "B01001_008",
-#     "B01001_008_margin",
-#     "B01001_009",
-#     "B01001_009_margin",
-#     "B01001_010",
-#     "B01001_010_margin",
-#     "B01001_011",
-#     "B01001_011_margin",
-#     "B01001_012",
-#     "B01001_012_margin",
-#     "B01001_013",
-#     "B01001_013_margin",
-#     "B01001_014",
-#     "B01001_014_margin",
-#     "B01001_015",
-#     "B01001_015_margin",
-#     "B01001_016",
-#     "B01001_016_margin",
-#     "B01001_017",
-#     "B01001_017_margin",
-#     "B01001_018",
-#     "B01001_018_margin",
-#     "B01001_019",
-#     "B01001_019_margin",
-#     "B01001_020",
-#     "B01001_020_margin",
-#     "B01001_021",
-#     "B01001_021_margin",
-#     "B01001_022",
-#     "B01001_022_margin",
-#     "B01001_023",
-#     "B01001_023_margin",
-#     "B01001_024",
-#     "B01001_024_margin",
-#     "B01001_025",
-#     "B01001_025_margin",
-#     "B01001_027", # 26 is total population of women and omitted
-#     "B01001_027_margin",
-#     "B01001_028",
-#     "B01001_028_margin",
-#     "B01001_029",
-#     "B01001_029_margin",
-#     "B01001_030",
-#     "B01001_030_margin",
-#     "B01001_031",
-#     "B01001_031_margin",
-#     "B01001_032",
-#     "B01001_032_margin",
-#     "B01001_033",
-#     "B01001_033_margin",
-#     "B01001_034",
-#     "B01001_034_margin",
-#     "B01001_035",
-#     "B01001_035_margin",
-#     "B01001_036",
-#     "B01001_036_margin",
-#     "B01001_037",
-#     "B01001_037_margin",
-#     "B01001_038",
-#     "B01001_038_margin",
-#     "B01001_039",
-#     "B01001_039_margin",
-#     "B01001_040",
-#     "B01001_040_margin",
-#     "B01001_041",
-#     "B01001_041_margin",
-#     "B01001_042",
-#     "B01001_042_margin",
-#     "B01001_043",
-#     "B01001_043_margin",
-#     "B01001_044",
-#     "B01001_044_margin",
-#     "B01001_045",
-#     "B01001_045_margin",
-#     "B01001_046",
-#     "B01001_046_margin",
-#     "B01001_047",
-#     "B01001_047_margin",
-#     "B01001_048",
-#     "B01001_048_margin",
-#     "B01001_049",
-#     "B01001_049_margin"
-#   )
-#   ]
-# 
-# age_median <- working_acs[
-#   ,c(
-#     "GEOID",
-#     "B01002_001",
-#     "B01002_001_margin",
-#     "B01002_002",
-#     "B01002_002_margin",
-#     "B01002_003",
-#     "B01002_003_margin"
-#   )
-#   ]
-# 
-# race_cat <- working_acs[
-#   ,c(
-#     "GEOID",
-#     "B03002_001",
-#     "B03002_001_margin",
-#     "B03002_002",
-#     "B03002_002_margin",
-#     "B03002_003",
-#     "B03002_003_margin",
-#     "B03002_004",
-#     "B03002_004_margin",
-#     "B03002_005",
-#     "B03002_005_margin",
-#     "B03002_006",
-#     "B03002_006_margin",
-#     "B03002_007",
-#     "B03002_007_margin",
-#     "B03002_008",
-#     "B03002_008_margin",
-#     "B03002_009",
-#     "B03002_009_margin",
-#     "B03002_010",
-#     "B03002_010_margin",
-#     "B03002_011",
-#     "B03002_011_margin",
-#     "B03002_012",
-#     "B03002_012_margin",
-#     "B03002_013",
-#     "B03002_013_margin",
-#     "B03002_014",
-#     "B03002_014_margin",
-#     "B03002_015",
-#     "B03002_015_margin",
-#     "B03002_016",
-#     "B03002_016_margin",
-#     "B03002_017",
-#     "B03002_017_margin",
-#     "B03002_018",
-#     "B03002_018_margin",
-#     "B03002_019",
-#     "B03002_019_margin",
-#     "B03002_020",
-#     "B03002_020_margin",
-#     "B03002_021",
-#     "B03002_021_margin")]
-# education_cat <- working_acs[
-#   ,c(
-#     "GEOID",
-#     "B15003_001",
-#     "B15003_001_margin",
-#     "B15003_002",
-#     "B15003_002_margin",
-#     "B15003_003",
-#     "B15003_003_margin",
-#     "B15003_004",
-#     "B15003_004_margin",
-#     "B15003_005",
-#     "B15003_005_margin",
-#     "B15003_006",
-#     "B15003_006_margin",
-#     "B15003_007",
-#     "B15003_007_margin",
-#     "B15003_008",
-#     "B15003_008_margin",
-#     "B15003_009",
-#     "B15003_009_margin",
-#     "B15003_010",
-#     "B15003_010_margin",
-#     "B15003_011",
-#     "B15003_011_margin",
-#     "B15003_012",
-#     "B15003_012_margin",
-#     "B15003_013",
-#     "B15003_013_margin",
-#     "B15003_014",
-#     "B15003_014_margin",
-#     "B15003_015",
-#     "B15003_015_margin",
-#     "B15003_016",
-#     "B15003_016_margin",
-#     "B15003_017",
-#     "B15003_017_margin",
-#     "B15003_018",
-#     "B15003_018_margin",
-#     "B15003_019",
-#     "B15003_019_margin",
-#     "B15003_020",
-#     "B15003_020_margin",
-#     "B15003_021",
-#     "B15003_021_margin",
-#     "B15003_022",
-#     "B15003_022_margin",
-#     "B15003_023",
-#     "B15003_023_margin",
-#     "B15003_024",
-#     "B15003_024_margin",
-#     "B15003_025",
-#     "B15003_025_margin"
-#   )
-#   ]
-# poverty_ratio_cat <-
-#   working_acs[
-#   ,c(
-#     "GEOID",
-#     "C17002_001",
-#     "C17002_001_margin",
-#     "C17002_002",
-#     "C17002_002_margin",
-#     "C17002_003",
-#     "C17002_003_margin",
-#     "C17002_004",
-#     "C17002_004_margin",
-#     "C17002_005",
-#     "C17002_005_margin",
-#     "C17002_006",
-#     "C17002_006_margin",
-#     "C17002_007",
-#     "C17002_007_margin",
-#     "C17002_008",
-#     "C17002_008_margin"
-#   )
-#   ]
-# income_house_cat <-
-#   working_acs[
-#     ,c(
-#       "GEOID",
-#       "B19001_001",
-#       "B19001_001_margin",
-#       "B19001_002",
-#       "B19001_002_margin",
-#       "B19001_003",
-#       "B19001_003_margin",
-#       "B19001_004",
-#       "B19001_004_margin",
-#       "B19001_005",
-#       "B19001_005_margin",
-#       "B19001_006",
-#       "B19001_006_margin",
-#       "B19001_007",
-#       "B19001_007_margin",
-#       "B19001_008",
-#       "B19001_008_margin",
-#       "B19001_009",
-#       "B19001_009_margin",
-#       "B19001_010",
-#       "B19001_010_margin",
-#       "B19001_011",
-#       "B19001_011_margin",
-#       "B19001_012",
-#       "B19001_012_margin",
-#       "B19001_013",
-#       "B19001_013_margin",
-#       "B19001_014",
-#       "B19001_014_margin",
-#       "B19001_015",
-#       "B19001_015_margin",
-#       "B19001_016",
-#       "B19001_016_margin",
-#       "B19001_017",
-#       "B19001_017_margin"
-#     )
-#     ]
-# income_house_median<-working_acs[
-#   ,c(
-#     "GEOID",
-#     "B19013_001",
-#     "B19013_001_margin"
-#   )
-#   ]
-# earnings_sex_cat <-
-#   working_acs[
-#     ,c(
-#       "GEOID",
-#       "B20001_001",
-#       "B20001_001_margin",
-#       "B20001_002",
-#       "B20001_002_margin",
-#       "B20001_003",
-#       "B20001_003_margin",
-#       "B20001_004",
-#       "B20001_004_margin",
-#       "B20001_005",
-#       "B20001_005_margin",
-#       "B20001_006",
-#       "B20001_006_margin",
-#       "B20001_007",
-#       "B20001_007_margin",
-#       "B20001_008",
-#       "B20001_008_margin",
-#       "B20001_009",
-#       "B20001_009_margin",
-#       "B20001_010",
-#       "B20001_010_margin",
-#       "B20001_011",
-#       "B20001_011_margin",
-#       "B20001_012",
-#       "B20001_012_margin",
-#       "B20001_013",
-#       "B20001_013_margin",
-#       "B20001_014",
-#       "B20001_014_margin",
-#       "B20001_015",
-#       "B20001_015_margin",
-#       "B20001_016",
-#       "B20001_016_margin",
-#       "B20001_017",
-#       "B20001_017_margin",
-#       "B20001_018",
-#       "B20001_018_margin",
-#       "B20001_019",
-#       "B20001_019_margin",
-#       "B20001_020",
-#       "B20001_020_margin",
-#       "B20001_021",
-#       "B20001_021_margin",
-#       "B20001_022",
-#       "B20001_022_margin",
-#       "B20001_023",
-#       "B20001_023_margin",
-#       "B20001_024",
-#       "B20001_024_margin",
-#       "B20001_025",
-#       "B20001_025_margin",
-#       "B20001_026",
-#       "B20001_026_margin",
-#       "B20001_027",
-#       "B20001_027_margin",
-#       "B20001_028",
-#       "B20001_028_margin",
-#       "B20001_029",
-#       "B20001_029_margin",
-#       "B20001_030",
-#       "B20001_030_margin",
-#       "B20001_031",
-#       "B20001_031_margin",
-#       "B20001_032",
-#       "B20001_032_margin",
-#       "B20001_033",
-#       "B20001_033_margin",
-#       "B20001_034",
-#       "B20001_034_margin",
-#       "B20001_035",
-#       "B20001_035_margin",
-#       "B20001_036",
-#       "B20001_036_margin",
-#       "B20001_037",
-#       "B20001_037_margin",
-#       "B20001_038",
-#       "B20001_038_margin",
-#       "B20001_039",
-#       "B20001_039_margin",
-#       "B20001_040",
-#       "B20001_040_margin",
-#       "B20001_041",
-#       "B20001_041_margin",
-#       "B20001_042",
-#       "B20001_042_margin",
-#       "B20001_043",
-#       "B20001_043_margin"
-#     )
-#     ]
-# earnings_median <-
-#   working_acs[
-#     ,c(
-#       "GEOID",
-#       "B20002_001",
-#       "B20002_001_margin",
-#       "B20002_002",
-#       "B20002_002_margin",
-#       "B20002_003",
-#       "B20002_003_margin"
-#     )
-#     ]
-# employment_cat <- # divide 5 by 3
-#   working_acs[
-#     ,c(
-#       "GEOID",
-#       "B23025_001",
-#       "B23025_001_margin",
-#       "B23025_002",
-#       "B23025_002_margin",
-#       "B23025_003",
-#       "B23025_003_margin",
-#       "B23025_004",
-#       "B23025_004_margin",
-#       "B23025_005",
-#       "B23025_005_margin",
-#       "B23025_006",
-#       "B23025_006_margin",
-#       "B23025_007",
-#       "B23025_007_margin"
-#     )
-#     ]
-# home_value_cat <-
-#   working_acs[
-#     ,c(
-#       "GEOID",
-#       "B25075_001",
-#       "B25075_001_margin",
-#       "B25075_002",
-#       "B25075_002_margin",
-#       "B25075_003",
-#       "B25075_003_margin",
-#       "B25075_004",
-#       "B25075_004_margin",
-#       "B25075_005",
-#       "B25075_005_margin",
-#       "B25075_006",
-#       "B25075_006_margin",
-#       "B25075_007",
-#       "B25075_007_margin",
-#       "B25075_008",
-#       "B25075_008_margin",
-#       "B25075_009",
-#       "B25075_009_margin",
-#       "B25075_010",
-#       "B25075_010_margin",
-#       "B25075_011",
-#       "B25075_011_margin",
-#       "B25075_012",
-#       "B25075_012_margin",
-#       "B25075_013",
-#       "B25075_013_margin",
-#       "B25075_014",
-#       "B25075_014_margin",
-#       "B25075_015",
-#       "B25075_015_margin",
-#       "B25075_016",
-#       "B25075_016_margin",
-#       "B25075_017",
-#       "B25075_017_margin",
-#       "B25075_018",
-#       "B25075_018_margin",
-#       "B25075_019",
-#       "B25075_019_margin",
-#       "B25075_020",
-#       "B25075_020_margin",
-#       "B25075_021",
-#       "B25075_021_margin",
-#       "B25075_022",
-#       "B25075_022_margin",
-#       "B25075_023",
-#       "B25075_023_margin",
-#       "B25075_024",
-#       "B25075_024_margin",
-#       "B25075_025",
-#       "B25075_025_margin",
-#       "B25075_026",
-#       "B25075_026_margin",
-#       "B25075_027",
-#       "B25075_027_margin"
-#     )
-#     ]
-# health_insurance_cat <-
-#   working_acs[
-#     ,c(
-#       "GEOID",
-#       "B27010_001",
-#       "B27010_001_margin",
-#       "B27010_002",
-#       "B27010_002_margin",
-#       "B27010_003",
-#       "B27010_003_margin",
-#       "B27010_004",
-#       "B27010_004_margin",
-#       "B27010_005",
-#       "B27010_005_margin",
-#       "B27010_006",
-#       "B27010_006_margin",
-#       "B27010_007",
-#       "B27010_007_margin",
-#       "B27010_008",
-#       "B27010_008_margin",
-#       "B27010_009",
-#       "B27010_009_margin",
-#       "B27010_010",
-#       "B27010_010_margin",
-#       "B27010_011",
-#       "B27010_011_margin",
-#       "B27010_012",
-#       "B27010_012_margin",
-#       "B27010_013",
-#       "B27010_013_margin",
-#       "B27010_014",
-#       "B27010_014_margin",
-#       "B27010_015",
-#       "B27010_015_margin",
-#       "B27010_016",
-#       "B27010_016_margin",
-#       "B27010_017",
-#       "B27010_017_margin",
-#       "B27010_018",
-#       "B27010_018_margin",
-#       "B27010_019",
-#       "B27010_019_margin",
-#       "B27010_020",
-#       "B27010_020_margin",
-#       "B27010_021",
-#       "B27010_021_margin",
-#       "B27010_022",
-#       "B27010_022_margin",
-#       "B27010_023",
-#       "B27010_023_margin",
-#       "B27010_024",
-#       "B27010_024_margin",
-#       "B27010_025",
-#       "B27010_025_margin",
-#       "B27010_027",
-#       "B27010_027_margin",
-#       "B27010_028",
-#       "B27010_028_margin",
-#       "B27010_029",
-#       "B27010_029_margin",
-#       "B27010_030",
-#       "B27010_030_margin",
-#       "B27010_031",
-#       "B27010_031_margin",
-#       "B27010_032",
-#       "B27010_032_margin",
-#       "B27010_033",
-#       "B27010_033_margin",
-#       "B27010_034",
-#       "B27010_034_margin",
-#       "B27010_035",
-#       "B27010_035_margin",
-#       "B27010_036",
-#       "B27010_036_margin",
-#       "B27010_037",
-#       "B27010_037_margin",
-#       "B27010_038",
-#       "B27010_038_margin",
-#       "B27010_039",
-#       "B27010_039_margin",
-#       "B27010_040",
-#       "B27010_040_margin",
-#       "B27010_041",
-#       "B27010_041_margin",
-#       "B27010_042",
-#       "B27010_042_margin",
-#       "B27010_043",
-#       "B27010_043_margin",
-#       "B27010_044",
-#       "B27010_044_margin",
-#       "B27010_045",
-#       "B27010_045_margin",
-#       "B27010_046",
-#       "B27010_046_margin",
-#       "B27010_047",
-#       "B27010_047_margin",
-#       "B27010_048",
-#       "B27010_048_margin",
-#       "B27010_049",
-#       "B27010_049_margin",
-#       "B27010_050",
-#       "B27010_050_margin",
-#       "B27010_051",
-#       "B27010_051_margin",
-#       "B27010_052",
-#       "B27010_052_margin",
-#       "B27010_053",
-#       "B27010_053_margin",
-#       "B27010_054",
-#       "B27010_054_margin",
-#       "B27010_055",
-#       "B27010_055_margin",
-#       "B27010_056",
-#       "B27010_056_margin",
-#       "B27010_057",
-#       "B27010_057_margin",
-#       "B27010_058",
-#       "B27010_058_margin",
-#       "B27010_059",
-#       "B27010_059_margin",
-#       "B27010_060",
-#       "B27010_060_margin",
-#       "B27010_061",
-#       "B27010_061_margin",
-#       "B27010_062",
-#       "B27010_062_margin",
-#       "B27010_063",
-#       "B27010_063_margin",
-#       "B27010_064",
-#       "B27010_064_margin",
-#       "B27010_065",
-#       "B27010_065_margin",
-#       "B27010_066",
-#       "B27010_066_margin"
-#     )
-#     ]
-# home_value_median <-
-#   working_acs[
-#     ,c(
-#       "GEOID",
-#       "B25077_001",
-#       "B25077_001_margin"
-#     )
-#     ]
-# ling_iso <-
-#   working_acs[
-#     ,c(
-#       "GEOID",
-#       "C16002_001",
-#       "C16002_001_margin",
-#       "C16002_002",
-#       "C16002_002_margin",
-#       "C16002_003",
-#       "C16002_003_margin",
-#       "C16002_004",
-#       "C16002_004_margin",
-#       "C16002_005",
-#       "C16002_005_margin",
-#       "C16002_006",
-#       "C16002_006_margin",
-#       "C16002_007",
-#       "C16002_007_margin",
-#       "C16002_008",
-#       "C16002_008_margin",
-#       "C16002_009",
-#       "C16002_009_margin",
-#       "C16002_010",
-#       "C16002_010_margin",
-#       "C16002_011",
-#       "C16002_011_margin",
-#       "C16002_012",
-#       "C16002_012_margin",
-#       "C16002_013",
-#       "C16002_013_margin",
-#       "C16002_014",
-#       "C16002_014_margin"
-#     )
-#     ]
-# housing_tenure <-
-#   working_acs[
-#     ,c(
-#       "GEOID",
-#       "B25003_001",
-#       "B25003_001_margin",
-#       "B25003_002",
-#       "B25003_002_margin",
-#       "B25003_003",
-#       "B25003_003_margin"
-#     )
-#     ]
-# 
-# # make list of all categories
-# variables_of_interest <-
-#   list(total_pop,
-#        sex_cat,
-#        sex_age_cat,
-#        age_median,
-#        race_cat,
-#        education_cat,
-#        poverty_ratio_cat,
-#        income_house_cat,
-#        income_house_median,
-#        earnings_sex_cat,
-#        earnings_median,
-#        employment_cat,
-#        home_value_cat,
-#        home_value_median,
-#        health_insurance_cat,
-#        ling_iso,
-#        housing_tenure)
-# 
-# #### merge different subset data together ####
-# 
-# # define merge function
-# merge_dataframes <-
-#   function(x, y) full_join(x, y, by = "GEOID")
-# 
-# # perform the merge function en masse
-# acs_select <-
-#   Reduce(
-#     merge_dataframes,
-#     variables_of_interest
-#   )
-# 
-# # save select acs data
-# save(acs_select,
-#      file = "acs_select.rdata")
-# 
-# # merge select acs data with geography
-# acs_select_geo <-
-#   full_join(ks_tiger_table,
-#             acs_select,
-#             by = "GEOID")
-# # View(acs_select_geo)
-# 
-# # save acs_select_geo
-# save(acs_select_geo,
-#      file = "acs_select_geo.rdata")
-# 
-# write.csv(acs_select_geo, file = "acs_select_geo.csv")
-# 
-# 
-# # make data for sorting into categories
-# acs_geo_cats <-
-#   acs_select_geo
-# 
-# ### making variables ####
-# # making variables
-# # from Silva:
-# # median household income (dollars),
-# # median household value (dollars),
-# # percent of population identifying as White only,
-# # population density (population per square mile),
-# # percent of population with a high school education/GED or higher, and
-# # population median age
-# # from RMF:  age categories
-# 
-# 
-# # total population
-# acs_geo_cats$pop_tot_B01001_001 <-
-#   acs_geo_cats$B01001_001
-# 
-# # population density (people/km2, ALAND in m2)
-# acs_geo_cats$pop_dense_B01001_001_ALAND <-
-#   (1000000*
-#      acs_geo_cats$B01001_001/
-#      acs_geo_cats$ALAND)
-# 
-# # median household income
-# acs_geo_cats$income_house_median_B19013_001 <-
-#   acs_geo_cats$B19013_001
-# 
-# # median age
-# acs_geo_cats$age_median_B01002_001 <-
-#   acs_geo_cats$B01002_001
-# 
-# # ages
-# acs_geo_cats$age_under_5_B01001_003_027 <-
-#   acs_geo_cats$B01001_003 + acs_geo_cats$B01001_027
-# acs_geo_cats$age_5_to_9_B01001_004_028 <-
-#   acs_geo_cats$B01001_004 + acs_geo_cats$B01001_028
-# acs_geo_cats$age_10_to_14_B01001_005_029 <-
-#   acs_geo_cats$B01001_005 + acs_geo_cats$B01001_029
-# acs_geo_cats$age_15_to_17_B01001_006_030 <-
-#   acs_geo_cats$B01001_006 + acs_geo_cats$B01001_030
-# acs_geo_cats$age_18_to_19_B01001_007_031 <-
-#   acs_geo_cats$B01001_007 + acs_geo_cats$B01001_031
-# acs_geo_cats$age_20_B01001_008_032 <-
-#   acs_geo_cats$B01001_008 + acs_geo_cats$B01001_032
-# acs_geo_cats$age_21_B01001_009_033 <-
-#   acs_geo_cats$B01001_009 + acs_geo_cats$B01001_033
-# acs_geo_cats$age_22_to_24_B01001_010_034 <-
-#   acs_geo_cats$B01001_010 + acs_geo_cats$B01001_034
-# acs_geo_cats$age_25_to_29_B01001_011_035 <-
-#   acs_geo_cats$B01001_011 + acs_geo_cats$B01001_035
-# acs_geo_cats$age_30_to_34_B01001_012_036 <-
-#   acs_geo_cats$B01001_012 + acs_geo_cats$B01001_036
-# acs_geo_cats$age_35_to_39_B01001_013_037 <-
-#   acs_geo_cats$B01001_013 + acs_geo_cats$B01001_037
-# acs_geo_cats$age_40_to_44_B01001_014_038 <-
-#   acs_geo_cats$B01001_014 + acs_geo_cats$B01001_038
-# acs_geo_cats$age_45_to_49_B01001_015_039 <-
-#   acs_geo_cats$B01001_015 + acs_geo_cats$B01001_039
-# acs_geo_cats$age_50_to_54_B01001_016_040 <-
-#   acs_geo_cats$B01001_016 + acs_geo_cats$B01001_040
-# acs_geo_cats$age_55_to_59_B01001_017_041 <-
-#   acs_geo_cats$B01001_017 + acs_geo_cats$B01001_041
-# acs_geo_cats$age_60_to_61_B01001_018_042 <-
-#   acs_geo_cats$B01001_018 + acs_geo_cats$B01001_042
-# acs_geo_cats$age_62_to_64_B01001_019_043 <-
-#   acs_geo_cats$B01001_019 + acs_geo_cats$B01001_043
-# acs_geo_cats$age_65_to_66_B01001_020_044 <-
-#   acs_geo_cats$B01001_020 + acs_geo_cats$B01001_044
-# acs_geo_cats$age_67_to_69_B01001_021_045 <-
-#   acs_geo_cats$B01001_021 + acs_geo_cats$B01001_045
-# acs_geo_cats$age_70_to_74_B01001_022_046 <-
-#   acs_geo_cats$B01001_022 + acs_geo_cats$B01001_046
-# acs_geo_cats$age_75_to_79_B01001_023_047 <-
-#   acs_geo_cats$B01001_023 + acs_geo_cats$B01001_047
-# acs_geo_cats$age_80_to_84_B01001_024_048 <-
-#   acs_geo_cats$B01001_024 + acs_geo_cats$B01001_048
-# acs_geo_cats$age_85_to_inf_B01001_025_049 <-
-#   acs_geo_cats$B01001_025 + acs_geo_cats$B01001_049
-# 
-# acs_geo_cats$age_0_to_14 <-
-#   acs_geo_cats$age_under_5_B01001_003_027 +
-#   acs_geo_cats$age_5_to_9_B01001_004_028 +
-#   acs_geo_cats$age_10_to_14_B01001_005_029
-# 
-# acs_geo_cats$age_0_to_17 <-
-#   acs_geo_cats$age_under_5_B01001_003_027 +
-#   acs_geo_cats$age_5_to_9_B01001_004_028 +
-#   acs_geo_cats$age_10_to_14_B01001_005_029 +
-#   acs_geo_cats$age_15_to_17_B01001_006_030
-# 
-# acs_geo_cats$age_0_to_19 <-
-#   acs_geo_cats$age_under_5_B01001_003_027 +
-#   acs_geo_cats$age_5_to_9_B01001_004_028 +
-#   acs_geo_cats$age_10_to_14_B01001_005_029 +
-#   acs_geo_cats$age_15_to_17_B01001_006_030 +
-#   acs_geo_cats$age_18_to_19_B01001_007_031
-# 
-# acs_geo_cats$age_5_to_14 <-
-#   acs_geo_cats$age_5_to_9_B01001_004_028 +
-#   acs_geo_cats$age_10_to_14_B01001_005_029
-# 
-# acs_geo_cats$age_5_to_17 <-
-#   acs_geo_cats$age_5_to_9_B01001_004_028 +
-#   acs_geo_cats$age_10_to_14_B01001_005_029 +
-#   acs_geo_cats$age_15_to_17_B01001_006_030
-# 
-# acs_geo_cats$age_5_to_19 <-
-#   acs_geo_cats$age_5_to_9_B01001_004_028 +
-#   acs_geo_cats$age_10_to_14_B01001_005_029 +
-#   acs_geo_cats$age_15_to_17_B01001_006_030 +
-#   acs_geo_cats$age_18_to_19_B01001_007_031
-# 
-# acs_geo_cats$age_10_to_17 <-
-#   acs_geo_cats$age_10_to_14_B01001_005_029 +
-#   acs_geo_cats$age_15_to_17_B01001_006_030
-# 
-# acs_geo_cats$age_15_to_64 <-
-#   acs_geo_cats$age_15_to_17_B01001_006_030 +
-#   acs_geo_cats$age_18_to_19_B01001_007_031 +
-#   acs_geo_cats$age_20_B01001_008_032 +
-#   acs_geo_cats$age_21_B01001_009_033 +
-#   acs_geo_cats$age_22_to_24_B01001_010_034 +
-#   acs_geo_cats$age_25_to_29_B01001_011_035 +
-#   acs_geo_cats$age_30_to_34_B01001_012_036 +
-#   acs_geo_cats$age_35_to_39_B01001_013_037 +
-#   acs_geo_cats$age_40_to_44_B01001_014_038 +
-#   acs_geo_cats$age_45_to_49_B01001_015_039 +
-#   acs_geo_cats$age_50_to_54_B01001_016_040 +
-#   acs_geo_cats$age_55_to_59_B01001_017_041 +
-#   acs_geo_cats$age_60_to_61_B01001_018_042 +
-#   acs_geo_cats$age_62_to_64_B01001_019_043
-# 
-# acs_geo_cats$age_18_to_64 <-
-#   acs_geo_cats$age_18_to_19_B01001_007_031 +
-#   acs_geo_cats$age_20_B01001_008_032 +
-#   acs_geo_cats$age_21_B01001_009_033 +
-#   acs_geo_cats$age_22_to_24_B01001_010_034 +
-#   acs_geo_cats$age_25_to_29_B01001_011_035 +
-#   acs_geo_cats$age_30_to_34_B01001_012_036 +
-#   acs_geo_cats$age_35_to_39_B01001_013_037 +
-#   acs_geo_cats$age_40_to_44_B01001_014_038 +
-#   acs_geo_cats$age_45_to_49_B01001_015_039 +
-#   acs_geo_cats$age_50_to_54_B01001_016_040 +
-#   acs_geo_cats$age_55_to_59_B01001_017_041 +
-#   acs_geo_cats$age_60_to_61_B01001_018_042 +
-#   acs_geo_cats$age_62_to_64_B01001_019_043
-# 
-# acs_geo_cats$age_20_to_64 <-
-#   acs_geo_cats$age_20_B01001_008_032 +
-#   acs_geo_cats$age_21_B01001_009_033 +
-#   acs_geo_cats$age_22_to_24_B01001_010_034 +
-#   acs_geo_cats$age_25_to_29_B01001_011_035 +
-#   acs_geo_cats$age_30_to_34_B01001_012_036 +
-#   acs_geo_cats$age_35_to_39_B01001_013_037 +
-#   acs_geo_cats$age_40_to_44_B01001_014_038 +
-#   acs_geo_cats$age_45_to_49_B01001_015_039 +
-#   acs_geo_cats$age_50_to_54_B01001_016_040 +
-#   acs_geo_cats$age_55_to_59_B01001_017_041 +
-#   acs_geo_cats$age_60_to_61_B01001_018_042 +
-#   acs_geo_cats$age_62_to_64_B01001_019_043
-# 
-# acs_geo_cats$age_65_plus <-
-#   acs_geo_cats$age_65_to_66_B01001_020_044 +
-#   acs_geo_cats$age_67_to_69_B01001_021_045 +
-#   acs_geo_cats$age_70_to_74_B01001_022_046 +
-#   acs_geo_cats$age_75_to_79_B01001_023_047 +
-#   acs_geo_cats$age_80_to_84_B01001_024_048 +
-#   acs_geo_cats$age_85_to_inf_B01001_025_049
-# 
-# # age percents
-# acs_geo_cats$age_under_5_percent_B01001 <-
-#   acs_geo_cats$age_under_5_B01001_003_027 /
-#   acs_geo_cats$pop_tot_B01001_001
-# 
-# acs_geo_cats$age_0_to_14_percent_B01001 <-
-#   acs_geo_cats$age_0_to_14 /
-#   acs_geo_cats$pop_tot_B01001_001
-# 
-# acs_geo_cats$age_0_to_17_percent_B01001 <-
-#   acs_geo_cats$age_0_to_17 /
-#   acs_geo_cats$pop_tot_B01001_001
-# 
-# acs_geo_cats$age_0_to_19_percent_B01001 <-
-#   acs_geo_cats$age_0_to_19 /
-#   acs_geo_cats$pop_tot_B01001_001
-# 
-# acs_geo_cats$age_5_to_14_percent_B01001 <-
-#   acs_geo_cats$age_5_to_14 /
-#   acs_geo_cats$pop_tot_B01001_001
-# 
-# acs_geo_cats$age_5_to_17_percent_B01001 <-
-#   acs_geo_cats$age_5_to_17 /
-#   acs_geo_cats$pop_tot_B01001_001
-# 
-# acs_geo_cats$age_5_to_19_percent_B01001 <-
-#   acs_geo_cats$age_5_to_19 /
-#   acs_geo_cats$pop_tot_B01001_001
-# 
-# acs_geo_cats$age_10_to_17_percent_B01001 <-
-#   acs_geo_cats$age_10_to_17 /
-#   acs_geo_cats$pop_tot_B01001_001
-# 
-# acs_geo_cats$age_15_to_64_percent_B01001 <-
-#   acs_geo_cats$age_15_to_64 /
-#   acs_geo_cats$pop_tot_B01001_001
-# 
-# acs_geo_cats$age_18_to_64_percent_B01001 <-
-#   acs_geo_cats$age_18_to_64 /
-# 
-#   acs_geo_cats$pop_tot_B01001_001
-# 
-# acs_geo_cats$age_20_to_64_percent_B01001 <-
-#   acs_geo_cats$age_20_to_64 /
-#   acs_geo_cats$pop_tot_B01001_001
-# 
-# acs_geo_cats$age_65_plus_percent_B01001 <-
-#   acs_geo_cats$age_65_plus /
-#   acs_geo_cats$pop_tot_B01001_001
-# 
-# # unemployment rate
-# acs_geo_cats$employment_tot_16_over_B23025_001 <-
-#   acs_geo_cats$B23025_001
-# acs_geo_cats$labor_force_tot_B23025_002 <-
-#   acs_geo_cats$B23025_002
-# acs_geo_cats$civie_labor_force_B23025_003 <-
-#   acs_geo_cats$B23025_003
-# acs_geo_cats$civie_employed_B23025_004 <-
-#   acs_geo_cats$B23025_004
-# acs_geo_cats$civie_unemployed_B23025_005 <-
-#   acs_geo_cats$B23025_005
-# acs_geo_cats$armed_forces_B23025_006 <-
-#   acs_geo_cats$B23025_006
-# 
-# acs_geo_cats$unemployed_percent_B23025_005_003 <-
-#   acs_geo_cats$B23025_005/
-#   acs_geo_cats$B23025_003
-# 
-# # median household value
-# acs_geo_cats$house_value_median_B25077_001 <-
-#   acs_geo_cats$B25077_001
-# 
-# # percent white
-# acs_geo_cats$white_non_hisp_lat_percent_B03002_003_001 <-
-#   acs_geo_cats$B03002_003/
-#   acs_geo_cats$B03002_001
-# 
-# # percent Native (includes Hispanic/Latinx)
-# acs_geo_cats$aian_percent_B03002_005_015_001 <-
-#   (acs_geo_cats$B03002_005 +
-#      acs_geo_cats$B03002_015) /
-#   acs_geo_cats$B03002_001
-# 
-# # percent of population with high school education or more
-# acs_geo_cats$education_high_school_plus_percent_B15003_017_to_025 <-
-#   (
-#     (
-#       acs_geo_cats$B15003_017 +
-#         acs_geo_cats$B15003_018 +
-#         acs_geo_cats$B15003_019 +
-#         acs_geo_cats$B15003_020 +
-#         acs_geo_cats$B15003_021 +
-#         acs_geo_cats$B15003_022 +
-#         acs_geo_cats$B15003_023 +
-#         acs_geo_cats$B15003_024 +
-#         acs_geo_cats$B15003_025
-#     )
-#     /acs_geo_cats$B15003_001
-#   )
-# 
-# # linguistic isolation
-# acs_geo_cats$ling_iso_total_households_C16002_001 <-
-#   acs_geo_cats$C16002_001
-# acs_geo_cats <-
-#   acs_geo_cats %>%
-#   mutate(
-#     limited_english_percent_C16002_004_007_010_013_001 <-
-#       (C16002_004 +
-#          C16002_007 +
-#          C16002_010 +
-#          C16002_013) /
-#       C16002_001)
-# 
-# # housing tenure
-# acs_geo_cats$housing_occupied_total_B25003_001 <-
-#   acs_geo_cats$B25003_001
-# acs_geo_cats$housing_owner_occupied_B25003_002 <-
-#   acs_geo_cats$B25003_002
-# acs_geo_cats$housing_renter_occupied_B25003_003 <-
-#   acs_geo_cats$B25003_003
-# acs_geo_cats$owner_occupy_percent_B25003_002_001 <-
-#   acs_geo_cats$B25003_002 /
-#   acs_geo_cats$B25003_001
-# acs_geo_cats$renter_occupy_percent_B25003_003_001 <-
-#   acs_geo_cats$B25003_003 /
-#   acs_geo_cats$B25003_001
-# 
-# # percent below poverty
-# acs_geo_cats$pop_for_pov_C17002_001 <-
-#   acs_geo_cats$C17002_001
-# acs_geo_cats$number_below_0p5_pov_C17002_002 <-
-#   acs_geo_cats$C17002_002
-# acs_geo_cats$number_0p5_to_0p99_pov_C17002_003 <-
-#   acs_geo_cats$C17002_003
-# acs_geo_cats$number_1p0_to_1p24_pov_C17002_004 <-
-#   acs_geo_cats$C17002_004
-# acs_geo_cats$number_1p25_to_1p49_pov_C17002_005 <-
-#   acs_geo_cats$C17002_005
-# acs_geo_cats$number_1p5_to_1p84_pov_C17002_006 <-
-#   acs_geo_cats$C17002_006
-# acs_geo_cats$number_1p85_to_1p99_pov_C17002_007 <-
-#   acs_geo_cats$C17002_007
-# acs_geo_cats$number_2p0_plus_pov_C17002_008 <-
-#   acs_geo_cats$C17002_008
-# 
-# acs_geo_cats$poverty_below_100_percent_C17002_002_003_001 <-
-#   (acs_geo_cats$C17002_002 +
-#      acs_geo_cats$C17002_003) /
-#   acs_geo_cats$pop_for_pov_C17002_001
-# 
-# acs_geo_cats$poverty_below_150_percent_C17002_002_to_005_001 <-
-#   (acs_geo_cats$C17002_002 +
-#      acs_geo_cats$C17002_003 +
-#      acs_geo_cats$C17002_004 +
-#      acs_geo_cats$C17002_005) /
-#   acs_geo_cats$pop_for_pov_C17002_001
-# 
-# acs_geo_cats$poverty_below_200_percent__C17002_002_to_007_001 <-
-#   (acs_geo_cats$C17002_002 +
-#      acs_geo_cats$C17002_003 +
-#      acs_geo_cats$C17002_004 +
-#      acs_geo_cats$C17002_005 +
-#      acs_geo_cats$C17002_006 +
-#      acs_geo_cats$C17002_007) /
-#   acs_geo_cats$pop_for_pov_C17002_001
-# 
-# # percent female
-# acs_geo_cats$female_number_B01001_026 <-
-#   acs_geo_cats$B01001_026
-# acs_geo_cats$male_number_B01001_002 <-
-#   acs_geo_cats$B01001_002
-# acs_geo_cats$female_percent_B01001_026_001 <-
-#   acs_geo_cats$female_number_B01001_026 /
-#   acs_geo_cats$pop_tot_B01001_001
-# 
-# # percent health insurance
-# acs_geo_cats$pop_for_health_insurance_B27010_001 <-
-#   acs_geo_cats$B27010_001
-# acs_geo_cats$no_health_insurance_percent_B27010_017_033_050_066 <-
-#   (acs_geo_cats$B27010_017 +
-#      acs_geo_cats$B27010_033 +
-#      acs_geo_cats$B27010_050 +
-#      acs_geo_cats$B27010_066) /
-#   acs_geo_cats$pop_for_health_insurance_B27010_001
-# 
-# # earnings median
-# acs_geo_cats$earnings_median_B20002_001 <-
-#   acs_geo_cats$B20002_001
-# 
-# # earnings categories
-# acs_geo_cats$earnings_1_to_2499_003_0024 <-
-#   acs_geo_cats$B20001_003 + acs_geo_cats$B20001_024
-# acs_geo_cats$earnings_2500_to_4999_004_025 <-
-#   acs_geo_cats$B20001_004 + acs_geo_cats$B20001_025
-# acs_geo_cats$earnings_5000_to_7499_005_026 <-
-#   acs_geo_cats$B20001_005 + acs_geo_cats$B20001_026
-# acs_geo_cats$earnings_7500_to_9999_006_027 <-
-#   acs_geo_cats$B20001_006 + acs_geo_cats$B20001_027
-# acs_geo_cats$earnings_10K_to_12499_007_028 <-
-#   acs_geo_cats$B20001_007 + acs_geo_cats$B20001_028
-# acs_geo_cats$earnings_12500_to_14999_008_029 <-
-#   acs_geo_cats$B20001_008 + acs_geo_cats$B20001_029
-# acs_geo_cats$earnings_15K_to_17499_009_030 <-
-#   acs_geo_cats$B20001_009 + acs_geo_cats$B20001_030
-# acs_geo_cats$earnings_17500_to_19999_010_031 <-
-#   acs_geo_cats$B20001_010 + acs_geo_cats$B20001_031
-# acs_geo_cats$earnings_20K_to_22499_011_032 <-
-#   acs_geo_cats$B20001_011 + acs_geo_cats$B20001_032
-# acs_geo_cats$earnings_22500_to_24999_012_033 <-
-#   acs_geo_cats$B20001_012 + acs_geo_cats$B20001_033
-# acs_geo_cats$earnings_25K_to_29999_013_034 <-
-#   acs_geo_cats$B20001_013 + acs_geo_cats$B20001_034
-# acs_geo_cats$earnings_30K_to_34999_014_035 <-
-#   acs_geo_cats$B20001_014 + acs_geo_cats$B20001_035
-# acs_geo_cats$earnings_35K_to_39999_015_036 <-
-#   acs_geo_cats$B20001_015 + acs_geo_cats$B20001_036
-# acs_geo_cats$earnings_40K_to_44999_016_037 <-
-#   acs_geo_cats$B20001_016 + acs_geo_cats$B20001_037
-# acs_geo_cats$earnings_45K_to_49999_017_038 <-
-#   acs_geo_cats$B20001_017 + acs_geo_cats$B20001_038
-# acs_geo_cats$earnings_50K_to_54999_018_039 <-
-#   acs_geo_cats$B20001_018 + acs_geo_cats$B20001_039
-# acs_geo_cats$earnings_55K_to_64999_019_040 <-
-#   acs_geo_cats$B20001_019 + acs_geo_cats$B20001_040
-# acs_geo_cats$earnings_65K_to_74999_020_041 <-
-#   acs_geo_cats$B20001_020 + acs_geo_cats$B20001_041
-# acs_geo_cats$earnings_75K_to_99999_021_042 <-
-#   acs_geo_cats$B20001_021 + acs_geo_cats$B20001_042
-# acs_geo_cats$earnings_100K_to_infinity_022_043 <-
-#   acs_geo_cats$B20001_022 + acs_geo_cats$B20001_043
-# 
-# # save constructed variables
-# save(acs_geo_cats,
-#      file = "acs_geo_cats.rdata")
-# 
-# # make constructed variables into .csv
-# write.csv(acs_geo_cats,
-#           file = "acs_geo_cats.csv")
+#### pull ACS data I need ####
 
-# load constructed variables to avoid the above
-load(file = "acs_geo_cats.rdata")
+# make working acs
+working_acs <-
+  acs_data_2013_2017_via_totalcensus
 
-# View(acs_geo_cats)
+# convert from dataframe to data table
+working_acs <-
+  as.data.frame(working_acs)
+
+# pull data from various categories
+total_pop <-
+  working_acs[
+    ,c(
+      "GEOID",
+      "B01001_001",
+      "B01001_001_margin"
+    )
+    ]
+sex_cat <- working_acs[
+  ,c(
+    "GEOID",
+    "B01001_002",
+    "B01001_002_margin",
+    "B01001_026",
+    "B01001_026_margin"
+  )
+  ]
+sex_age_cat <- working_acs[
+  ,c(
+    "GEOID",
+    "B01001_003",
+    "B01001_003_margin",
+    "B01001_004",
+    "B01001_004_margin",
+    "B01001_005",
+    "B01001_005_margin",
+    "B01001_006",
+    "B01001_006_margin",
+    "B01001_007",
+    "B01001_007_margin",
+    "B01001_008",
+    "B01001_008_margin",
+    "B01001_009",
+    "B01001_009_margin",
+    "B01001_010",
+    "B01001_010_margin",
+    "B01001_011",
+    "B01001_011_margin",
+    "B01001_012",
+    "B01001_012_margin",
+    "B01001_013",
+    "B01001_013_margin",
+    "B01001_014",
+    "B01001_014_margin",
+    "B01001_015",
+    "B01001_015_margin",
+    "B01001_016",
+    "B01001_016_margin",
+    "B01001_017",
+    "B01001_017_margin",
+    "B01001_018",
+    "B01001_018_margin",
+    "B01001_019",
+    "B01001_019_margin",
+    "B01001_020",
+    "B01001_020_margin",
+    "B01001_021",
+    "B01001_021_margin",
+    "B01001_022",
+    "B01001_022_margin",
+    "B01001_023",
+    "B01001_023_margin",
+    "B01001_024",
+    "B01001_024_margin",
+    "B01001_025",
+    "B01001_025_margin",
+    "B01001_027", # 26 is total population of women and omitted
+    "B01001_027_margin",
+    "B01001_028",
+    "B01001_028_margin",
+    "B01001_029",
+    "B01001_029_margin",
+    "B01001_030",
+    "B01001_030_margin",
+    "B01001_031",
+    "B01001_031_margin",
+    "B01001_032",
+    "B01001_032_margin",
+    "B01001_033",
+    "B01001_033_margin",
+    "B01001_034",
+    "B01001_034_margin",
+    "B01001_035",
+    "B01001_035_margin",
+    "B01001_036",
+    "B01001_036_margin",
+    "B01001_037",
+    "B01001_037_margin",
+    "B01001_038",
+    "B01001_038_margin",
+    "B01001_039",
+    "B01001_039_margin",
+    "B01001_040",
+    "B01001_040_margin",
+    "B01001_041",
+    "B01001_041_margin",
+    "B01001_042",
+    "B01001_042_margin",
+    "B01001_043",
+    "B01001_043_margin",
+    "B01001_044",
+    "B01001_044_margin",
+    "B01001_045",
+    "B01001_045_margin",
+    "B01001_046",
+    "B01001_046_margin",
+    "B01001_047",
+    "B01001_047_margin",
+    "B01001_048",
+    "B01001_048_margin",
+    "B01001_049",
+    "B01001_049_margin"
+  )
+  ]
+
+age_median <- working_acs[
+  ,c(
+    "GEOID",
+    "B01002_001",
+    "B01002_001_margin",
+    "B01002_002",
+    "B01002_002_margin",
+    "B01002_003",
+    "B01002_003_margin"
+  )
+  ]
+
+race_cat <- working_acs[
+  ,c(
+    "GEOID",
+    "B03002_001",
+    "B03002_001_margin",
+    "B03002_002",
+    "B03002_002_margin",
+    "B03002_003",
+    "B03002_003_margin",
+    "B03002_004",
+    "B03002_004_margin",
+    "B03002_005",
+    "B03002_005_margin",
+    "B03002_006",
+    "B03002_006_margin",
+    "B03002_007",
+    "B03002_007_margin",
+    "B03002_008",
+    "B03002_008_margin",
+    "B03002_009",
+    "B03002_009_margin",
+    "B03002_010",
+    "B03002_010_margin",
+    "B03002_011",
+    "B03002_011_margin",
+    "B03002_012",
+    "B03002_012_margin",
+    "B03002_013",
+    "B03002_013_margin",
+    "B03002_014",
+    "B03002_014_margin",
+    "B03002_015",
+    "B03002_015_margin",
+    "B03002_016",
+    "B03002_016_margin",
+    "B03002_017",
+    "B03002_017_margin",
+    "B03002_018",
+    "B03002_018_margin",
+    "B03002_019",
+    "B03002_019_margin",
+    "B03002_020",
+    "B03002_020_margin",
+    "B03002_021",
+    "B03002_021_margin")]
+education_cat <- working_acs[
+  ,c(
+    "GEOID",
+    "B15003_001",
+    "B15003_001_margin",
+    "B15003_002",
+    "B15003_002_margin",
+    "B15003_003",
+    "B15003_003_margin",
+    "B15003_004",
+    "B15003_004_margin",
+    "B15003_005",
+    "B15003_005_margin",
+    "B15003_006",
+    "B15003_006_margin",
+    "B15003_007",
+    "B15003_007_margin",
+    "B15003_008",
+    "B15003_008_margin",
+    "B15003_009",
+    "B15003_009_margin",
+    "B15003_010",
+    "B15003_010_margin",
+    "B15003_011",
+    "B15003_011_margin",
+    "B15003_012",
+    "B15003_012_margin",
+    "B15003_013",
+    "B15003_013_margin",
+    "B15003_014",
+    "B15003_014_margin",
+    "B15003_015",
+    "B15003_015_margin",
+    "B15003_016",
+    "B15003_016_margin",
+    "B15003_017",
+    "B15003_017_margin",
+    "B15003_018",
+    "B15003_018_margin",
+    "B15003_019",
+    "B15003_019_margin",
+    "B15003_020",
+    "B15003_020_margin",
+    "B15003_021",
+    "B15003_021_margin",
+    "B15003_022",
+    "B15003_022_margin",
+    "B15003_023",
+    "B15003_023_margin",
+    "B15003_024",
+    "B15003_024_margin",
+    "B15003_025",
+    "B15003_025_margin"
+  )
+  ]
+poverty_ratio_cat <-
+  working_acs[
+  ,c(
+    "GEOID",
+    "C17002_001",
+    "C17002_001_margin",
+    "C17002_002",
+    "C17002_002_margin",
+    "C17002_003",
+    "C17002_003_margin",
+    "C17002_004",
+    "C17002_004_margin",
+    "C17002_005",
+    "C17002_005_margin",
+    "C17002_006",
+    "C17002_006_margin",
+    "C17002_007",
+    "C17002_007_margin",
+    "C17002_008",
+    "C17002_008_margin"
+  )
+  ]
+income_house_cat <-
+  working_acs[
+    ,c(
+      "GEOID",
+      "B19001_001",
+      "B19001_001_margin",
+      "B19001_002",
+      "B19001_002_margin",
+      "B19001_003",
+      "B19001_003_margin",
+      "B19001_004",
+      "B19001_004_margin",
+      "B19001_005",
+      "B19001_005_margin",
+      "B19001_006",
+      "B19001_006_margin",
+      "B19001_007",
+      "B19001_007_margin",
+      "B19001_008",
+      "B19001_008_margin",
+      "B19001_009",
+      "B19001_009_margin",
+      "B19001_010",
+      "B19001_010_margin",
+      "B19001_011",
+      "B19001_011_margin",
+      "B19001_012",
+      "B19001_012_margin",
+      "B19001_013",
+      "B19001_013_margin",
+      "B19001_014",
+      "B19001_014_margin",
+      "B19001_015",
+      "B19001_015_margin",
+      "B19001_016",
+      "B19001_016_margin",
+      "B19001_017",
+      "B19001_017_margin"
+    )
+    ]
+income_house_median<-working_acs[
+  ,c(
+    "GEOID",
+    "B19013_001",
+    "B19013_001_margin"
+  )
+  ]
+earnings_sex_cat <-
+  working_acs[
+    ,c(
+      "GEOID",
+      "B20001_001",
+      "B20001_001_margin",
+      "B20001_002",
+      "B20001_002_margin",
+      "B20001_003",
+      "B20001_003_margin",
+      "B20001_004",
+      "B20001_004_margin",
+      "B20001_005",
+      "B20001_005_margin",
+      "B20001_006",
+      "B20001_006_margin",
+      "B20001_007",
+      "B20001_007_margin",
+      "B20001_008",
+      "B20001_008_margin",
+      "B20001_009",
+      "B20001_009_margin",
+      "B20001_010",
+      "B20001_010_margin",
+      "B20001_011",
+      "B20001_011_margin",
+      "B20001_012",
+      "B20001_012_margin",
+      "B20001_013",
+      "B20001_013_margin",
+      "B20001_014",
+      "B20001_014_margin",
+      "B20001_015",
+      "B20001_015_margin",
+      "B20001_016",
+      "B20001_016_margin",
+      "B20001_017",
+      "B20001_017_margin",
+      "B20001_018",
+      "B20001_018_margin",
+      "B20001_019",
+      "B20001_019_margin",
+      "B20001_020",
+      "B20001_020_margin",
+      "B20001_021",
+      "B20001_021_margin",
+      "B20001_022",
+      "B20001_022_margin",
+      "B20001_023",
+      "B20001_023_margin",
+      "B20001_024",
+      "B20001_024_margin",
+      "B20001_025",
+      "B20001_025_margin",
+      "B20001_026",
+      "B20001_026_margin",
+      "B20001_027",
+      "B20001_027_margin",
+      "B20001_028",
+      "B20001_028_margin",
+      "B20001_029",
+      "B20001_029_margin",
+      "B20001_030",
+      "B20001_030_margin",
+      "B20001_031",
+      "B20001_031_margin",
+      "B20001_032",
+      "B20001_032_margin",
+      "B20001_033",
+      "B20001_033_margin",
+      "B20001_034",
+      "B20001_034_margin",
+      "B20001_035",
+      "B20001_035_margin",
+      "B20001_036",
+      "B20001_036_margin",
+      "B20001_037",
+      "B20001_037_margin",
+      "B20001_038",
+      "B20001_038_margin",
+      "B20001_039",
+      "B20001_039_margin",
+      "B20001_040",
+      "B20001_040_margin",
+      "B20001_041",
+      "B20001_041_margin",
+      "B20001_042",
+      "B20001_042_margin",
+      "B20001_043",
+      "B20001_043_margin"
+    )
+    ]
+earnings_median <-
+  working_acs[
+    ,c(
+      "GEOID",
+      "B20002_001",
+      "B20002_001_margin",
+      "B20002_002",
+      "B20002_002_margin",
+      "B20002_003",
+      "B20002_003_margin"
+    )
+    ]
+employment_cat <- # divide 5 by 3
+  working_acs[
+    ,c(
+      "GEOID",
+      "B23025_001",
+      "B23025_001_margin",
+      "B23025_002",
+      "B23025_002_margin",
+      "B23025_003",
+      "B23025_003_margin",
+      "B23025_004",
+      "B23025_004_margin",
+      "B23025_005",
+      "B23025_005_margin",
+      "B23025_006",
+      "B23025_006_margin",
+      "B23025_007",
+      "B23025_007_margin"
+    )
+    ]
+home_value_cat <-
+  working_acs[
+    ,c(
+      "GEOID",
+      "B25075_001",
+      "B25075_001_margin",
+      "B25075_002",
+      "B25075_002_margin",
+      "B25075_003",
+      "B25075_003_margin",
+      "B25075_004",
+      "B25075_004_margin",
+      "B25075_005",
+      "B25075_005_margin",
+      "B25075_006",
+      "B25075_006_margin",
+      "B25075_007",
+      "B25075_007_margin",
+      "B25075_008",
+      "B25075_008_margin",
+      "B25075_009",
+      "B25075_009_margin",
+      "B25075_010",
+      "B25075_010_margin",
+      "B25075_011",
+      "B25075_011_margin",
+      "B25075_012",
+      "B25075_012_margin",
+      "B25075_013",
+      "B25075_013_margin",
+      "B25075_014",
+      "B25075_014_margin",
+      "B25075_015",
+      "B25075_015_margin",
+      "B25075_016",
+      "B25075_016_margin",
+      "B25075_017",
+      "B25075_017_margin",
+      "B25075_018",
+      "B25075_018_margin",
+      "B25075_019",
+      "B25075_019_margin",
+      "B25075_020",
+      "B25075_020_margin",
+      "B25075_021",
+      "B25075_021_margin",
+      "B25075_022",
+      "B25075_022_margin",
+      "B25075_023",
+      "B25075_023_margin",
+      "B25075_024",
+      "B25075_024_margin",
+      "B25075_025",
+      "B25075_025_margin",
+      "B25075_026",
+      "B25075_026_margin",
+      "B25075_027",
+      "B25075_027_margin"
+    )
+    ]
+health_insurance_cat <-
+  working_acs[
+    ,c(
+      "GEOID",
+      "B27010_001",
+      "B27010_001_margin",
+      "B27010_002",
+      "B27010_002_margin",
+      "B27010_003",
+      "B27010_003_margin",
+      "B27010_004",
+      "B27010_004_margin",
+      "B27010_005",
+      "B27010_005_margin",
+      "B27010_006",
+      "B27010_006_margin",
+      "B27010_007",
+      "B27010_007_margin",
+      "B27010_008",
+      "B27010_008_margin",
+      "B27010_009",
+      "B27010_009_margin",
+      "B27010_010",
+      "B27010_010_margin",
+      "B27010_011",
+      "B27010_011_margin",
+      "B27010_012",
+      "B27010_012_margin",
+      "B27010_013",
+      "B27010_013_margin",
+      "B27010_014",
+      "B27010_014_margin",
+      "B27010_015",
+      "B27010_015_margin",
+      "B27010_016",
+      "B27010_016_margin",
+      "B27010_017",
+      "B27010_017_margin",
+      "B27010_018",
+      "B27010_018_margin",
+      "B27010_019",
+      "B27010_019_margin",
+      "B27010_020",
+      "B27010_020_margin",
+      "B27010_021",
+      "B27010_021_margin",
+      "B27010_022",
+      "B27010_022_margin",
+      "B27010_023",
+      "B27010_023_margin",
+      "B27010_024",
+      "B27010_024_margin",
+      "B27010_025",
+      "B27010_025_margin",
+      "B27010_027",
+      "B27010_027_margin",
+      "B27010_028",
+      "B27010_028_margin",
+      "B27010_029",
+      "B27010_029_margin",
+      "B27010_030",
+      "B27010_030_margin",
+      "B27010_031",
+      "B27010_031_margin",
+      "B27010_032",
+      "B27010_032_margin",
+      "B27010_033",
+      "B27010_033_margin",
+      "B27010_034",
+      "B27010_034_margin",
+      "B27010_035",
+      "B27010_035_margin",
+      "B27010_036",
+      "B27010_036_margin",
+      "B27010_037",
+      "B27010_037_margin",
+      "B27010_038",
+      "B27010_038_margin",
+      "B27010_039",
+      "B27010_039_margin",
+      "B27010_040",
+      "B27010_040_margin",
+      "B27010_041",
+      "B27010_041_margin",
+      "B27010_042",
+      "B27010_042_margin",
+      "B27010_043",
+      "B27010_043_margin",
+      "B27010_044",
+      "B27010_044_margin",
+      "B27010_045",
+      "B27010_045_margin",
+      "B27010_046",
+      "B27010_046_margin",
+      "B27010_047",
+      "B27010_047_margin",
+      "B27010_048",
+      "B27010_048_margin",
+      "B27010_049",
+      "B27010_049_margin",
+      "B27010_050",
+      "B27010_050_margin",
+      "B27010_051",
+      "B27010_051_margin",
+      "B27010_052",
+      "B27010_052_margin",
+      "B27010_053",
+      "B27010_053_margin",
+      "B27010_054",
+      "B27010_054_margin",
+      "B27010_055",
+      "B27010_055_margin",
+      "B27010_056",
+      "B27010_056_margin",
+      "B27010_057",
+      "B27010_057_margin",
+      "B27010_058",
+      "B27010_058_margin",
+      "B27010_059",
+      "B27010_059_margin",
+      "B27010_060",
+      "B27010_060_margin",
+      "B27010_061",
+      "B27010_061_margin",
+      "B27010_062",
+      "B27010_062_margin",
+      "B27010_063",
+      "B27010_063_margin",
+      "B27010_064",
+      "B27010_064_margin",
+      "B27010_065",
+      "B27010_065_margin",
+      "B27010_066",
+      "B27010_066_margin"
+    )
+    ]
+home_value_median <-
+  working_acs[
+    ,c(
+      "GEOID",
+      "B25077_001",
+      "B25077_001_margin"
+    )
+    ]
+ling_iso <-
+  working_acs[
+    ,c(
+      "GEOID",
+      "C16002_001",
+      "C16002_001_margin",
+      "C16002_002",
+      "C16002_002_margin",
+      "C16002_003",
+      "C16002_003_margin",
+      "C16002_004",
+      "C16002_004_margin",
+      "C16002_005",
+      "C16002_005_margin",
+      "C16002_006",
+      "C16002_006_margin",
+      "C16002_007",
+      "C16002_007_margin",
+      "C16002_008",
+      "C16002_008_margin",
+      "C16002_009",
+      "C16002_009_margin",
+      "C16002_010",
+      "C16002_010_margin",
+      "C16002_011",
+      "C16002_011_margin",
+      "C16002_012",
+      "C16002_012_margin",
+      "C16002_013",
+      "C16002_013_margin",
+      "C16002_014",
+      "C16002_014_margin"
+    )
+    ]
+housing_tenure <-
+  working_acs[
+    ,c(
+      "GEOID",
+      "B25003_001",
+      "B25003_001_margin",
+      "B25003_002",
+      "B25003_002_margin",
+      "B25003_003",
+      "B25003_003_margin"
+    )
+    ]
+
+# make list of all categories
+variables_of_interest <-
+  list(total_pop,
+       sex_cat,
+       sex_age_cat,
+       age_median,
+       race_cat,
+       education_cat,
+       poverty_ratio_cat,
+       income_house_cat,
+       income_house_median,
+       earnings_sex_cat,
+       earnings_median,
+       employment_cat,
+       home_value_cat,
+       home_value_median,
+       health_insurance_cat,
+       ling_iso,
+       housing_tenure)
+
+#### merge different subset data together ####
+
+# define merge function
+merge_dataframes <-
+  function(x, y) full_join(x, y, by = "GEOID")
+
+# perform the merge function en masse
+acs_select <-
+  Reduce(
+    merge_dataframes,
+    variables_of_interest
+  )
+
+# save select acs data
+save(acs_select,
+     file = "acs_select.rdata")
+
+# merge select acs data with geography
+acs_select_geo <-
+  full_join(ks_tiger_table,
+            acs_select,
+            by = "GEOID")
+# View(acs_select_geo)
+
+# save acs_select_geo
+save(acs_select_geo,
+     file = "acs_select_geo.rdata")
+
+write.csv(acs_select_geo, file = "acs_select_geo.csv")
+
+
+# make data for sorting into categories
+acs_geo_cats <-
+  acs_select_geo
+
+### making variables ####
+# making variables
+# from Silva:
+# median household income (dollars),
+# median household value (dollars),
+# percent of population identifying as White only,
+# population density (population per square mile),
+# percent of population with a high school education/GED or higher, and
+# population median age
+# from RMF:  age categories
+
+
+# total population
+acs_geo_cats$pop_tot_B01001_001 <-
+  acs_geo_cats$B01001_001
+
+# land area in km2
+acs_geo_cats$ALAND_KM <-
+  acs_geo_cats$ALAND/1000000
+
+# population density (people/km2, ALAND in m2)
+acs_geo_cats$pop_dense_B01001_001_ALAND <-
+  (acs_geo_cats$B01001_001/
+     acs_geo_cats$ALAND_KM)
+
+# median household income
+acs_geo_cats$income_house_median_B19013_001 <-
+  acs_geo_cats$B19013_001
+
+# median age
+acs_geo_cats$age_median_B01002_001 <-
+  acs_geo_cats$B01002_001
+
+# ages
+acs_geo_cats$age_under_5_B01001_003_027 <-
+  acs_geo_cats$B01001_003 + acs_geo_cats$B01001_027
+acs_geo_cats$age_5_to_9_B01001_004_028 <-
+  acs_geo_cats$B01001_004 + acs_geo_cats$B01001_028
+acs_geo_cats$age_10_to_14_B01001_005_029 <-
+  acs_geo_cats$B01001_005 + acs_geo_cats$B01001_029
+acs_geo_cats$age_15_to_17_B01001_006_030 <-
+  acs_geo_cats$B01001_006 + acs_geo_cats$B01001_030
+acs_geo_cats$age_18_to_19_B01001_007_031 <-
+  acs_geo_cats$B01001_007 + acs_geo_cats$B01001_031
+acs_geo_cats$age_20_B01001_008_032 <-
+  acs_geo_cats$B01001_008 + acs_geo_cats$B01001_032
+acs_geo_cats$age_21_B01001_009_033 <-
+  acs_geo_cats$B01001_009 + acs_geo_cats$B01001_033
+acs_geo_cats$age_22_to_24_B01001_010_034 <-
+  acs_geo_cats$B01001_010 + acs_geo_cats$B01001_034
+acs_geo_cats$age_25_to_29_B01001_011_035 <-
+  acs_geo_cats$B01001_011 + acs_geo_cats$B01001_035
+acs_geo_cats$age_30_to_34_B01001_012_036 <-
+  acs_geo_cats$B01001_012 + acs_geo_cats$B01001_036
+acs_geo_cats$age_35_to_39_B01001_013_037 <-
+  acs_geo_cats$B01001_013 + acs_geo_cats$B01001_037
+acs_geo_cats$age_40_to_44_B01001_014_038 <-
+  acs_geo_cats$B01001_014 + acs_geo_cats$B01001_038
+acs_geo_cats$age_45_to_49_B01001_015_039 <-
+  acs_geo_cats$B01001_015 + acs_geo_cats$B01001_039
+acs_geo_cats$age_50_to_54_B01001_016_040 <-
+  acs_geo_cats$B01001_016 + acs_geo_cats$B01001_040
+acs_geo_cats$age_55_to_59_B01001_017_041 <-
+  acs_geo_cats$B01001_017 + acs_geo_cats$B01001_041
+acs_geo_cats$age_60_to_61_B01001_018_042 <-
+  acs_geo_cats$B01001_018 + acs_geo_cats$B01001_042
+acs_geo_cats$age_62_to_64_B01001_019_043 <-
+  acs_geo_cats$B01001_019 + acs_geo_cats$B01001_043
+acs_geo_cats$age_65_to_66_B01001_020_044 <-
+  acs_geo_cats$B01001_020 + acs_geo_cats$B01001_044
+acs_geo_cats$age_67_to_69_B01001_021_045 <-
+  acs_geo_cats$B01001_021 + acs_geo_cats$B01001_045
+acs_geo_cats$age_70_to_74_B01001_022_046 <-
+  acs_geo_cats$B01001_022 + acs_geo_cats$B01001_046
+acs_geo_cats$age_75_to_79_B01001_023_047 <-
+  acs_geo_cats$B01001_023 + acs_geo_cats$B01001_047
+acs_geo_cats$age_80_to_84_B01001_024_048 <-
+  acs_geo_cats$B01001_024 + acs_geo_cats$B01001_048
+acs_geo_cats$age_85_to_inf_B01001_025_049 <-
+  acs_geo_cats$B01001_025 + acs_geo_cats$B01001_049
+
+acs_geo_cats$age_0_to_14 <-
+  acs_geo_cats$age_under_5_B01001_003_027 +
+  acs_geo_cats$age_5_to_9_B01001_004_028 +
+  acs_geo_cats$age_10_to_14_B01001_005_029
+
+acs_geo_cats$age_0_to_17 <-
+  acs_geo_cats$age_under_5_B01001_003_027 +
+  acs_geo_cats$age_5_to_9_B01001_004_028 +
+  acs_geo_cats$age_10_to_14_B01001_005_029 +
+  acs_geo_cats$age_15_to_17_B01001_006_030
+
+acs_geo_cats$age_0_to_19 <-
+  acs_geo_cats$age_under_5_B01001_003_027 +
+  acs_geo_cats$age_5_to_9_B01001_004_028 +
+  acs_geo_cats$age_10_to_14_B01001_005_029 +
+  acs_geo_cats$age_15_to_17_B01001_006_030 +
+  acs_geo_cats$age_18_to_19_B01001_007_031
+
+acs_geo_cats$age_5_to_14 <-
+  acs_geo_cats$age_5_to_9_B01001_004_028 +
+  acs_geo_cats$age_10_to_14_B01001_005_029
+
+acs_geo_cats$age_5_to_17 <-
+  acs_geo_cats$age_5_to_9_B01001_004_028 +
+  acs_geo_cats$age_10_to_14_B01001_005_029 +
+  acs_geo_cats$age_15_to_17_B01001_006_030
+
+acs_geo_cats$age_5_to_19 <-
+  acs_geo_cats$age_5_to_9_B01001_004_028 +
+  acs_geo_cats$age_10_to_14_B01001_005_029 +
+  acs_geo_cats$age_15_to_17_B01001_006_030 +
+  acs_geo_cats$age_18_to_19_B01001_007_031
+
+acs_geo_cats$age_10_to_17 <-
+  acs_geo_cats$age_10_to_14_B01001_005_029 +
+  acs_geo_cats$age_15_to_17_B01001_006_030
+
+acs_geo_cats$age_15_to_64 <-
+  acs_geo_cats$age_15_to_17_B01001_006_030 +
+  acs_geo_cats$age_18_to_19_B01001_007_031 +
+  acs_geo_cats$age_20_B01001_008_032 +
+  acs_geo_cats$age_21_B01001_009_033 +
+  acs_geo_cats$age_22_to_24_B01001_010_034 +
+  acs_geo_cats$age_25_to_29_B01001_011_035 +
+  acs_geo_cats$age_30_to_34_B01001_012_036 +
+  acs_geo_cats$age_35_to_39_B01001_013_037 +
+  acs_geo_cats$age_40_to_44_B01001_014_038 +
+  acs_geo_cats$age_45_to_49_B01001_015_039 +
+  acs_geo_cats$age_50_to_54_B01001_016_040 +
+  acs_geo_cats$age_55_to_59_B01001_017_041 +
+  acs_geo_cats$age_60_to_61_B01001_018_042 +
+  acs_geo_cats$age_62_to_64_B01001_019_043
+
+acs_geo_cats$age_18_to_64 <-
+  acs_geo_cats$age_18_to_19_B01001_007_031 +
+  acs_geo_cats$age_20_B01001_008_032 +
+  acs_geo_cats$age_21_B01001_009_033 +
+  acs_geo_cats$age_22_to_24_B01001_010_034 +
+  acs_geo_cats$age_25_to_29_B01001_011_035 +
+  acs_geo_cats$age_30_to_34_B01001_012_036 +
+  acs_geo_cats$age_35_to_39_B01001_013_037 +
+  acs_geo_cats$age_40_to_44_B01001_014_038 +
+  acs_geo_cats$age_45_to_49_B01001_015_039 +
+  acs_geo_cats$age_50_to_54_B01001_016_040 +
+  acs_geo_cats$age_55_to_59_B01001_017_041 +
+  acs_geo_cats$age_60_to_61_B01001_018_042 +
+  acs_geo_cats$age_62_to_64_B01001_019_043
+
+acs_geo_cats$age_20_to_64 <-
+  acs_geo_cats$age_20_B01001_008_032 +
+  acs_geo_cats$age_21_B01001_009_033 +
+  acs_geo_cats$age_22_to_24_B01001_010_034 +
+  acs_geo_cats$age_25_to_29_B01001_011_035 +
+  acs_geo_cats$age_30_to_34_B01001_012_036 +
+  acs_geo_cats$age_35_to_39_B01001_013_037 +
+  acs_geo_cats$age_40_to_44_B01001_014_038 +
+  acs_geo_cats$age_45_to_49_B01001_015_039 +
+  acs_geo_cats$age_50_to_54_B01001_016_040 +
+  acs_geo_cats$age_55_to_59_B01001_017_041 +
+  acs_geo_cats$age_60_to_61_B01001_018_042 +
+  acs_geo_cats$age_62_to_64_B01001_019_043
+
+acs_geo_cats$age_65_plus <-
+  acs_geo_cats$age_65_to_66_B01001_020_044 +
+  acs_geo_cats$age_67_to_69_B01001_021_045 +
+  acs_geo_cats$age_70_to_74_B01001_022_046 +
+  acs_geo_cats$age_75_to_79_B01001_023_047 +
+  acs_geo_cats$age_80_to_84_B01001_024_048 +
+  acs_geo_cats$age_85_to_inf_B01001_025_049
+
+# age percents
+acs_geo_cats$age_under_5_percent_B01001 <-
+  acs_geo_cats$age_under_5_B01001_003_027 /
+  acs_geo_cats$pop_tot_B01001_001
+
+acs_geo_cats$age_0_to_14_percent_B01001 <-
+  acs_geo_cats$age_0_to_14 /
+  acs_geo_cats$pop_tot_B01001_001
+
+acs_geo_cats$age_0_to_17_percent_B01001 <-
+  acs_geo_cats$age_0_to_17 /
+  acs_geo_cats$pop_tot_B01001_001
+
+acs_geo_cats$age_0_to_19_percent_B01001 <-
+  acs_geo_cats$age_0_to_19 /
+  acs_geo_cats$pop_tot_B01001_001
+
+acs_geo_cats$age_5_to_14_percent_B01001 <-
+  acs_geo_cats$age_5_to_14 /
+  acs_geo_cats$pop_tot_B01001_001
+
+acs_geo_cats$age_5_to_17_percent_B01001 <-
+  acs_geo_cats$age_5_to_17 /
+  acs_geo_cats$pop_tot_B01001_001
+
+acs_geo_cats$age_5_to_19_percent_B01001 <-
+  acs_geo_cats$age_5_to_19 /
+  acs_geo_cats$pop_tot_B01001_001
+
+acs_geo_cats$age_10_to_17_percent_B01001 <-
+  acs_geo_cats$age_10_to_17 /
+  acs_geo_cats$pop_tot_B01001_001
+
+acs_geo_cats$age_15_to_64_percent_B01001 <-
+  acs_geo_cats$age_15_to_64 /
+  acs_geo_cats$pop_tot_B01001_001
+
+acs_geo_cats$age_18_to_64_percent_B01001 <-
+  acs_geo_cats$age_18_to_64 /
+
+  acs_geo_cats$pop_tot_B01001_001
+
+acs_geo_cats$age_20_to_64_percent_B01001 <-
+  acs_geo_cats$age_20_to_64 /
+  acs_geo_cats$pop_tot_B01001_001
+
+acs_geo_cats$age_65_plus_percent_B01001 <-
+  acs_geo_cats$age_65_plus /
+  acs_geo_cats$pop_tot_B01001_001
+
+# unemployment rate
+acs_geo_cats$employment_tot_16_over_B23025_001 <-
+  acs_geo_cats$B23025_001
+acs_geo_cats$labor_force_tot_B23025_002 <-
+  acs_geo_cats$B23025_002
+acs_geo_cats$civie_labor_force_B23025_003 <-
+  acs_geo_cats$B23025_003
+acs_geo_cats$civie_employed_B23025_004 <-
+  acs_geo_cats$B23025_004
+acs_geo_cats$civie_unemployed_B23025_005 <-
+  acs_geo_cats$B23025_005
+acs_geo_cats$armed_forces_B23025_006 <-
+  acs_geo_cats$B23025_006
+
+acs_geo_cats$unemployed_percent_B23025_005_003 <-
+  acs_geo_cats$B23025_005/
+  acs_geo_cats$B23025_003
+
+# median household value
+acs_geo_cats$house_value_median_B25077_001 <-
+  acs_geo_cats$B25077_001
+
+# percent non_Hispanic_white
+acs_geo_cats$white_non_hisp_lat_percent_B03002_003_001 <-
+  acs_geo_cats$B03002_003 /
+  acs_geo_cats$B03002_001
+
+# percent Native (includes Hispanic/Latinx)
+acs_geo_cats$aian_percent_B03002_005_015_001 <-
+  (acs_geo_cats$B03002_005 +
+     acs_geo_cats$B03002_015) /
+  acs_geo_cats$B03002_001
+
+# percent Hispanic/Latino
+acs_geo_cats$hisp_lat_percent_B03002_012_001 <- 
+  (acs_geo_cats$B03002_012 / 
+     acs_geo_cats$B03002_001)
+
+# percent of population with high school education or more
+acs_geo_cats$education_high_school_plus_percent_B15003_017_to_025 <-
+  (
+    (
+      acs_geo_cats$B15003_017 +
+        acs_geo_cats$B15003_018 +
+        acs_geo_cats$B15003_019 +
+        acs_geo_cats$B15003_020 +
+        acs_geo_cats$B15003_021 +
+        acs_geo_cats$B15003_022 +
+        acs_geo_cats$B15003_023 +
+        acs_geo_cats$B15003_024 +
+        acs_geo_cats$B15003_025
+    )
+    /acs_geo_cats$B15003_001
+  )
+
+# linguistic isolation
+acs_geo_cats$ling_iso_total_households_C16002_001 <-
+  acs_geo_cats$C16002_001
+acs_geo_cats <-
+  acs_geo_cats %>%
+  mutate(
+    limited_english_percent_C16002_004_007_010_013_001 =
+      (C16002_004 +
+         C16002_007 +
+         C16002_010 +
+         C16002_013) /
+      C16002_001)
+
+# housing tenure
+acs_geo_cats$housing_occupied_total_B25003_001 <-
+  acs_geo_cats$B25003_001
+acs_geo_cats$housing_owner_occupied_B25003_002 <-
+  acs_geo_cats$B25003_002
+acs_geo_cats$housing_renter_occupied_B25003_003 <-
+  acs_geo_cats$B25003_003
+acs_geo_cats$owner_occupy_percent_B25003_002_001 <-
+  acs_geo_cats$B25003_002 /
+  acs_geo_cats$B25003_001
+acs_geo_cats$renter_occupy_percent_B25003_003_001 <-
+  acs_geo_cats$B25003_003 /
+  acs_geo_cats$B25003_001
+
+# percent below poverty
+acs_geo_cats$pop_for_pov_C17002_001 <-
+  acs_geo_cats$C17002_001
+acs_geo_cats$number_below_0p5_pov_C17002_002 <-
+  acs_geo_cats$C17002_002
+acs_geo_cats$number_0p5_to_0p99_pov_C17002_003 <-
+  acs_geo_cats$C17002_003
+acs_geo_cats$number_1p0_to_1p24_pov_C17002_004 <-
+  acs_geo_cats$C17002_004
+acs_geo_cats$number_1p25_to_1p49_pov_C17002_005 <-
+  acs_geo_cats$C17002_005
+acs_geo_cats$number_1p5_to_1p84_pov_C17002_006 <-
+  acs_geo_cats$C17002_006
+acs_geo_cats$number_1p85_to_1p99_pov_C17002_007 <-
+  acs_geo_cats$C17002_007
+acs_geo_cats$number_2p0_plus_pov_C17002_008 <-
+  acs_geo_cats$C17002_008
+
+acs_geo_cats$poverty_below_100_percent_C17002_002_003_001 <-
+  (acs_geo_cats$C17002_002 +
+     acs_geo_cats$C17002_003) /
+  acs_geo_cats$pop_for_pov_C17002_001
+
+acs_geo_cats$poverty_below_150_percent_C17002_002_to_005_001 <-
+  (acs_geo_cats$C17002_002 +
+     acs_geo_cats$C17002_003 +
+     acs_geo_cats$C17002_004 +
+     acs_geo_cats$C17002_005) /
+  acs_geo_cats$pop_for_pov_C17002_001
+
+acs_geo_cats$poverty_below_200_percent__C17002_002_to_007_001 <-
+  (acs_geo_cats$C17002_002 +
+     acs_geo_cats$C17002_003 +
+     acs_geo_cats$C17002_004 +
+     acs_geo_cats$C17002_005 +
+     acs_geo_cats$C17002_006 +
+     acs_geo_cats$C17002_007) /
+  acs_geo_cats$pop_for_pov_C17002_001
+
+# percent female
+acs_geo_cats$female_number_B01001_026 <-
+  acs_geo_cats$B01001_026
+acs_geo_cats$male_number_B01001_002 <-
+  acs_geo_cats$B01001_002
+acs_geo_cats$female_percent_B01001_026_001 <-
+  acs_geo_cats$female_number_B01001_026 /
+  acs_geo_cats$pop_tot_B01001_001
+
+# percent health insurance
+acs_geo_cats$pop_for_health_insurance_B27010_001 <-
+  acs_geo_cats$B27010_001
+acs_geo_cats$no_health_insurance_percent_B27010_017_033_050_066 <-
+  (acs_geo_cats$B27010_017 +
+     acs_geo_cats$B27010_033 +
+     acs_geo_cats$B27010_050 +
+     acs_geo_cats$B27010_066) /
+  acs_geo_cats$pop_for_health_insurance_B27010_001
+
+# earnings median
+acs_geo_cats$earnings_median_B20002_001 <-
+  acs_geo_cats$B20002_001
+
+# earnings categories
+acs_geo_cats$earnings_1_to_2499_003_0024 <-
+  acs_geo_cats$B20001_003 + acs_geo_cats$B20001_024
+acs_geo_cats$earnings_2500_to_4999_004_025 <-
+  acs_geo_cats$B20001_004 + acs_geo_cats$B20001_025
+acs_geo_cats$earnings_5000_to_7499_005_026 <-
+  acs_geo_cats$B20001_005 + acs_geo_cats$B20001_026
+acs_geo_cats$earnings_7500_to_9999_006_027 <-
+  acs_geo_cats$B20001_006 + acs_geo_cats$B20001_027
+acs_geo_cats$earnings_10K_to_12499_007_028 <-
+  acs_geo_cats$B20001_007 + acs_geo_cats$B20001_028
+acs_geo_cats$earnings_12500_to_14999_008_029 <-
+  acs_geo_cats$B20001_008 + acs_geo_cats$B20001_029
+acs_geo_cats$earnings_15K_to_17499_009_030 <-
+  acs_geo_cats$B20001_009 + acs_geo_cats$B20001_030
+acs_geo_cats$earnings_17500_to_19999_010_031 <-
+  acs_geo_cats$B20001_010 + acs_geo_cats$B20001_031
+acs_geo_cats$earnings_20K_to_22499_011_032 <-
+  acs_geo_cats$B20001_011 + acs_geo_cats$B20001_032
+acs_geo_cats$earnings_22500_to_24999_012_033 <-
+  acs_geo_cats$B20001_012 + acs_geo_cats$B20001_033
+acs_geo_cats$earnings_25K_to_29999_013_034 <-
+  acs_geo_cats$B20001_013 + acs_geo_cats$B20001_034
+acs_geo_cats$earnings_30K_to_34999_014_035 <-
+  acs_geo_cats$B20001_014 + acs_geo_cats$B20001_035
+acs_geo_cats$earnings_35K_to_39999_015_036 <-
+  acs_geo_cats$B20001_015 + acs_geo_cats$B20001_036
+acs_geo_cats$earnings_40K_to_44999_016_037 <-
+  acs_geo_cats$B20001_016 + acs_geo_cats$B20001_037
+acs_geo_cats$earnings_45K_to_49999_017_038 <-
+  acs_geo_cats$B20001_017 + acs_geo_cats$B20001_038
+acs_geo_cats$earnings_50K_to_54999_018_039 <-
+  acs_geo_cats$B20001_018 + acs_geo_cats$B20001_039
+acs_geo_cats$earnings_55K_to_64999_019_040 <-
+  acs_geo_cats$B20001_019 + acs_geo_cats$B20001_040
+acs_geo_cats$earnings_65K_to_74999_020_041 <-
+  acs_geo_cats$B20001_020 + acs_geo_cats$B20001_041
+acs_geo_cats$earnings_75K_to_99999_021_042 <-
+  acs_geo_cats$B20001_021 + acs_geo_cats$B20001_042
+acs_geo_cats$earnings_100K_to_infinity_022_043 <-
+  acs_geo_cats$B20001_022 + acs_geo_cats$B20001_043
+
+# save constructed variables
+save(acs_geo_cats,
+     file = "acs_geo_cats.rdata")
+
+# make constructed variables into .csv
+write.csv(acs_geo_cats,
+          file = "acs_geo_cats.csv")
+
+# # load constructed variables to avoid the above
+# load(file = "acs_geo_cats.rdata")
+
 
 
 
@@ -2345,6 +2358,25 @@ ks_only_apis <-
          drop_dup[KID %in% kids_of_dup_api_rows_to_drop] <- 
            'drop_dup_api')
 
+# order ks_only_apis by drop or keep
+ks_only_apis <- 
+  ks_only_apis[order(ks_only_apis$drop_dup),]
+
+# View(ks_only_apis)
+
+# propogate dates (BEWARE, THIS STEP TAKE ABOUT 20 MINUTES!)
+ks_only_apis <-
+  ks_only_apis %>%
+  group_by(API_NUMBER) %>%
+  fill(
+    permit_propogate,
+    spud_propogate,
+    completion_propogate,
+    plugging_propogate,
+    modified_propogate
+  ) %>%
+  ungroup()
+
 # View(ks_only_apis)
 
 # remove duplicate APIs, keeping those last modified
@@ -2353,6 +2385,7 @@ ks_bye_dup_api <-
          KID %notin% kids_of_dup_api_rows_to_drop)
 
 nrow(ks_bye_dup_api) # get number for flowchart
+
 
 
 #### dealing with API duplication based on 4-digit activity code ####
@@ -2432,10 +2465,10 @@ write.csv(ks_lat_long_dup,
 ks_lat_long_dup <- 
   ks_lat_long_dup[order(ks_lat_long_dup$LATITUDE, 
                         ks_lat_long_dup$LONGITUDE, 
-                        ks_lat_long_dup$uic, 
+                        -rank(ks_lat_long_dup$uic), 
                         ks_lat_long_dup$modified_propogate),]
 
-# View(ks_lat_long_dup)
+table(ks_lat_long_dup$uic)
 
 # propogate dates
 ks_lat_long_dup <-
@@ -2462,6 +2495,9 @@ ks_lat_long_drop_index <-
 # makes dataframe of rows of wells to drop
 wells_to_drop_due_to_lat_long <-    
   ks_lat_long_dup[ks_lat_long_drop_index, ]
+
+table(wells_to_drop_due_to_lat_long$uic)
+View(wells_to_drop_due_to_lat_long)
 
 # makes list of just the kids
 kids_of_wells_to_drop_due_to_lat_long <-   
@@ -2517,7 +2553,7 @@ ks_swd_full_for_map <- # make mapping dataset
 # save dataset for mapping
 save(ks_swd_full_for_map, 
      file = "ks_swd_full_for_map.rdata")
-View(ks_swd_full_for_map)
+# View(ks_swd_full_for_map)
 
 # table(ks_swd_full_for_map$activity)
 # table(ks_swd_full_for_map$STATUS)
@@ -2687,24 +2723,331 @@ ks_wells_and_block_groups$completed_after_2010[
 
 
 # make variable for true SWD well
+ks_wells_and_block_groups$all_swd <- 1
+
+# make variable for wells excluding midways and abandoned locations
 ks_wells_and_block_groups$extant_swd <- 1
 ks_wells_and_block_groups$post_2000 <- NA
 
-
-
 table(ks_wells_and_block_groups$activity)
+table(ks_wells_and_block_groups$STATUS)
 
 # exclude abandoned locations and midways from total SWD list
 ks_wells_and_block_groups <- 
   within(ks_wells_and_block_groups, 
          extant_swd[activity %in% 
                       c("midway", 
-                        "ab_loc", 
-                        "future")] <- 0)
-
-sum(ks_wells_and_block_groups$extant_swd)
+                        "ab_loc")] <- 0)
 
 View(ks_wells_and_block_groups)
+
+sum(ks_wells_and_block_groups$all_swd)
+sum(ks_wells_and_block_groups$extant_swd)
+
+# assign wells to block groups!
+ks_well_counts <- aggregate(
+  ks_wells_and_block_groups$extant_swd ~ GEOID,
+  ks_wells_and_block_groups,
+  sum)
+# View(ks_well_counts)
+
+# rename second variable as the well count
+colnames(ks_well_counts)[2] <- "extant_well_count"
+View(ks_well_counts)
+
+# convert GEOID to character
+ks_well_counts$GEOID <- as.character(ks_well_counts$GEOID)
+
+# load ACS variables
+# load(file = "acs_geo_cats.rdata")
+# View(acs_geo_cats)
+
+# convert acs_geo_cats GEOID to the one in ks_well_counts
+# preserve the original GEOID
+acs_geo_cats$GEOID_alphanum <- acs_geo_cats$GEOID # preserve the original GEOID
+acs_geo_cats$GEOID <- gsub("15000US", "", acs_geo_cats$GEOID)
+
+# merge well counts and acs!  hey-o!
+wells_demographic_join <- merge(ks_well_counts,
+                          acs_geo_cats,
+                          by = "GEOID",
+                          all = TRUE)
+
+# replace NAs with 0s
+wells_demographic_join <- 
+  within(wells_demographic_join, 
+         extant_well_count[is.na(
+           wells_demographic_join$extant_well_count)] <- 0)
+
+# make new binary variable for have versus not have swd
+well_demographic_join$any_swd_binary <- NA
+well_demographic_join <- 
+  within(well_demographic_join, 
+         any_swd_binary[extant_well_count == 0] <- 'no')
+well_demographic_join <- 
+  within(well_demographic_join, 
+         any_swd_binary[extant_well_count > 0] <- 'yes')
+
+View(wells_demographic_join[1:5])
+
+# check for wells in unpopulated census block groups
+# View(wells_demographic_join[,c("GEOID",
+                               # "extant_well_count",
+                               # "pop_tot_B01001_001",
+                               # "ALAND",
+                               # "AWATER")])
+
+# remove block groups with no poulation
+wells_demographic_join_populated <- 
+  wells_demographic_join[which(
+    wells_demographic_join$pop_tot_B01001_001 != 0),]
+
+# View(wells_demographic_join_populated) 2339 rows
+
+# View(wells_demographic_join_populated[,c("GEOID",
+#                                         "ALAND", 
+#                                         "AWATER")])
+
+ks_analysis_dataset <- wells_demographic_join_populated
+
+
+
+#### CORRELATION TABLE ####
+
+# make dataframe for the correlation dataset
+correlation_matrix_data  <-  
+  ks_analysis_dataset[,c(
+    "GEOID",
+    "ALAND_KM", 
+    "pop_dense_B01001_001_ALAND", 
+    "age_0_to_17_percent_B01001", 
+    "age_65_plus_percent_B01001", 
+    "white_non_hisp_lat_percent_B03002_003_001", 
+    "hisp_lat_percent_B03002_012_001", 
+    "aian_percent_B03002_005_015_001",
+    "education_high_school_plus_percent_B15003_017_to_025", 
+    "renter_occupy_percent_B25003_003_001", 
+    "limited_english_percent_C16002_004_007_010_013_001", 
+    "earnings_median_B20002_001", 
+    "income_house_median_B19013_001", 
+    "house_value_median_B25077_001", 
+    "no_health_insurance_percent_B27010_017_033_050_066", 
+    "poverty_below_100_percent_C17002_002_003_001", 
+    "unemployed_percent_B23025_005_003", 
+    "extant_well_count")]
+
+# fix names to make them prettier on the heatmap
+colnames(correlation_matrix_data) <- c("GEOID", 
+                                       "Land area", 
+                                       "Population density", 
+                                       "% age <18", 
+                                       "% age >65", 
+                                       "% non-Hispanic white", 
+                                       "% Native American", 
+                                       "% Hispanic or Latinx",
+                                       "% high school education", 
+                                       "% renter-occupied households", 
+                                       "% limited-English households", 
+                                       "Median earnings", 
+                                       "Median household income", 
+                                       "Median household value", 
+                                       "% with no health insurance", 
+                                       "% in poverty", 
+                                       "% unemployed", 
+                                       "Well count")
+
+# reorder the columns
+correlation_matrix_data <- 
+  correlation_matrix_data[c("GEOID", 
+                            "Median household value", 
+                            "Median earnings", 
+                            "Median household income", 
+                            "% with no health insurance", 
+                            "% limited-English households", 
+                            "% renter-occupied households", 
+                            "% unemployed", 
+                            "% in poverty", 
+                            "% high school education", 
+                            "% age >65", 
+                            "% age <18", 
+                            "% non-Hispanic white", 
+                            "% Hispanic or Latinx", 
+                            "% Native American", 
+                            "Population density", 
+                            "Land area", 
+                            "Well count")]
+
+View(correlation_matrix_data)
+
+na_rows_correlation_matrix_data <- 
+  correlation_matrix_data[
+    !complete.cases(correlation_matrix_data), ]
+
+# View(na_rows_correlation_matrix_data)
+
+correlation_matrix_data_complete <- 
+  correlation_matrix_data[
+    complete.cases(correlation_matrix_data), ]
+
+# View(correlation_matrix_data_complete)
+ 
+# create the correlation matrix
+# rounds to 2 decimal places
+correlation_matrix  <-  
+  round(cor(correlation_matrix_data_complete[,2:16], 
+            method = "spearman"), 
+        2) 
+
+# View(correlation_matrix)
+
+# view and write to file
+# View(correlation_matrix)
+write.csv(correlation_matrix, file = "correlation_matrix.csv")
+
+# count observations going into the correlation matrix
+counts_pairwise_correlations  <-  
+  count.pairwise(correlation_matrix_data_complete[,2:16], 
+                 y = NULL, 
+                 diagonal=TRUE)
+
+# view and write to file
+View(counts_pairwise_correlations)
+write.csv(counts_pairwise_correlations, 
+          file = "counts_pairwise_correlations.csv")
+
+
+
+#### make pretty heatmap ####
+cormat <- 
+  correlation_matrix
+
+library(reshape2)
+melted_cormat <- melt(cormat)
+head(melted_cormat)
+
+ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) +
+  geom_tile()
+
+# get lower triangle of the correlation matrix
+get_lower_tri<-function(cormat){
+  cormat[upper.tri(cormat)] <- NA
+  return(cormat)
+}
+# get upper triangle of the correlation matrix
+get_upper_tri <- function(cormat){
+  cormat[lower.tri(cormat)]<- NA
+  return(cormat)
+}
+
+upper_tri <- get_upper_tri(cormat)
+upper_tri
+
+# melt the correlation matrix
+melted_cormat <- melt(upper_tri, na.rm = TRUE)
+
+# heatmap
+ggheatmap <- ggplot(data = melted_cormat, aes(Var2, Var1, fill = value))+
+  geom_tile(color = "white")+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white",
+                       midpoint = 0, limit = c(-1,1), space = "Lab",
+                       name="Spearman\nCorrelation") +
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 45, vjust = 1,
+                                   hjust = 1, 
+                                   family = "Times New Roman")) +
+  coord_fixed()
+
+
+# reorder_cormat <- function(cormat){
+#   # Use correlation between variables as distance
+#   dd <- as.dist((1-cormat)/2)
+#   hc <- hclust(dd)
+#   cormat <-cormat[hc$order, hc$order]
+# }
+# 
+# # reorder the correlation matrix
+# cormat <- reorder_cormat(cormat)
+# upper_tri <- get_upper_tri(cormat)
+# 
+# # melt the correlation matrix
+# melted_cormat <- melt(upper_tri, na.rm = TRUE)
+
+# create a ggheatmap
+ggheatmap <- ggplot(melted_cormat, aes(Var2, Var1, fill = value))+
+  geom_tile(color = "white")+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white",
+                       midpoint = 0, limit = c(-1,1), space = "Lab",
+                       name="Spearman\nCorrelation") +
+  theme_minimal()+ # minimal theme
+  theme(axis.text.x = element_text(angle = 45, vjust = 1,
+                                   size = 12, hjust = 1, 
+                               family = "Times New Roman"), 
+        axis.text.y = element_text(family = "Times New Roman", 
+                                   size = 12))+
+  coord_fixed()
+
+print(ggheatmap)   # print the heatmap
+
+ggheatmap +
+  geom_text(aes(Var2, Var1, label = value), color = "black", size = 4, 
+            family = "Times New Roman") +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    axis.ticks = element_blank(),
+    legend.justification = c(1, 0),
+    legend.position = c(0.6, 0.7),
+    legend.direction = "horizontal", 
+    text=element_text(family = "Times New Roman"))+
+  guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
+                               title.position = "top", title.hjust = 0.5))
+
+ggheatmap +
+  geom_text(aes(Var2, Var1, label = value), color = "black", size = 3) +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    axis.ticks = element_blank(),
+    legend.justification = c(1, 0),
+    legend.position = c(0.6, 0.7),
+    legend.direction = "horizontal", 
+    text = element_text(family = "Times New Roman"))+
+  guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
+                               title.position = "top", title.hjust = 0.5))
+print(ggheatmap)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# we can do quick and dirty with the UIC data :D
 
 
 
@@ -2720,45 +3063,13 @@ View(ks_wells_and_block_groups)
 # cutoffs: completed since 2000
 
 
-
-
-
-
-
-
- 
-# ks_wells_and_block_groups$swd <- 1
-# 
-# ks_well_counts <- aggregate(
-#   ks_wells_and_block_groups$swd ~ GEOID_Data, 
-#   ks_wells_and_block_groups, 
-#   sum)
-# # View(ks_well_counts)
-# 
-# # rename GEOID_Data to GEOID in well data
-# ks_well_counts$GEOID <- 
-#   ks_well_counts$GEOID_Data
-# save(ks_well_counts, 
-#      file = "ks_well_counts.rdata")
-# load(file = "ks_well_counts.rdata")
-# 
-# # load ACS variables
-# load(file = 
-#        "acs_geo_cats.rdata")
-# 
-# # merge well counts and acs!  hey-o!
-# KS_FINAL_DATASET <- merge(ks_well_counts, 
-#                           acs_geo_cats, 
-#                           by = "GEOID", 
-#                           all = TRUE)
-# # View(KS_FINAL_DATASET)
 # save(KS_FINAL_DATASET, 
 #      file = "KS_FINAL_DATASET.rdata")
 # write.csv(KS_FINAL_DATASET, 
 #           file = "KS_FINAL_DATASET.csv")
 # 
 
-
+# View(ks_uic_2018_09_04)
 
 
 
@@ -2890,148 +3201,7 @@ class_1_wells <-
 
 
 
-
-# #### swd well block groups only ####
 # 
-# # make variable for sum of swd wells per block group
-# ks_analysis_dataset$any_swd_sum <- 
-#   ks_analysis_dataset[,c("ks_wells_and_block_groups$swd")]
-# str(ks_analysis_dataset$any_swd_sum)
-# ks_analysis_dataset <- 
-#   within(ks_analysis_dataset,any_swd_sum[is.na(ks_analysis_dataset$any_swd_sum)] 
-#          <- 0)
-# ks_analysis_dataset[,c("ks_wells_and_block_groups$swd")] <- NULL
-# # View(ks_analysis_dataset)
-# 
-# # make new binary variable for have versus not have swd
-# ks_analysis_dataset$any_swd_binary <- NA
-# ks_analysis_dataset <- within(ks_analysis_dataset, any_swd_binary[any_swd_sum == 0] <- 'no')
-# ks_analysis_dataset <- within(ks_analysis_dataset, any_swd_binary[any_swd_sum > 0] <- 'yes')
-# table(ks_analysis_dataset$any_swd_binary)
-# 
-# names(ks_analysis_dataset)
-# 
-# # drop 12 without people
-# ks_analysis_dataset <- ks_analysis_dataset %>%
-#   filter(population_density_B01001_ALAND > 0)
-# 
-# #### correlation matrix of ACS variables ####
-# names(ks_analysis_dataset) # get variable names
-# 
-# # make dataframe for the correlation dataset
-# correlation_matrix_data  <-  ks_analysis_dataset[,c("median_household_income_B19013","median_household_value_B25077","percent_white_B03002","population_density_B01001_ALAND","percent_high_school_plus_B15003","median_age_B01002","any_swd_sum","any_swd_binary","GEOID_simple")]
-# 
-# # create the correlation matrix
-# correlation_matrix  <-  round(cor(correlation_matrix_data[,1:6], use = "pairwise.complete.obs"),2) # rounds to 2 decimal places
-# 
-# # view and write to file
-# # View(correlation_matrix)
-# write.csv(correlation_matrix, file = "correlation_matrix.csv")
-# 
-# # count observations going into the correlation matrix
-# counts_pairwise_correlations  <-  count.pairwise(correlation_matrix_data[,1:6], y = NULL,diagonal=TRUE)
-# 
-# # view and write to file
-# # View(counts_pairwise_correlations)
-# write.csv(counts_pairwise_correlations, file = "counts_pairwise_correlations.csv")
-# 
-# 
-# 
-# #### make pretty heatmap ####
-# cormat <- correlation_matrix
-# 
-# library(reshape2)
-# melted_cormat <- melt(cormat)
-# head(melted_cormat)
-# 
-# ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + 
-#   geom_tile()
-# 
-# # Get lower triangle of the correlation matrix
-# get_lower_tri<-function(cormat){
-#   cormat[upper.tri(cormat)] <- NA
-#   return(cormat)
-# }
-# # Get upper triangle of the correlation matrix
-# get_upper_tri <- function(cormat){
-#   cormat[lower.tri(cormat)]<- NA
-#   return(cormat)
-# }
-# 
-# upper_tri <- get_upper_tri(cormat)
-# upper_tri
-# 
-# # Melt the correlation matrix
-# library(reshape2)
-# melted_cormat <- melt(upper_tri, na.rm = TRUE)
-# # Heatmap
-# library(ggplot2)
-# ggheatmap <- ggplot(data = melted_cormat, aes(Var2, Var1, fill = value))+
-#   geom_tile(color = "white")+
-#   scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
-#                        midpoint = 0, limit = c(-1,1), space = "Lab", 
-#                        name="Pearson\nCorrelation") +
-#   theme_minimal()+ 
-#   theme(axis.text.x = element_text(angle = 45, vjust = 1, 
-#                                    size = 12, hjust = 1))+
-#   coord_fixed()
-# 
-# reorder_cormat <- function(cormat){
-#   # Use correlation between variables as distance
-#   dd <- as.dist((1-cormat)/2)
-#   hc <- hclust(dd)
-#   cormat <-cormat[hc$order, hc$order]
-# }
-# 
-# # Reorder the correlation matrix
-# cormat <- reorder_cormat(cormat)
-# upper_tri <- get_upper_tri(cormat)
-# # Melt the correlation matrix
-# melted_cormat <- melt(upper_tri, na.rm = TRUE)
-# # Create a ggheatmap
-# ggheatmap <- ggplot(melted_cormat, aes(Var2, Var1, fill = value))+
-#   geom_tile(color = "white")+
-#   scale_fill_gradient2(low = "blue", high = "red", mid = "white",
-#                        midpoint = 0, limit = c(-1,1), space = "Lab",
-#                        name="Pearson\nCorrelation") +
-#   theme_minimal()+ # minimal theme
-#   theme(axis.text.x = element_text(angle = 45, vjust = 1,
-#                                    size = 12, hjust = 1))+
-#   coord_fixed()
-# # Print the heatmap
-# print(ggheatmap)
-# 
-# ggheatmap + 
-#   geom_text(aes(Var2, Var1, label = value), color = "black", size = 4) +
-#   theme(
-#     axis.title.x = element_blank(),
-#     axis.title.y = element_blank(),
-#     panel.grid.major = element_blank(),
-#     panel.border = element_blank(),
-#     panel.background = element_blank(),
-#     axis.ticks = element_blank(),
-#     legend.justification = c(1, 0),
-#     legend.position = c(0.6, 0.7),
-#     legend.direction = "horizontal")+
-#   guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
-#                                title.position = "top", title.hjust = 0.5))
-# 
-# ggheatmap + 
-#   geom_text(aes(Var2, Var1, label = value), color = "black", size = 3) +
-#   theme(
-#     axis.title.x = element_blank(),
-#     axis.title.y = element_blank(),
-#     panel.grid.major = element_blank(),
-#     panel.border = element_blank(),
-#     panel.background = element_blank(),
-#     axis.ticks = element_blank(),
-#     legend.justification = c(1, 0),
-#     legend.position = c(0.6, 0.7),
-#     legend.direction = "horizontal")+
-#   guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
-#                                title.position = "top", title.hjust = 0.5))
-# 
-# print(ggheatmap)
 # 
 # 
 # 
