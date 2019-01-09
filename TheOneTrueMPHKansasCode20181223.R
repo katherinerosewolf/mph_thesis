@@ -205,6 +205,17 @@ my_wait <- function() {
 # save(ks_tiger_table,
 #      file = "ks_tiger_table.rdata"
 #      )
+#
+#
+#
+# #### horizontal well data load ####
+# horizontal_wells_raw <-
+#   fread(file = "horizontal_wells_2019_01_09.txt")
+# 
+# save(horizontal_wells_raw,
+#      file = "horizontal_wells_raw.rdata")
+
+
 
 
 
@@ -221,6 +232,81 @@ load(file = "ks_tiger_table.rdata")
 
 # load raw acs data
 load(file = "acs_data_2013_2017_via_totalcensus.rdata") 
+
+# load horizontal well data
+load(file = "horizontal_wells_raw.rdata")
+
+
+
+#### horizontal well data work ####
+
+horizontal_wells <- horizontal_wells_raw
+
+# convert dates to dates
+horizontal_wells$permit_as_date  <-
+  as.Date(horizontal_wells$PERMIT, "%d-%b-%Y") # permit date
+horizontal_wells$spud_as_date  <-
+  as.Date(horizontal_wells$SPUD, "%d-%b-%Y") # spud date
+horizontal_wells$completion_as_date  <-
+  as.Date(horizontal_wells$COMPLETION, "%d-%b-%Y") # completion date
+horizontal_wells$plugging_as_date  <-
+  as.Date(horizontal_wells$PLUGGING, "%d-%b-%Y") # plugging date
+horizontal_wells$modified_as_date  <-
+  as.Date(horizontal_wells$MODIFIED, "%d-%b-%Y") # modified date
+horizontal_wells$API_NUMBER  <-
+  as.character(horizontal_wells$API_NUMBER) # make API into a character
+
+save(horizontal_wells, file = "horizontal_wells.rdata")
+
+# isolate post-2010 wells
+
+horizontal_wells$permit_2010_plus <- NA
+horizontal_wells$spud_2010_plus <- NA
+horizontal_wells$completion_2010_plus <- NA
+horizontal_wells$in_2010_plus <- NA
+
+# 2010 permit, spud, and completion dates
+horizontal_wells <- 
+  within(horizontal_wells, 
+         permit_2010_plus[permit_as_date >= "2010-01-01"] <- 'yes')
+horizontal_wells <- 
+  within(horizontal_wells, 
+         spud_2010_plus[spud_as_date >= "2010-01-01"] <- 'yes')
+horizontal_wells <- 
+  within(horizontal_wells, 
+         completion_2010_plus[completion_as_date >= "2010-01-01"] <- 'yes')
+
+horizontal_wells <- 
+  within(horizontal_wells, 
+         in_2010_plus[permit_2010_plus == 'yes' |
+                       spud_2010_plus == 'yes' |
+                        completion_2010_plus == 'yes'] <- 'yes')
+
+View(horizontal_wells)
+
+horizontal_wells_post_2010 <- 
+  horizontal_wells[which(horizontal_wells$in_2010_plus == 'yes'),]
+
+View(horizontal_wells_post_2010)
+
+horizontal_wells_post_2010_exclusions <- 
+  horizontal_wells_post_2010[
+    which(
+      horizontal_wells_post_2010$STATUS %notin% 
+        c("SWD", "SWD-P&A")),]
+  
+View(horizontal_wells_post_2010_exclusions)
+
+horizontal_wells_for_map <- 
+  horizontal_wells_post_2010_exclusions[,c("KID", 
+                                          "LATITUDE", 
+                                          "LONGITUDE", 
+                                          "STATUS")]
+
+View(horizontal_wells_for_map)
+
+write.csv(horizontal_wells_for_map, 
+          file = "horizontal_wells_for_map.csv")
 
 
 
@@ -2627,10 +2713,15 @@ ks_wells_and_block_groups$activity <-   # make plugged unknowns inactive
 # View(ks_wells_and_block_groups)
 table(ks_wells_and_block_groups$activity)
 
+View(head(ks_wells_2018_11_01))
 
 
-
-
+# #### sidenote -- wells in the mississippi ####
+# mississippian_wells <- 
+#   ks_wells_2018_11_01[ks_wells_2018_11_01$PRODUCE_FORM 
+#                       %like% "Mississippian",]
+# 
+# View(mississippian_wells)
 
 
 # assigning years
