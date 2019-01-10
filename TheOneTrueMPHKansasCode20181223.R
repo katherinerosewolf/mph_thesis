@@ -2975,23 +2975,50 @@ ks_swd_statii_two_not_in_statii_one_or_man <-
       "1002886382"
   ),]
 
-View(ks_swd_statii_two_not_in_statii_one_or_man)
+# View(ks_swd_statii_two_not_in_statii_one_or_man)
+
+# ks_swd_s1_kids_for_master
+ks_swd_s1_kids_for_master <- 
+  ks_swd_statii_one$KID
+  
+# ks_swd_s2_kids_for_master
+ks_swd_s2_kids_for_master <- 
+  ks_swd_statii_two_not_in_statii_one_or_man$KID
+
+# ks_swd_man_kids_for_master
+ks_swd_man_kids_for_master <- 
+  ks_swd_manual_not_in_statii_one$KID
+
+# pull rows corresponding to above apis
+
+
+# join to manual assignment columns
+
+
 
 # make final wells lists for lat/long duplicate evaluation
-ks_man_list_for_lat_long_eval <-   # manual assignments
+ks_swd_man_rows <-   # manual assignments
   ks_swd_manual_not_in_statii_one
 # make flag for inclusion reasons
-ks_man_list_for_lat_long_eval
+ks_swd_man_rows$origin <- "manual"
   
-ks_s1_list_for_lat_long <-   # status1 rows
-  ks_swd_statii_one
+ks_swd_s1_rows <-   # status1 rows
+  ks_working_with_block_groups[which(
+    ks_working_with_block_groups %in% 
+  )]
+ks_swd_s1_rows$origin <- "s1"
   
-ks_s2_list_for_lat_long <-   # status2 rows
+ks_swd_s2_rows <-   # status2 rows
   ks_swd_statii_two_not_in_statii_one_or_man
+ks_swd_s2_rows$origin <- "s2"
 
 # make master review list
+ks_swd_master <- 
+  
 
   
+# then label s1/s2/manual
+
 
 
 ks_swd_s2_lat_long_dup_index <- 
