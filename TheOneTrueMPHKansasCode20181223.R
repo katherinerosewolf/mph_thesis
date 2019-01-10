@@ -2966,9 +2966,10 @@ ks_swd_manual_not_in_statii_two <-
 # View(ks_swd_manual_not_in_statii_two) DON'T USE THIS KEEP MANUAL WELL!
 
 # manually examine sole well in common
-View(ks_working[which(ks_working$KID %in% c(1030278155, 1002886382)),])
+# View(ks_working[which(ks_working$KID %in% c(1030278155, 1002886382)),])
 # want manual well, 1030278155
 
+# delete unwanted well 1002886382
 ks_swd_statii_two_not_in_statii_one_or_man <- 
   ks_swd_statii_two_not_in_statii_one[which(
     ks_swd_statii_two_not_in_statii_one$KID != 
@@ -2978,42 +2979,197 @@ ks_swd_statii_two_not_in_statii_one_or_man <-
 # View(ks_swd_statii_two_not_in_statii_one_or_man)
 
 # ks_swd_s1_kids_for_master
-ks_swd_s1_kids_for_master <- 
+ks_swd_s1_kids_for_master_review <- 
   ks_swd_statii_one$KID
   
 # ks_swd_s2_kids_for_master
-ks_swd_s2_kids_for_master <- 
+ks_swd_s2_kids_for_master_review <- 
   ks_swd_statii_two_not_in_statii_one_or_man$KID
 
 # ks_swd_man_kids_for_master
-ks_swd_man_kids_for_master <- 
+ks_swd_man_kids_for_master_review <- 
   ks_swd_manual_not_in_statii_one$KID
 
+# kids for master list
+kids_for_master_list_review <- 
+  c(ks_swd_s1_kids_for_master_review, 
+    ks_swd_s2_kids_for_master_review, 
+    ks_swd_man_kids_for_master_review)
+
+View(kids_for_master_list_review)
+
 # pull rows corresponding to above apis
+ks_swd_master_dataframe_for_review <- 
+  ks_working_with_block_groups[
+    which(
+      ks_working_with_block_groups$KID %in% 
+        kids_for_master_list_review
+    ),
+    ]
+
+# View(ks_swd_master_dataframe_for_review)
+
+# label rows by origin
+ks_swd_master_dataframe_for_review$origin <- NA
+
+ks_swd_master_dataframe_for_review <-   # label s1s
+  within(ks_swd_master_dataframe_for_review, 
+         origin[KID %in% 
+                  ks_swd_s1_kids_for_master_review] <- "s1")
+
+ks_swd_master_dataframe_for_review <-   # label s2s
+  within(ks_swd_master_dataframe_for_review, 
+         origin[KID %in% 
+                  ks_swd_s2_kids_for_master_review] <- "s2")
+
+ks_swd_master_dataframe_for_review <-   # label manuals
+  within(ks_swd_master_dataframe_for_review, 
+         origin[KID %in% 
+                  ks_swd_man_kids_for_master_review] <- "man")
+
+# View(ks_swd_master_dataframe_for_review)
+
+# find duplicates by latitude and longitude 
+ks_swd_master_lat_long_dup_index <- 
+  duplicated(ks_swd_master_dataframe_for_review[c("LATITUDE","LONGITUDE")]) | 
+  duplicated(ks_swd_master_dataframe_for_review[c("LATITUDE","LONGITUDE")], 
+             fromLast = TRUE)
+ks_swd_master_lat_long_dup <- 
+  ks_swd_master_dataframe_for_review[ks_swd_master_lat_long_dup_index, ]
+
+# View(ks_swd_master_lat_long_dup)
+
+# pull lat/long dup rows with s2 or manual origins
+ks_swd_lat_long_dup_s2_man <- 
+  ks_swd_master_lat_long_dup[which(
+    ks_swd_master_lat_long_dup$origin %in% c("s2", "man")
+  ),]
+
+# pull lat/long dup rows with s1 origins
+ks_swd_lat_long_dup_s1 <- 
+  ks_swd_master_lat_long_dup[which(
+    ks_swd_master_lat_long_dup$origin == 's1'
+  ),]
+
+# make s2/man dataframe simpler, pulling bare minimum of columns
+ks_swd_lat_long_s2_man_simple <- 
+  ks_swd_lat_long_dup_s2_man[,c("KID", "LATITUDE", "LONGITUDE", "origin")]
+colnames(ks_swd_lat_long_s2_man_simple)[1] <- "KID_S2_MAN"
+
+# make s1 dataframe simpler, pulling bare minimum of columns
+ks_swd_lat_long_s1_simple <- 
+  ks_swd_lat_long_dup_s1[,c("KID", "LATITUDE", "LONGITUDE", "origin")]
+colnames(ks_swd_lat_long_s1_simple)[1] <- "KID_S1"
+
+# merge s1 and s2/man kids into one dataframe by lat/long
+lat_long_duplicates_of_weirdos_only <- 
+  merge(ks_swd_lat_long_s2_man_simple,
+        ks_swd_lat_long_s1_simple,
+        by = c("LATITUDE", "LONGITUDE"))
+
+# kids of rows to pull for duplicate evaluation
+kids_of_rows_to_pull_for_duplicate_evaluation <- 
+  c(lat_long_duplicates_of_weirdos_only$KID_S2_MAN, 
+    lat_long_duplicates_of_weirdos_only$KID_S1)
+
+# View(kids_of_rows_to_pull_for_duplicate_evaluation)
+
+# make dataframe of duplicates of s1 wells by s2/manual wells by lat/long
+weirdo_duplicate_rows <- 
+  ks_swd_master_dataframe_for_review[which(
+    ks_swd_master_dataframe_for_review$KID %in% 
+      kids_of_rows_to_pull_for_duplicate_evaluation
+  ),]
+
+
+# kid 1030570876 is swd but no api, 
+# where dup has api and more dates, API 15-009-07176
+
+
+# manual check of sole weird well
+# View(ks_working_with_block_groups[which(
+#   ks_working_with_block_groups$API_NUMBER_SIMPLE == "15-009-07176"
+# ),])
+
+# kids of wells to keep (drop 6 of them)
+kids_keep_lat_long <- 
+  weirdo_duplicate_rows$KID[which(weirdo_duplicate_rows$origin == 's1')]
+
+# kids of wells to drop (drop 6 of them)
+kids_drop_lat_long <- 
+  weirdo_duplicate_rows$KID[which(weirdo_duplicate_rows$origin != 's1')]
+
+# remove 6 duplicates!
+ks_swd_master_no_weirdo_dups <- 
+  ks_swd_master_dataframe_for_review[which(
+    ks_swd_master_dataframe_for_review$KID %notin% 
+      kids_drop_lat_long
+  ),]
+
+View(ks_swd_master_no_weirdo_dups)
+str(ks_swd_master_no_weirdo_dups$API_NUMBER_SIMPLE)
+
+# fix that one api
+ks_swd_master_no_weirdo_dups <-   # fix big one
+  within(ks_swd_master_no_weirdo_dups, 
+         API_NUMBER[KID == "1030570876"] <- "15-009-01716")
+ks_swd_master_no_weirdo_dups <-   # fix simple one
+  within(ks_swd_master_no_weirdo_dups, 
+         API_NUMBER_SIMPLE[KID == "1030570876"] <- "15-009-01716")
+
+ks_s2_man_remaining <- 
+  filter(ks_swd_master_no_weirdo_dups, 
+         origin == 's2' | origin == 'man')
+
+
+
+#### remove those without APIs ####
+ks_swd_master_with_api <- 
+  filter(ks_swd_master_no_weirdo_dups, 
+         !is.na(API_NUMBER))
+
+# View(ks_swd_master_with_api)  # count 14,865
+
+
+
+#### check full API duplicates, match to list ####
+# view rows with duplicated APIs
+ks_swd_master_api_dup_index <-   # make the index to get the rows
+  duplicated(ks_swd_master_with_api$API_NUMBER) | 
+  duplicated(ks_swd_master_with_api$API_NUMBER, 
+             fromLast = TRUE)
+
+ks_swd_api_full_dups <-   # pull the duplicated rows
+  ks_swd_master_api_dup_index[index,]
+save(ks_api_full_dups, 
+     file = "ks_api_full_dups.rdata")
+
+
+#### check simple API duplicates, now not deleting SWD wells ####
+
+
+
+
+#### check lat/long duplicates ####
+  
+
+
+
+
+
+
+#### NOTES FOR THE END: GIVE API TO KID!!! ####
+
+
+
+
+
 
 
 # join to manual assignment columns
 
 
 
-# make final wells lists for lat/long duplicate evaluation
-ks_swd_man_rows <-   # manual assignments
-  ks_swd_manual_not_in_statii_one
-# make flag for inclusion reasons
-ks_swd_man_rows$origin <- "manual"
-  
-ks_swd_s1_rows <-   # status1 rows
-  ks_working_with_block_groups[which(
-    ks_working_with_block_groups %in% 
-  )]
-ks_swd_s1_rows$origin <- "s1"
-  
-ks_swd_s2_rows <-   # status2 rows
-  ks_swd_statii_two_not_in_statii_one_or_man
-ks_swd_s2_rows$origin <- "s2"
-
-# make master review list
-ks_swd_master <- 
   
 
   
@@ -3021,12 +3177,7 @@ ks_swd_master <-
 
 
 
-ks_swd_s2_lat_long_dup_index <- 
-  duplicated(ks_api_dups_gone[c("LATITUDE","LONGITUDE")]) | 
-  duplicated(ks_api_dups_gone[c("LATITUDE","LONGITUDE")], 
-             fromLast = TRUE)
-ks_lat_long_dup <- 
-  ks_api_dups_gone[ks_lat_long_dup_index, ]
+
 
 
 
