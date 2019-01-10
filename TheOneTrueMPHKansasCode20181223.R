@@ -36,8 +36,8 @@ library(tidyverse)
 
 
 #### load fonts ####
-font_import()
-loadfonts(device = "win")
+# font_import()
+# loadfonts(device = "win")
 
 
 
@@ -240,7 +240,8 @@ load(file = "horizontal_wells_raw.rdata")
 
 #### horizontal well data work ####
 
-horizontal_wells <- horizontal_wells_raw
+horizontal_wells <-   # make working dataset
+  horizontal_wells_raw
 
 # convert dates to dates
 horizontal_wells$permit_as_date  <-
@@ -256,10 +257,9 @@ horizontal_wells$modified_as_date  <-
 horizontal_wells$API_NUMBER  <-
   as.character(horizontal_wells$API_NUMBER) # make API into a character
 
-save(horizontal_wells, file = "horizontal_wells.rdata")
+# isolate wells from 2010 onward
 
-# isolate post-2010 wells
-
+# make variables
 horizontal_wells$permit_2010_plus <- NA
 horizontal_wells$spud_2010_plus <- NA
 horizontal_wells$completion_2010_plus <- NA
@@ -276,37 +276,200 @@ horizontal_wells <-
   within(horizontal_wells, 
          completion_2010_plus[completion_as_date >= "2010-01-01"] <- 'yes')
 
+# make ONE VARIABLE TO RULE THEM ALL called 'in_2010_plus'
+# (I deny watching Lord of the Rings while writing this code.)
 horizontal_wells <- 
   within(horizontal_wells, 
          in_2010_plus[permit_2010_plus == 'yes' |
                        spud_2010_plus == 'yes' |
                         completion_2010_plus == 'yes'] <- 'yes')
 
-View(horizontal_wells)
+# View(horizontal_wells)
 
-horizontal_wells_post_2010 <- 
+horizontal_wells_post_2010 <-   # make dataframe with only 2010 and later wells
   horizontal_wells[which(horizontal_wells$in_2010_plus == 'yes'),]
 
-View(horizontal_wells_post_2010)
+# View(horizontal_wells_post_2010)
 
+# exclude horizontal disposal wells (?!) (probably failed fracking wells)
 horizontal_wells_post_2010_exclusions <- 
   horizontal_wells_post_2010[
     which(
       horizontal_wells_post_2010$STATUS %notin% 
         c("SWD", "SWD-P&A")),]
   
-View(horizontal_wells_post_2010_exclusions)
+# View(horizontal_wells_post_2010_exclusions)
 
+# make simple dataset for fast spatial joining
 horizontal_wells_for_map <- 
   horizontal_wells_post_2010_exclusions[,c("KID", 
                                           "LATITUDE", 
                                           "LONGITUDE", 
                                           "STATUS")]
 
-View(horizontal_wells_for_map)
+# View(horizontal_wells_for_map)
 
 write.csv(horizontal_wells_for_map, 
           file = "horizontal_wells_for_map.csv")
+write.csv(horizontal_wells_post_2010_exclusions, 
+          file = "horizontal_wells_post_2010_exclusions.csv")
+
+#### HERE WE PORT THE HORIZONTAL WELL DATA TO ARCGIS FOR MAPPING FUN ####
+
+
+
+#### UIC data work ####
+# View(ks_uic_2018_09_04)
+
+uic_small <- 
+  ks_uic_2018_09_04[,c("KGS_ID", 
+                       "API", 
+                       "LATITUDE", 
+                       "LONGITUDE", 
+                       "YEAR", 
+                       "MONTH", 
+                       "FLUID_INJECTED", 
+                       "GAS_INJECTED", 
+                       "TOTAL_GAS_YEAR", 
+                       "TOTAL_FLUID_YEAR", 
+                       "INJECTION_ZONE")]
+
+# figure out why some of the rows have no year total but do have monthly totals
+check_weird_rows <- 
+  uic_small[which(FLUID_INJECTED > 0 & TOTAL_FLUID_YEAR == 0),]
+
+# View(check_weird_rows)
+
+# sum by KID
+fix_fluid_year <- aggregate(FLUID_INJECTED ~ KGS_ID, 
+                        check_weird_rows, 
+                        sum)
+
+names(fix_fluid_year)[2] <- "FIX_TOTAL_FLUID_YEAR"
+
+# View(fix_fluid_year)
+
+fixed_weird_rows <- 
+  merge(x = check_weird_rows, 
+        y = fix_fluid_year, 
+        by = "KGS_ID", 
+        all = TRUE)
+
+# View(fixed_weird_rows)
+
+# fix the five manually
+uic_small <- 
+  within(uic_small, 
+         TOTAL_FLUID_YEAR[KGS_ID == 1033661327 & 
+                            YEAR == 2015] <- 6935)
+uic_small <- 
+  within(uic_small, 
+         TOTAL_FLUID_YEAR[KGS_ID == 1037335071 & 
+                            YEAR == 2017] <- 40028)
+uic_small <- 
+  within(uic_small, 
+         TOTAL_FLUID_YEAR[KGS_ID == 1042538729 & 
+                            YEAR == 2016] <- 40028)
+uic_small <- 
+  within(uic_small, 
+         TOTAL_FLUID_YEAR[KGS_ID == 1045066288 & 
+                            YEAR == 2016] <- 40028)
+uic_small <- 
+  within(uic_small, 
+         TOTAL_FLUID_YEAR[KGS_ID == 1045109583 & 
+                            YEAR == 2016] <- 40028)
+
+recheck_weird_rows <- 
+  uic_small[which(FLUID_INJECTED > 0 & TOTAL_FLUID_YEAR == 0),]
+# View(recheck_weird_rows)
+
+# View(uic_small)
+
+uic_year_only <-   # remove months
+  uic_small[,c("KGS_ID", 
+               "API", 
+               "LATITUDE", 
+               "LONGITUDE", 
+               "YEAR", 
+               "TOTAL_GAS_YEAR", 
+               "TOTAL_FLUID_YEAR", 
+               "INJECTION_ZONE")]
+
+uic_year_only <-   # remove duplicates, leaving only relevant months and years
+  unique(uic_year_only)
+
+uic_2010_onward_only <- 
+  uic_year_only[which(YEAR %in% 
+                        c(2010, 
+                          2011, 
+                          2012, 
+                          2013, 
+                          2014, 
+                          2015,
+                          2016,
+                          2017)),]
+
+# View(uic_2010_onward_only)
+
+# sum lifetime fluid per KID
+total_lifetime_fluid_injected_by_well <- 
+  aggregate(TOTAL_FLUID_YEAR ~ KGS_ID, 
+            uic_year_only, 
+            sum)
+
+names(total_lifetime_fluid_injected_by_well) <- 
+  c("KID", "total_lifetime_fluid_injected")
+
+# sum 2010 onward fluid per KID
+from_2010_fluid_injected_by_well <- 
+  aggregate(TOTAL_FLUID_YEAR ~ KGS_ID, 
+            uic_2010_onward_only, 
+            sum)
+
+names(from_2010_fluid_injected_by_well) <- 
+  c("KID", "from_2010_fluid_injected")
+
+# merge lifetime and since 2010 totals
+fluid_totals_by_well <- 
+  merge(total_lifetime_fluid_injected_by_well, 
+        from_2010_fluid_injected_by_well, 
+        by = "KID", 
+        all = TRUE)
+
+# View(fluid_totals_by_well)
+
+well_data_from_master_set <- 
+  ks_wells_2018_11_01[,c("KID", 
+                         "STATUS", 
+                         "STATUS2", 
+                         "API_NUMBER", 
+                         "LATITUDE", 
+                         "LONGITUDE")]
+
+fluid_totals_by_well <-   # 
+  merge(fluid_totals_by_well, 
+        well_data_from_master_set, 
+        by = "KID",
+        all.x = TRUE, 
+        all.y = FALSE)
+
+# View(fluid_totals_by_well)
+
+table(fluid_totals_by_well$STATUS)
+
+swd_fluid_totals_by_well <- 
+  fluid_totals_by_well[which(
+    fluid_totals_by_well$STATUS %in% c("SWD", 
+                                       "SWD-P&A")
+  ),]
+  
+# View(swd_fluid_totals_by_well)
+
+# make dataset for ArcGIS
+write.csv(swd_fluid_totals_by_well, 
+          file = "swd_fluid_totals_by_well.csv")
+
+
 
 
 
@@ -1827,7 +1990,9 @@ positions_of_possible_comments_to_include <-
        ignore.case = TRUE)
 
 comments_to_review <-   # makes vector of identified comments
-  ks_working_with_block_groups$COMMENTS[positions_of_possible_comments_to_include]
+  ks_working_with_block_groups$COMMENTS[
+    positions_of_possible_comments_to_include
+    ]
 
 # makes .csv file of identified comments
 write.csv(comments_to_review,   # makes .csv file of identified comments
@@ -1835,7 +2000,8 @@ write.csv(comments_to_review,   # makes .csv file of identified comments
 
 # makes dataframe of entire rows matching comments
 rows_requiring_comment_investigation <-
-  ks_working_with_block_groups[which(ks_working_with_block_groups$COMMENTS %in% comments_to_review),]
+  ks_working_with_block_groups[which(ks_working_with_block_groups$COMMENTS %in% 
+                                       comments_to_review),]
 
 # make dataframe of most relevant columns of entire rows matching comments
 rows_requiring_comment_investigation_simple <- 
@@ -2647,6 +2813,214 @@ save(ks_swd_full_for_map,
 # what do we need?!
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#### ALTERNATE WELL ASSIGNMENT PROCEDURE ####
+
+# true 
+swd_status1s <-   # make vector of status1s that mean swd well
+  sort(c("OTHER(1O&1SWD)",
+         "OTHER(CBM/SWD)",
+         "OTHER(OIL,SWD)",
+         "OTHER(SWD-P&A)",
+         "OTHER-P&A(OIL-SWD)",
+         "SWD",
+         "SWD-P&A"))
+
+ks_swd_statii_one <- 
+  ks_working_with_block_groups[
+    which(
+      ks_working_with_block_groups$STATUS %in%
+        swd_status1s
+    ),
+    ]
+# View(ks_swd_statii_one)
+
+
+ks_swd_statii_two <- 
+  ks_working_with_block_groups[
+    which(
+      ks_working_with_block_groups$STATUS2 == "Converted to SWD Well" 
+      & ks_working_with_block_groups$STATUS %notin% swd_status1s),
+    ]
+
+# View(ks_swd_statii_two)
+# table(ks_swd_statii_two$STATUS)
+
+# pull the manual assignments 
+raw_assignments_exclude_swd <- 
+  raw_manual_well_assignments_dataframe[
+    which(raw_manual_well_assignments_dataframe$STATUS %notin% 
+            swd_status1s & 
+            raw_manual_well_assignments_dataframe$STATUS2 != 
+            "Converted to SWD Well"),
+  ]
+
+# View(raw_assignments_exclude_swd)
+
+raw_assignments_man_swd <- 
+  raw_assignments_exclude_swd[
+    which(raw_assignments_exclude_swd$man_well_type_swd == "yes"),]
+
+# View(raw_assignments_man_swd)
+
+# separate well api into event codes
+raw_assignments_man_swd <- 
+  raw_assignments_man_swd %>% 
+  separate(API_NUMBER, 
+           into = c("API_NUMBER_SIMPLE", "EVENT"), 
+           sep = 12, 
+           remove = F)
+
+# remove extraneous dashes from event codes
+raw_assignments_man_swd$EVENT <- 
+  substring(raw_assignments_man_swd$EVENT, 2)
+# View(raw_assignments_man_swd)
+
+#### find APIs of status II in status I and delete those
+# APIs of statusIs
+status1_apis <- 
+  as.character(unique(ks_swd_statii_one$API_NUMBER_SIMPLE))
+
+status2_apis <- 
+  as.character(unique(ks_swd_statii_two$API_NUMBER_SIMPLE))
+
+# View(status1_apis)
+
+# View(status2_apis)
+
+
+# make true/false vector to match status2 apis to status1 apis
+s2s_in_s1s_T_F <- status2_apis %in% status1_apis
+
+# list of status2 apis in status1 apis
+s2_apis_in_s1_apis <- status2_apis[s2s_in_s1s_T_F]
+
+ks_swd_statii_two_not_in_statii_one <- 
+  ks_swd_statii_two[which(
+    ks_swd_statii_two$API_NUMBER_SIMPLE %notin% 
+      s2_apis_in_s1_apis),]
+
+View(ks_swd_statii_two_not_in_statii_one)
+
+
+
+#### find APIs of manual assignments in status Is and delete those
+# pull manual assignment apis
+raw_assignment_apis <- 
+  as.character(unique(raw_assignments_man_swd$API_NUMBER_SIMPLE))
+
+# make true/false vector to match manual apis to status1 apis
+raws_in_s1s_T_F <- 
+  raw_assignment_apis %in% status1_apis
+
+# list of manual assignment apis in status1 apis
+raw_apis_in_s1_apis <- 
+   raw_assignment_apis[raws_in_s1s_T_F]
+  
+ks_swd_manual_not_in_statii_one <- 
+  raw_assignments_man_swd[which(
+    raw_assignments_man_swd$API_NUMBER_SIMPLE %notin% 
+      raw_apis_in_s1_apis),]
+
+View(ks_swd_manual_not_in_statii_one)
+
+
+
+#### find APIs of manual assignments in status2s and delete those
+# pull manual assignment apis
+ks_swd_manual_not_in_statii_one_apis <- 
+  as.character(unique(ks_swd_manual_not_in_statii_one$API_NUMBER_SIMPLE))
+
+# make true/false vector to match manual apis to status2 apis
+raws_in_s2s_T_F <- 
+  ks_swd_manual_not_in_statii_one_apis %in% status2_apis
+
+# list of manual assignment apis in status2 apis
+raw_apis_in_s2_apis <- 
+  ks_swd_manual_not_in_statii_one_apis[raws_in_s2s_T_F]
+
+ks_swd_manual_not_in_statii_two <- 
+  ks_swd_manual_not_in_statii_one[which(
+    ks_swd_manual_not_in_statii_one$API_NUMBER_SIMPLE %notin% 
+      raw_apis_in_s2_apis),]
+
+# View(ks_swd_manual_not_in_statii_two) DON'T USE THIS KEEP MANUAL WELL!
+
+# manually examine sole well in common
+View(ks_working[which(ks_working$KID %in% c(1030278155, 1002886382)),])
+# want manual well, 1030278155
+
+ks_swd_statii_two_not_in_statii_one_or_man <- 
+  ks_swd_statii_two_not_in_statii_one[which(
+    ks_swd_statii_two_not_in_statii_one$KID != 
+      "1002886382"
+  ),]
+
+View(ks_swd_statii_two_not_in_statii_one_or_man)
+
+# make final wells lists for lat/long duplicate evaluation
+ks_man_list_for_lat_long_eval <-   # manual assignments
+  ks_swd_manual_not_in_statii_one
+# make flag for inclusion reasons
+ks_man_list_for_lat_long_eval
+  
+ks_s1_list_for_lat_long <-   # status1 rows
+  ks_swd_statii_one
+  
+ks_s2_list_for_lat_long <-   # status2 rows
+  ks_swd_statii_two_not_in_statii_one_or_man
+
+# make master review list
+
+  
+
+
+ks_swd_s2_lat_long_dup_index <- 
+  duplicated(ks_api_dups_gone[c("LATITUDE","LONGITUDE")]) | 
+  duplicated(ks_api_dups_gone[c("LATITUDE","LONGITUDE")], 
+             fromLast = TRUE)
+ks_lat_long_dup <- 
+  ks_api_dups_gone[ks_lat_long_dup_index, ]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#### BACK TO ORIGINAL ASSIGNMENT PROCEDURE ####
+
 ks_wells_and_block_groups <- 
   ks_swd_full_for_map
 
@@ -2713,7 +3087,7 @@ ks_wells_and_block_groups$activity <-   # make plugged unknowns inactive
 # View(ks_wells_and_block_groups)
 table(ks_wells_and_block_groups$activity)
 
-View(head(ks_wells_2018_11_01))
+# View(head(ks_wells_2018_11_01))
 
 
 # #### sidenote -- wells in the mississippi ####
@@ -2744,7 +3118,7 @@ ks_wells_and_block_groups$spud_after_2010 <- NA
 ks_wells_and_block_groups$completed_after_2010 <- NA
 ks_wells_and_block_groups$active_after_2010 <- NA
 
-View(ks_wells_and_block_groups)
+# View(ks_wells_and_block_groups)
 
 
 
@@ -2830,7 +3204,7 @@ ks_wells_and_block_groups <-
                       c("midway", 
                         "ab_loc")] <- 0)
 
-View(ks_wells_and_block_groups)
+# View(ks_wells_and_block_groups)
 
 sum(ks_wells_and_block_groups$all_swd)
 sum(ks_wells_and_block_groups$extant_swd)
@@ -2844,7 +3218,7 @@ ks_well_counts <- aggregate(
 
 # rename second variable as the well count
 colnames(ks_well_counts)[2] <- "extant_well_count"
-View(ks_well_counts)
+# View(ks_well_counts)
 
 # convert GEOID to character
 ks_well_counts$GEOID <- as.character(ks_well_counts$GEOID)
@@ -2879,7 +3253,7 @@ well_demographic_join <-
   within(well_demographic_join, 
          any_swd_binary[extant_well_count > 0] <- 'yes')
 
-View(wells_demographic_join[1:5])
+# View(wells_demographic_join[1:5])
 
 # check for wells in unpopulated census block groups
 # View(wells_demographic_join[,c("GEOID",
@@ -2968,7 +3342,7 @@ correlation_matrix_data <-
                             "Land area", 
                             "Well count")]
 
-View(correlation_matrix_data)
+# View(correlation_matrix_data)
 
 na_rows_correlation_matrix_data <- 
   correlation_matrix_data[
@@ -3002,7 +3376,7 @@ counts_pairwise_correlations  <-
                  diagonal=TRUE)
 
 # view and write to file
-View(counts_pairwise_correlations)
+# View(counts_pairwise_correlations)
 write.csv(counts_pairwise_correlations, 
           file = "counts_pairwise_correlations.csv")
 
