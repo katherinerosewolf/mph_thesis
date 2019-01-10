@@ -1634,16 +1634,15 @@ write.csv(acs_geo_cats,
 # what data to isolate?
 # active versus inactive
 # any
-# spudded after 2010
-# post 2010 and 2000 cutoff years
+# spudded in/after 2010
 
 
 
-# #### well data ####
-#
+# # #### well data ####
+# 
 # # make well data file for cleaning
 # ks_clean <-
-#   ks_wells_2018_11_01 
+#   ks_wells_2018_11_01
 # 
 # 
 # 
@@ -1761,7 +1760,7 @@ write.csv(acs_geo_cats,
 #      file = "ks_clean.rdata")
 # 
 # # load ks_clean so you don't have to do all this again
-# load(file = "ks_clean.rdata") 
+# load(file = "ks_clean.rdata")
 # 
 # 
 # 
@@ -1770,82 +1769,88 @@ write.csv(acs_geo_cats,
 # # make working file to start imputing and propogating
 # ks_working <- ks_clean
 # 
-# # order wells by API
-# ks_working <- 
-#   ks_working[
-#     order(ks_working$API_NUMBER),
-#     ]
+# # # order wells by API
+# # ks_working <- 
+# #   ks_working[
+# #     order(ks_working$API_NUMBER),
+# #     ]
+# # 
+# # # propogate dates (BEWARE, THIS STEP TAKE ABOUT 20 MINUTES!)
+# # ks_working <- 
+# #   ks_working %>% 
+# #   group_by(API_NUMBER_SIMPLE) %>% 
+# #   fill(
+# #     permit_propogate, 
+# #     spud_propogate, 
+# #     completion_propogate, 
+# #     plugging_propogate, 
+# #     modified_propogate
+# #   ) %>% 
+# #   ungroup()
+# # 
+# # # save the working file so you never have to do the above again
+# # save(ks_working, file = "ks_working.rdata")
 # 
-# # propogate dates (BEWARE, THIS STEP TAKE ABOUT 20 MINUTES!)
-# ks_working <- 
-#   ks_working %>% 
-#   group_by(API_NUMBER_SIMPLE) %>% 
-#   fill(
-#     permit_propogate, 
-#     spud_propogate, 
-#     completion_propogate, 
-#     plugging_propogate, 
-#     modified_propogate
-#   ) %>% 
-#   ungroup()
+# # load the working file
+# load(file = "ks_working.rdata")
+# # View(ks_working[1:200,])
 # 
-# # save the working file so you never have to do the above again
-# save(ks_working, file = "ks_working.rdata")
+# # make set for spatial joining in ArcGIS
+# ks_all_wells_for_map <- 
+#   ks_working[,c("KID", 
+#                 "API_NUMBER", 
+#                 "LATITUDE", 
+#                 "LONGITUDE")]
+# 
+# # export mapping data
+# write.csv(ks_all_wells_for_map, 
+#           file = "ks_all_wells_for_map.csv")
+# 
+# #### HERE MUST DO SPATIAL JOIN IN ARCGIS ####
+# 
+# # import spatial join (within!) results back
+# ks_join_wells_block_groups <- 
+#   fread(file = "ks_join_wells_block_groups_for_r_2019_01_06.txt", 
+#         stringsAsFactors = FALSE)
+# 
+# # join data with GEOID back to full data
+# ks_working_with_block_groups <- 
+#   join(ks_working, 
+#        ks_join_wells_block_groups, 
+#        by = "KID", 
+#        type = "full")
+# 
+# # View(ks_working_with_block_groups)
 
-# load the working file
-load(file = "ks_working.rdata")
-# View(ks_working[1:200,])
+# save(ks_working_with_block_groups, 
+#      file = "ks_working_with_block_groups.rdata")
+# write.csv(ks_working_with_block_groups, 
+#      file = "ks_working_with_block_groups.csv")
 
-# make set for spatial joining in ArcGIS
-ks_all_wells_for_map <- 
-  ks_working[,c("KID", 
-                "API_NUMBER", 
-                "LATITUDE", 
-                "LONGITUDE")]
-
-# export mapping data
-write.csv(ks_all_wells_for_map, 
-          file = "ks_all_wells_for_map.csv")
-
-#### HERE MUST DO SPATIAL JOIN IN ARCGIS ####
-
-# import spatial join (within!) results back
-ks_join_wells_block_groups <- 
-  fread(file = "ks_join_wells_block_groups_for_r_2019_01_06.txt", 
-        stringsAsFactors = FALSE)
-
-# join data with GEOID back to full data
-ks_working_with_block_groups <- 
-  join(ks_working, 
-       ks_join_wells_block_groups, 
-       by = "KID", 
-       type = "full")
-
-# View(ks_working_with_block_groups)
-
-
+# load file to start from here
+load(file = "ks_working_with_block_groups.rdata")
 
 ##### checking ambiguous wells for inclusion or exclusion #####
 
-# get counts by well status1 (main status)
-ks_well_counts_by_status1 <- 
-  table(ks_working_with_block_groups$STATUS) # get counts
-ks_well_counts_by_status1 <- 
-  as.data.frame(ks_well_counts_by_status1) # convert to dataframe
-save(ks_well_counts_by_status1, 
-     file = "ks_well_counts_by_status1.rdata")
-write.csv(ks_well_counts_by_status1, 
-          file = "ks_well_counts_by_status1.csv") # write for excel file
-
-# get counts by well status2
-ks_well_counts_by_status2 <- 
-  table(ks_working_with_block_groups$STATUS2)
-ks_well_counts_by_status2 <- 
-  as.data.frame(ks_well_counts_by_status2) # convert to dataframe
-save(ks_well_counts_by_status2, 
-     file = "ks_well_counts_by_status2.rdata")
-write.csv(ks_well_counts_by_status2, 
-          file = "ks_well_counts_by_status2.csv")
+# # get counts by well status1 (main status)
+# ks_well_counts_by_status1 <- 
+#   table(ks_working_with_block_groups$STATUS) # get counts
+# ks_well_counts_by_status1 <- 
+#   as.data.frame(ks_well_counts_by_status1) # convert to dataframe
+# save(ks_well_counts_by_status1, 
+#      file = "ks_well_counts_by_status1.rdata")
+# write.csv(ks_well_counts_by_status1, 
+#           file = "ks_well_counts_by_status1.csv") # write for excel file
+# 
+# # get counts by well status2
+# ks_well_counts_by_status2 <- 
+#   table(ks_working_with_block_groups$STATUS2)
+# ks_well_counts_by_status2 <- 
+#   as.data.frame(ks_well_counts_by_status2) # convert to dataframe
+# save(ks_well_counts_by_status2, 
+#      file = "ks_well_counts_by_status2.rdata")
+# write.csv(ks_well_counts_by_status2, 
+#           file = "ks_well_counts_by_status2.csv")
 
 # make vectors of status1s and status2s
 ks_all_status1s <- 
@@ -1856,10 +1861,10 @@ save(ks_all_status1s,
      file = "ks_all_status1s.rdata")
 save(ks_all_status2s, # save status1s to file
      file = "ks_all_status2s.rdata") # save status2s to file
-write.csv(ks_all_status1s, 
-          file = "ks_all_status1s.csv") # csv of status1s for excel
-write.csv(ks_all_status2s, 
-          file = "ks_all_status2s.csv") # csv of status2s for excel
+# write.csv(ks_all_status1s, 
+#           file = "ks_all_status1s.csv") # csv of status1s for excel
+# write.csv(ks_all_status2s, 
+#           file = "ks_all_status2s.csv") # csv of status2s for excel
 
 # make vectors of status1s for further investigation or not
 ks_status1_check_further <- 
@@ -1978,74 +1983,82 @@ ks_potential_disposal_exclude_status2s
 
 
 
-#### investigating rows based on comments ####
-ks_potential_disposal_comments <-   # make vector of just comments
-  ks_working_with_block_groups$COMMENTS
+# #### investigating rows based on comments ####
+# ks_potential_disposal_comments <-   # make vector of just comments
+#   ks_working_with_block_groups$COMMENTS
+# 
+# # below identifies rows with comments containing the strings 
+# # "swd", "disp", "salt", "class", or "waste"
+# positions_of_possible_comments_to_include <-
+#   grep("swd|disp|salt|class|waste", 
+#        ks_potential_disposal_comments, 
+#        ignore.case = TRUE)
+# 
+# comments_to_review <-   # makes vector of identified comments
+#   ks_working_with_block_groups$COMMENTS[
+#     positions_of_possible_comments_to_include
+#     ]
+# 
+# # makes .csv file of identified comments
+# write.csv(comments_to_review,   # makes .csv file of identified comments
+#           file = "comments_to_review.csv")
+# 
+# # makes dataframe of entire rows matching comments
+# rows_requiring_comment_investigation <-
+#   ks_working_with_block_groups[which(ks_working_with_block_groups$COMMENTS %in% 
+#                                        comments_to_review),]
+# 
+# # make dataframe of most relevant columns of entire rows matching comments
+# rows_requiring_comment_investigation_simple <- 
+#   rows_requiring_comment_investigation[
+#     ,c("KID",
+#        "API_NUMBER",
+#        "activity",
+#        "well_type",
+#        "assignment_source",
+#        "detailed_well_type",
+#        "assignment_notes",
+#        "comments_examined",
+#        "kgs_available_documents_verified",
+#        "STATUS",
+#        "STATUS2",
+#        "COMMENTS"
+#     )
+#     ]
+# 
+# # make .csv files of rows matching comments and simple rows matching comments
+# write.csv(rows_requiring_comment_investigation,
+#           file = "rows_requiring_comment_investigation.csv")
+# write.csv(rows_requiring_comment_investigation_simple, 
+#           file = "rows_requiring_comment_investigation_simple.csv")
 
-# below identifies rows with comments containing the strings 
-# "swd", "disp", "salt", "class", or "waste"
-positions_of_possible_comments_to_include <-
-  grep("swd|disp|salt|class|waste", 
-       ks_potential_disposal_comments, 
-       ignore.case = TRUE)
-
-comments_to_review <-   # makes vector of identified comments
-  ks_working_with_block_groups$COMMENTS[
-    positions_of_possible_comments_to_include
-    ]
-
-# makes .csv file of identified comments
-write.csv(comments_to_review,   # makes .csv file of identified comments
-          file = "comments_to_review.csv")
-
-# makes dataframe of entire rows matching comments
-rows_requiring_comment_investigation <-
-  ks_working_with_block_groups[which(ks_working_with_block_groups$COMMENTS %in% 
-                                       comments_to_review),]
-
-# make dataframe of most relevant columns of entire rows matching comments
-rows_requiring_comment_investigation_simple <- 
-  rows_requiring_comment_investigation[
-    ,c("KID",
-       "API_NUMBER",
-       "activity",
-       "well_type",
-       "assignment_source",
-       "detailed_well_type",
-       "assignment_notes",
-       "comments_examined",
-       "kgs_available_documents_verified",
-       "STATUS",
-       "STATUS2",
-       "COMMENTS"
-    )
-    ]
-
-# make .csv files of rows matching comments and simple rows matching comments
-write.csv(rows_requiring_comment_investigation,
-          file = "rows_requiring_comment_investigation.csv")
-write.csv(rows_requiring_comment_investigation_simple, 
-          file = "rows_requiring_comment_investigation_simple.csv")
 
 
-
-#### manual well assignment space ####
-# cat("Please assign the ambiguous wells manually in an Excel file.  Afterward, find the window that just opened and click on the 'continue' button to continue the program.  The next prompt asks you to choose the file with the well assignments.")
+# #### manual well assignment space ####
+# cat("Please assign the ambiguous wells manually in an Excel file.  
+# Afterward, find the window that just opened and click on the 'continue' 
+# button to continue the program.  The next prompt asks you to choose the file 
+# with the well assignments.")
 # my_wait() # runs function to force the program to wait for input
-
+# 
 # # import manual assignments
 # manual_well_assignment_csv_file <- # asks user to choose the correct .csv file
 #   file.choose()
 # 
 # raw_manual_well_assignments_dataframe <- # converts above .csv to a dataframe
 #   read.csv(manual_well_assignment_csv_file)
-
-raw_manual_well_assignments_dataframe <- # converts above .csv to a dataframe
-  read.csv(
-    file = 
-      "rows_requiring_comment_investigation_simple_2019_01_04_back_to_r.csv")
-
+# 
+# raw_manual_well_assignments_dataframe <- # converts above .csv to a dataframe
+#   read.csv(
+#     file =
+#       "rows_requiring_comment_investigation_simple_2019_01_04_back_to_r.csv")
+# 
 # View(raw_manual_well_assignments_dataframe) # view the import
+# save(raw_manual_well_assignments_dataframe,   # save the dataframe
+#      file = 'raw_manual_well_assignments_dataframe.rdata')
+
+# load the dataframe to start from here
+load(file = "raw_manual_well_assignments_dataframe.rdata")
 
 
 
@@ -2066,62 +2079,771 @@ kids_status2s <-   # KIDs of wells IDed via status2
   ks_working_with_block_groups$KID[which(ks_working_with_block_groups$STATUS2 %in% 
                        ks_potential_disposal_include_status2s)]
 
-# length(kids_from_manual_assignments) # count of manual KIDs
-# length(kids_status1s)  # count of status1 KIDs
-# length(kids_status2s)  # count of status2 KIDs
-
-# combine the lists
-kids_semi_final_list <- c(kids_from_manual_assignments, 
-                          kids_status1s,
-                          kids_status2s)
-
-# convert the list of three vectors into just one vector
-kids_semi_final_list <- 
-  unlist(kids_semi_final_list)
-
-kids_semi_final_list <-   # delete duplicates
-  unique(kids_semi_final_list)   
-
-ks_semi_final_wells <-   # make dataframe of data from selected wells
-  ks_working_with_block_groups[which(ks_working_with_block_groups$KID %in% 
-                   kids_semi_final_list),]
-
-# View(ks_semi_final_wells)
-
-# save data to disk
-save(ks_semi_final_wells, file = "ks_semi_final_wells.rdata")
-write.csv(ks_semi_final_wells, file = "ks_semi_final_wells.csv")
 
 
+#### HERE BEGINS THE REVISED WELL ASSIGNMENT PROCEDURE ####
 
-#### create working semi-final dataset ####
+# make vector of status1s that mean swd well
+swd_status1s <-   
+  sort(c("OTHER(1O&1SWD)",
+         "OTHER(CBM/SWD)",
+         "OTHER(OIL,SWD)",
+         "OTHER(SWD-P&A)",
+         "OTHER-P&A(OIL-SWD)",
+         "SWD",
+         "SWD-P&A"))
 
-ks_semi_final_wells_working <-   # make safe working dataset
-  ks_semi_final_wells
+# make dataframe of wells selected due to status1
+ks_swd_statii_one <- 
+  ks_working_with_block_groups[
+    which(
+      ks_working_with_block_groups$STATUS %in%
+        swd_status1s
+    ),
+    ]
+# View(ks_swd_statii_one)
 
-# status1s
+# make dataframe of wells selected due to status2
+ks_swd_statii_two <- 
+  ks_working_with_block_groups[
+    which(
+      ks_working_with_block_groups$STATUS2 == "Converted to SWD Well" 
+      & ks_working_with_block_groups$STATUS %notin% swd_status1s),
+    ]
 
-ks_semi_final_status1s <-   # make vector of status1s in semi-final dataset
-  sort(unique(ks_semi_final_wells$STATUS))
+# View(ks_swd_statii_two)
+# table(ks_swd_statii_two$STATUS)
 
-# View(ks_semi_final_status1s)   # view vector of status1s
+# pull the manual assignments 
+raw_assignments_exclude_swd <- 
+  raw_manual_well_assignments_dataframe[
+    which(raw_manual_well_assignments_dataframe$STATUS %notin% 
+            swd_status1s & 
+            raw_manual_well_assignments_dataframe$STATUS2 != 
+            "Converted to SWD Well"),
+    ]
 
-# View(table(ks_semi_final_wells_working$STATUS))   # view table of status1s
+# View(raw_assignments_exclude_swd)
 
-write.csv(ks_semi_final_status1s,   # write .csv of status1s
-          file = "ks_semi_final_status1s.csv")
 
-# status2s
 
-ks_semi_final_status2s <-   # make vector of status2s in semi-final dataset
-  sort(unique(ks_semi_final_wells$STATUS2))
+#### make big dataframe of all wells pulled for at least one reason ####
+# list all the kids
+kids_of_everything <- 
+  c(ks_swd_statii_one$KID, 
+         ks_swd_statii_two$KID, 
+         raw_assignments_exclude_swd$KID) 
 
-# View(ks_semi_final_status2s)   # view vector of status2s
+# View(ks_swd_statii_one$KID)
+# View(ks_swd_statii_two$KID)
+# View(raw_assignments_exclude_swd$KID)
 
-# View(table(ks_semi_final_wells_working$STATUS2))   # view table of status2s
 
-write.csv(ks_semi_final_status2s,   # write .csv of status2s
-          file = "ks_semi_final_status2s.csv")
+# pull the wells
+top_of_the_flowchart <- 
+  ks_working_with_block_groups[which(
+    ks_working_with_block_groups$KID %in% 
+      kids_of_everything),]
+# View(top_of_the_flowchart)
+
+
+raw_assignments_man_swd <- 
+  raw_assignments_exclude_swd[
+    which(raw_assignments_exclude_swd$man_well_type_swd == "yes"),]
+
+raw_assignments_man_not_swd <- 
+  raw_assignments_exclude_swd[
+    which(raw_assignments_exclude_swd$man_well_type_swd != "yes"),]
+
+# View(raw_assignments_man_swd)
+
+# separate well api into event codes
+raw_assignments_man_swd <- 
+  raw_assignments_man_swd %>% 
+  separate(API_NUMBER, 
+           into = c("API_NUMBER_SIMPLE", 
+                    "EVENT"), 
+           sep = 12, 
+           remove = F)
+
+# remove extraneous dashes from event codes
+raw_assignments_man_swd$EVENT <- 
+  substring(raw_assignments_man_swd$EVENT, 2)
+# View(raw_assignments_man_swd)
+
+
+
+#### find APIs of status II in status I and delete those
+# APIs of statusIs
+status1_apis <- 
+  as.character(unique(ks_swd_statii_one$API_NUMBER_SIMPLE))
+
+status2_apis <- 
+  as.character(unique(ks_swd_statii_two$API_NUMBER_SIMPLE))
+
+# View(status1_apis)
+
+# View(status2_apis)
+
+
+# make true/false vector to match status2 apis to status1 apis
+s2s_in_s1s_T_F <- status2_apis %in% status1_apis
+
+# list of status2 apis in status1 apis
+s2_apis_in_s1_apis <- status2_apis[s2s_in_s1s_T_F]
+
+ks_swd_statii_two_not_in_statii_one <- 
+  ks_swd_statii_two[which(
+    ks_swd_statii_two$API_NUMBER_SIMPLE %notin% 
+      s2_apis_in_s1_apis),]
+
+# make vector of kids removed at this step for later analysis (n = 3157)
+kids_of_removed_s2_well_apis_overlap_with_s1 <- 
+  setdiff(ks_swd_statii_two$KID, 
+          ks_swd_statii_two_not_in_statii_one$KID)
+
+
+
+# View(ks_swd_statii_two_not_in_statii_one)
+
+
+
+#### find APIs of manual assignments in status Is and delete those
+# pull manual assignment apis
+raw_assignment_apis <- 
+  as.character(unique(raw_assignments_man_swd$API_NUMBER_SIMPLE))
+
+# make true/false vector to match manual apis to status1 apis
+raws_in_s1s_T_F <- 
+  raw_assignment_apis %in% status1_apis
+
+# list of manual assignment apis in status1 apis
+raw_apis_in_s1_apis <- 
+  raw_assignment_apis[raws_in_s1s_T_F]
+
+ks_swd_manual_not_in_statii_one <- 
+  raw_assignments_man_swd[which(
+    raw_assignments_man_swd$API_NUMBER_SIMPLE %notin% 
+      raw_apis_in_s1_apis),]
+
+# kids of removed wells (n = 37)
+kids_of_removed_man_well_apis_overlap_with_s1 <- 
+  setdiff(raw_assignments_man_swd$KID, 
+          ks_swd_manual_not_in_statii_one$KID)
+
+
+# View(ks_swd_manual_not_in_statii_one)
+
+
+
+#### find APIs of manual assignments in status2s and delete those
+# pull manual assignment apis
+ks_swd_manual_not_in_statii_one_apis <- 
+  as.character(unique(ks_swd_manual_not_in_statii_one$API_NUMBER_SIMPLE))
+
+# make true/false vector to match manual apis to status2 apis
+raws_in_s2s_T_F <- 
+  ks_swd_manual_not_in_statii_one_apis %in% status2_apis
+
+# list of manual assignment apis in status2 apis
+raw_apis_in_s2_apis <- 
+  ks_swd_manual_not_in_statii_one_apis[raws_in_s2s_T_F]
+
+View(raw_apis_in_s1_apis)
+
+ks_swd_manual_not_in_statii_two <- 
+  ks_swd_manual_not_in_statii_one[which(
+    ks_swd_manual_not_in_statii_one$API_NUMBER_SIMPLE %notin% 
+      raw_apis_in_s2_apis),]
+
+# View(ks_swd_manual_not_in_statii_two)   # DON'T USE THIS KEEP MANUAL WELL!
+
+# manually examine sole well in common
+# View(ks_working[which(ks_working$KID %in% c(1030278155, 1002886382)),])
+# want manual well, 1030278155
+
+# delete unwanted well 1002886382
+ks_swd_statii_two_not_in_statii_one_or_man <- 
+  ks_swd_statii_two_not_in_statii_one[which(
+    ks_swd_statii_two_not_in_statii_one$KID != 
+      "1002886382"
+  ),]
+# View(ks_swd_statii_two_not_in_statii_one_or_man)
+
+# ks_swd_s1_kids_for_master
+ks_swd_s1_kids_for_master_review <- 
+  ks_swd_statii_one$KID
+length(ks_swd_s1_kids_for_master_review)
+
+# ks_swd_s2_kids_for_master
+ks_swd_s2_kids_for_master_review <- 
+  ks_swd_statii_two_not_in_statii_one_or_man$KID
+length(ks_swd_s2_kids_for_master_review)
+
+# ks_swd_man_kids_for_master
+ks_swd_man_kids_for_master_review <- 
+  ks_swd_manual_not_in_statii_one$KID
+length(ks_swd_man_kids_for_master_review)
+
+# kids for master list
+kids_for_master_list_review <- 
+  c(ks_swd_s1_kids_for_master_review, 
+    ks_swd_s2_kids_for_master_review, 
+    ks_swd_man_kids_for_master_review)
+
+# View(kids_for_master_list_review)
+
+# pull rows corresponding to above apis
+ks_swd_master_dataframe_for_review <- 
+  ks_working_with_block_groups[
+    which(
+      ks_working_with_block_groups$KID %in% 
+        kids_for_master_list_review
+    ),
+    ]
+
+# View(ks_swd_master_dataframe_for_review)
+
+# label rows by origin
+ks_swd_master_dataframe_for_review$origin <- NA
+
+ks_swd_master_dataframe_for_review <-   # label s1s
+  within(ks_swd_master_dataframe_for_review, 
+         origin[KID %in% 
+                  ks_swd_s1_kids_for_master_review] <- "s1")
+
+ks_swd_master_dataframe_for_review <-   # label s2s
+  within(ks_swd_master_dataframe_for_review, 
+         origin[KID %in% 
+                  ks_swd_s2_kids_for_master_review] <- "s2")
+
+ks_swd_master_dataframe_for_review <-   # label manuals
+  within(ks_swd_master_dataframe_for_review, 
+         origin[KID %in% 
+                  ks_swd_man_kids_for_master_review] <- "man")
+
+# View(ks_swd_master_dataframe_for_review)
+
+
+
+#### find duplicates by latitude and longitude ####
+ks_swd_master_lat_long_dup_index <- 
+  duplicated(ks_swd_master_dataframe_for_review[c("LATITUDE","LONGITUDE")]) | 
+  duplicated(ks_swd_master_dataframe_for_review[c("LATITUDE","LONGITUDE")], 
+             fromLast = TRUE)
+
+ks_swd_master_lat_long_dup <-   # make dataframe of the duplicates
+  ks_swd_master_dataframe_for_review[ks_swd_master_lat_long_dup_index, ]
+
+# View(ks_swd_master_lat_long_dup)
+
+# pull lat/long dup rows with s2 or manual origins
+ks_swd_lat_long_dup_s2_man <- 
+  ks_swd_master_lat_long_dup[which(
+    ks_swd_master_lat_long_dup$origin %in% c("s2", "man")
+  ),]
+
+# pull lat/long dup rows with s1 origins
+ks_swd_lat_long_dup_s1 <- 
+  ks_swd_master_lat_long_dup[which(
+    ks_swd_master_lat_long_dup$origin == 's1'
+  ),]
+
+# make s2/man dataframe simpler, pulling bare minimum of columns
+ks_swd_lat_long_s2_man_simple <- 
+  ks_swd_lat_long_dup_s2_man[,c("KID", "LATITUDE", "LONGITUDE", "origin")]
+colnames(ks_swd_lat_long_s2_man_simple)[1] <- "KID_S2_MAN"
+
+# make s1 dataframe simpler, pulling bare minimum of columns
+ks_swd_lat_long_s1_simple <- 
+  ks_swd_lat_long_dup_s1[,c("KID", "LATITUDE", "LONGITUDE", "origin")]
+colnames(ks_swd_lat_long_s1_simple)[1] <- "KID_S1"
+
+# merge s1 and s2/man kids into one dataframe by lat/long
+lat_long_duplicates_of_weirdos_only <- 
+  merge(ks_swd_lat_long_s2_man_simple,
+        ks_swd_lat_long_s1_simple,
+        by = c("LATITUDE", "LONGITUDE"))
+
+# kids of rows to pull for duplicate evaluation
+kids_of_rows_to_pull_for_duplicate_evaluation <- 
+  c(lat_long_duplicates_of_weirdos_only$KID_S2_MAN, 
+    lat_long_duplicates_of_weirdos_only$KID_S1)
+
+# View(kids_of_rows_to_pull_for_duplicate_evaluation)
+
+# make dataframe of duplicates of s1 wells by s2/manual wells by lat/long
+weirdo_duplicate_rows <- 
+  ks_swd_master_dataframe_for_review[which(
+    ks_swd_master_dataframe_for_review$KID %in% 
+      kids_of_rows_to_pull_for_duplicate_evaluation
+  ),]
+
+# View(weirdo_duplicate_rows)
+
+# kid 1030570876 is swd but no api, 
+# where dup has api and more dates, API 15-009-07176
+
+
+# manual check of sole weird well
+# View(ks_working_with_block_groups[which(
+#   ks_working_with_block_groups$API_NUMBER_SIMPLE == "15-009-07176"
+# ),])
+
+# kids of wells to keep (drop 6 of them)
+kids_keep_lat_long <- 
+  weirdo_duplicate_rows$KID[which(weirdo_duplicate_rows$origin == 's1')]
+
+# kids of wells to drop (drop 6 of them)
+kids_drop_lat_long <- 
+  weirdo_duplicate_rows$KID[which(weirdo_duplicate_rows$origin != 's1')]
+
+# save the master dataframe
+save(ks_swd_master_dataframe_for_review, 
+     file = "ks_swd_master_dataframe_for_review.rdata")
+
+# remove 6 duplicates!
+ks_swd_master_no_weirdo_dups <- 
+  ks_swd_master_dataframe_for_review[which(
+    ks_swd_master_dataframe_for_review$KID %notin% 
+      kids_drop_lat_long
+  ),]
+
+# View(ks_swd_master_no_weirdo_dups)
+str(ks_swd_master_no_weirdo_dups$API_NUMBER_SIMPLE)
+
+# fix that one api
+ks_swd_master_no_weirdo_dups <-   # fix big one
+  within(ks_swd_master_no_weirdo_dups, 
+         API_NUMBER[KID == "1030570876"] <- "15-009-07176")
+ks_swd_master_no_weirdo_dups <-   # fix simple one
+  within(ks_swd_master_no_weirdo_dups, 
+         API_NUMBER_SIMPLE[KID == "1030570876"] <- "15-009-07176")
+
+# ks_s2_man_remaining <- 
+#   filter(ks_swd_master_no_weirdo_dups, 
+#          origin == 's2' | origin == 'man')
+
+
+
+#### remove those without APIs ####
+ks_swd_master_with_api <- 
+  filter(ks_swd_master_no_weirdo_dups, 
+         !is.na(API_NUMBER))
+
+nrow(ks_swd_master_no_weirdo_dups)
+
+# View(ks_swd_master_with_api)  # count 14,865
+
+
+
+#### check full API duplicates, match to list ####
+# view rows with duplicated APIs
+ks_swd_master_api_dup_index <-   # make the index to get the rows
+  duplicated(ks_swd_master_with_api$API_NUMBER) | 
+  duplicated(ks_swd_master_with_api$API_NUMBER, 
+             fromLast = TRUE)
+
+ks_swd_api_full_dups <-   # pull the duplicated rows
+  ks_swd_master_with_api[ks_swd_master_api_dup_index,]
+save(ks_swd_api_full_dups, 
+     file = "ks_swd_api_full_dups.rdata")
+
+# View(ks_swd_api_full_dups) # count of 274, all s1s
+
+
+
+#### check simple API duplicates, now not deleting SWD wells ####
+# keep last modified
+
+ks_swd_api_full_dups <-   # order by modification date
+  ks_swd_api_full_dups[order(ks_swd_api_full_dups$modified_as_date),]
+# View(ks_swd_api_full_dups)
+
+# marks all but latest api for each well as TRUE
+ks_swd_full_api_drop_index <-    
+  duplicated(ks_swd_api_full_dups$API_NUMBER, 
+             fromLast = TRUE)
+
+# makes dataframe of rows of wells to drop
+ks_swd_full_api_drop_wells <-    
+  ks_swd_api_full_dups[ks_swd_full_api_drop_index, ]
+
+kids_full_api_drops <-   # makes list of just the kids
+  ks_swd_full_api_drop_wells$KID
+
+# make a drop dup column
+ks_swd_master_with_api$drop_dup <- NA
+
+# flag all full api dups
+ks_swd_master_with_api <-    
+  within(ks_swd_master_with_api, 
+         drop_dup[KID %in% ks_swd_api_full_dups$KID] <- 
+           'keep_dup_full_api')
+
+# flag full api drops
+ks_swd_master_with_api <-    
+  within(ks_swd_master_with_api, 
+         drop_dup[KID %in% kids_full_api_drops] <- 
+           'drop_dup_full_api')
+
+# View(ks_swd_master_with_api[which(!is.na(ks_swd_master_with_api$drop_dup)),])
+
+ks_swd_master_for_small_api <- 
+  filter(ks_swd_master_with_api, 
+         is.na(drop_dup) |
+           drop_dup != "drop_dup_full_api")
+
+nrow(ks_swd_master_with_api)
+nrow(ks_swd_master_for_small_api)
+
+
+
+#### DROP PARTIAL API DUPLICATES HERE #### 
+
+# view rows with duplicated APIs
+ks_swd_master_small_dup_index <-   # make the index to get the rows
+  duplicated(ks_swd_master_for_small_api$API_NUMBER_SIMPLE) | 
+  duplicated(ks_swd_master_for_small_api$API_NUMBER_SIMPLE, 
+             fromLast = TRUE)
+
+ks_swd_api_small_dups <-   # pull the duplicated rows
+  ks_swd_master_for_small_api[ks_swd_master_small_dup_index,]
+save(ks_swd_api_small_dups, 
+     file = "ks_swd_api_small_dups.rdata")
+
+# View(ks_swd_api_small_dups) # count of 2,218, 2 s2, 2,216 s1s
+
+ks_swd_api_small_dups <-   # order by full api number
+  ks_swd_api_small_dups[order(ks_swd_api_small_dups$API_NUMBER),]
+# View(ks_swd_master_for_small_api)
+
+# marks all but last api for each well as TRUE
+ks_swd_api_small_drop_index <-    
+  duplicated(ks_swd_api_small_dups$API_NUMBER_SIMPLE, 
+             fromLast = TRUE)
+
+# makes dataframe of rows of wells to drop
+ks_swd_api_small_drops <-    
+  ks_swd_api_small_dups[ks_swd_api_small_drop_index, ]
+
+kids_api_small_drops <-   # makes list of just the kids
+  ks_swd_api_small_drops$KID
+
+# flag all full api dups
+# (note: in full dataset!  need to drop full and small again)
+ks_swd_master_with_api <-    
+  within(ks_swd_master_with_api, 
+         drop_dup[KID %in% ks_swd_api_small_dups$KID] <- 
+           'keep_dup_small_api')
+
+# flag full api drops
+ks_swd_master_with_api <-    
+  within(ks_swd_master_with_api, 
+         drop_dup[KID %in% kids_api_small_drops] <- 
+           'drop_dup_small_api')
+length(kids_api_small_drops) # 1152
+
+# View(ks_swd_master_with_api[which(!is.na(ks_swd_master_with_api$drop_dup)),])
+
+# drop full and small duplicates
+ks_swd_master_dropped_all_apis <- 
+  filter(ks_swd_master_with_api, 
+         is.na(drop_dup) |
+           drop_dup == "keep_dup_full_api" | 
+           drop_dup == "keep_dup_small_api")
+
+table(ks_swd_master_with_api$drop_dup, ks_swd_master_with_api$origin)
+
+#### deal with lat/longs!  nearly done! ####
+# find duplicates by latitude and longitude 
+ks_swd_last_lat_long_dup_index <- 
+  duplicated(ks_swd_master_dropped_all_apis[c("LATITUDE","LONGITUDE")]) | 
+  duplicated(ks_swd_master_dropped_all_apis[c("LATITUDE","LONGITUDE")], 
+             fromLast = TRUE)
+
+ks_swd_last_lat_long_dups <-   # make dataframe of the duplicates
+  ks_swd_master_dropped_all_apis[ks_swd_last_lat_long_dup_index, ]
+
+View(ks_swd_last_lat_long_dups)
+
+ks_swd_last_lat_long_dups <-   # order by modification date
+  ks_swd_last_lat_long_dups[order(ks_swd_last_lat_long_dups$modified_as_date),]
+# View(ks_swd_last_lat_long_dups)
+
+table(ks_swd_last_lat_long_dups$origin)
+
+# marks all but latest lat/long for each well as TRUE
+ks_swd_last_lat_long_drop_index <-    
+  duplicated(ks_swd_last_lat_long_dups[c("LATITUDE","LONGITUDE")], 
+             fromLast = TRUE)
+
+# makes dataframe of rows of wells to drop
+ks_swd_last_lat_long_drops <-    
+  ks_swd_last_lat_long_dups[ks_swd_last_lat_long_drop_index, ]
+nrow(ks_swd_last_lat_long_drops)
+
+kids_last_lat_long_drops <-   # makes list of just the kids
+  ks_swd_last_lat_long_drops$KID
+
+# flag all lat-long dups
+ks_swd_master_with_api <-    
+  within(ks_swd_master_with_api, 
+         drop_dup[KID %in% ks_swd_last_lat_long_dups$KID] <- 
+           'keep_dup_lat_long')
+
+# flag all lat-long drops
+ks_swd_master_with_api <-    
+  within(ks_swd_master_with_api, 
+         drop_dup[KID %in% kids_last_lat_long_drops] <- 
+           'drop_dup_lat_long')
+
+# View(ks_swd_master_with_api[which(
+# !is.na(ks_swd_master_with_api$drop_dup))
+# ,])
+
+# View(ks_swd_master_with_api[which(!is.na(ks_swd_master_with_api$drop_dup)),])
+
+ks_swd_without_any_dups <-   # make final dataset of wells
+  filter(ks_swd_master_with_api, 
+         is.na(drop_dup) |
+           drop_dup %in% c("keep_dup_full_api", 
+                           "keep_dup_small_api", 
+                           "keep_dup_lat_long"))
+
+# # save and load chunk
+# # View(ks_swd_without_any_dups)
+# save(ks_swd_without_any_dups, 
+#      file = "ks_swd_without_any_dups.rdata")
+# write.csv(ks_swd_without_any_dups, 
+#           file = "ks_swd_without_any_dups.csv")
+
+load(file = "ks_swd_without_any_dups.rdata")
+
+
+
+#### update master dataframe to make later analysis easier ####
+ks_swd_top_of_the_flowchart <-   # start the dataframe
+  top_of_the_flowchart
+
+ks_swd_top_of_the_flowchart$origin <- NA   # start the origin column
+
+ks_swd_top_of_the_flowchart <-   # assign s1 origins
+  within(ks_swd_top_of_the_flowchart, 
+         origin[KID %in% ks_swd_statii_one$KID] <- 's1')
+
+ks_swd_top_of_the_flowchart <-   # assign s2 origins
+  within(ks_swd_top_of_the_flowchart, 
+         origin[KID %in% ks_swd_statii_two$KID] <- 's2')
+
+ks_swd_top_of_the_flowchart <-   # assign 'other' origins
+  within(ks_swd_top_of_the_flowchart, 
+         origin[KID %in% raw_assignments_exclude_swd$KID] <- 'man')
+
+
+
+# View(ks_swd_statii_one$KID)
+# View(ks_swd_statii_two$KID)
+# View(raw_assignments_exclude_swd$KID)
+
+# fix that one api
+ks_swd_top_of_the_flowchart <-   # fix big one
+  within(ks_swd_top_of_the_flowchart, 
+         API_NUMBER[KID == "1030570876"] <- "15-009-07176")
+ks_swd_top_of_the_flowchart <-   # fix simple one
+  within(ks_swd_top_of_the_flowchart, 
+         API_NUMBER_SIMPLE[KID == "1030570876"] <- "15-009-07176")
+
+# kids of manual wells with no api (n = 2 after manual review)
+
+# View(raw_assignments_exclude_swd)   # exclude those not swd, leaves 354
+
+raw_assignments_api_only <-   # exclude those without API, leaves 173
+  raw_assignments_exclude_swd[which(raw_assignments_exclude_swd$API_NUMBER != ""),]
+
+raw_assignments_api_and_swd <-   # those classed as swd with apis, leaves 106
+  raw_assignments_api_only[which(raw_assignments_api_only$man_well_type_swd == 'yes'),]
+View(raw_assignments_api_and_swd) 
+
+# kids of non-swd wells dropped per manual review
+View(raw_assignments_man_not_swd$KID)
+
+# kids of s2 apis that overlapped with s1 apis
+View(kids_of_removed_s2_well_apis_overlap_with_s1)
+
+# kids of man apis that overlapped with s1 apis
+View(kids_of_removed_man_well_apis_overlap_with_s1)
+
+# kids of s2 apis that overlapped with man apis
+kids_of_s2_apis_that_overlapped_with_s1_apis <- c("1002886382")
+
+# assign drop_dup values and reasons
+ks_swd_top_of_the_flowchart$drop_dup <- NA
+
+# assign dropped wells among lat/long s2 to not s2 dups
+kids_drop_lat_long
+
+# assign wells dropped due to missing API
+
+
+# assign wells dropped due to full API duplicates
+
+# assign wells dropped due to partial API duplicates
+
+# assign final wells dropped due to lat_long
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ks_swd_working <-   # make working file
+  ks_swd_without_any_dups
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# #### FROM HERE WE SKIP TO THE ALTERNATE ASSIGNMENT PROCEDURE ####
+# 
+# # length(kids_from_manual_assignments) # count of manual KIDs
+# # length(kids_status1s)  # count of status1 KIDs
+# # length(kids_status2s)  # count of status2 KIDs
+# 
+# # combine the lists
+# kids_semi_final_list <- c(kids_from_manual_assignments, 
+#                           kids_status1s,
+#                           kids_status2s)
+# 
+# # convert the list of three vectors into just one vector
+# kids_semi_final_list <- 
+#   unlist(kids_semi_final_list)
+# 
+# kids_semi_final_list <-   # delete duplicates
+#   unique(kids_semi_final_list)   
+# 
+# ks_semi_final_wells <-   # make dataframe of data from selected wells
+#   ks_working_with_block_groups[which(ks_working_with_block_groups$KID %in% 
+#                    kids_semi_final_list),]
+# 
+# # View(ks_semi_final_wells)
+# 
+# # save data to disk
+# save(ks_semi_final_wells, file = "ks_semi_final_wells.rdata")
+# write.csv(ks_semi_final_wells, file = "ks_semi_final_wells.csv")
+# 
+# 
+# 
+# #### create working semi-final dataset ####
+# 
+# ks_semi_final_wells_working <-   # make safe working dataset
+#   ks_semi_final_wells
+# 
+# # status1s
+# 
+# ks_semi_final_status1s <-   # make vector of status1s in semi-final dataset
+#   sort(unique(ks_semi_final_wells$STATUS))
+# 
+# # View(ks_semi_final_status1s)   # view vector of status1s
+# 
+# # View(table(ks_semi_final_wells_working$STATUS))   # view table of status1s
+# 
+# write.csv(ks_semi_final_status1s,   # write .csv of status1s
+#           file = "ks_semi_final_status1s.csv")
+# 
+# # status2s
+# 
+# ks_semi_final_status2s <-   # make vector of status2s in semi-final dataset
+#   sort(unique(ks_semi_final_wells$STATUS2))
+# 
+# # View(ks_semi_final_status2s)   # view vector of status2s
+# 
+# # View(table(ks_semi_final_wells_working$STATUS2))   # view table of status2s
+# 
+# write.csv(ks_semi_final_status2s,   # write .csv of status2s
+#           file = "ks_semi_final_status2s.csv")
+
+
+
+
+#### HEREIN BEGINS THE ALTERNATE WELL ASSIGNMENT PROCEDURE ####
+
 
 
 
@@ -2304,7 +3026,7 @@ ks_semi_final_wells_working$uic <-
 # kids<-unique(ks_uic$KGS_ID)
 # kids
 #
-# ks_wells_in_uic_data_only <- subset(ks_working_with_block_groups, KID %in% kids)
+# ks_wells_in_uic_data_only <- subset(ks_semi_final_wells_working, KID %in% kids)
 # View(ks_wells_in_uic_data_only)
 # uic_statuses<-table(ks_wells_in_uic_data_only$STATUS)
 # View(uic_statuses)
@@ -2616,18 +3338,18 @@ ks_only_apis <-
 
 # View(ks_only_apis)
 
-# propogate dates (BEWARE, THIS STEP TAKE ABOUT 20 MINUTES!)
-ks_only_apis <-
-  ks_only_apis %>%
-  group_by(API_NUMBER) %>%
-  fill(
-    permit_propogate,
-    spud_propogate,
-    completion_propogate,
-    plugging_propogate,
-    modified_propogate
-  ) %>%
-  ungroup()
+# # propogate dates (BEWARE, THIS STEP TAKE ABOUT 20 MINUTES!)
+# ks_only_apis <-
+#   ks_only_apis %>%
+#   group_by(API_NUMBER) %>%
+#   fill(
+#     permit_propogate,
+#     spud_propogate,
+#     completion_propogate,
+#     plugging_propogate,
+#     modified_propogate
+#   ) %>%
+#   ungroup()
 
 # View(ks_only_apis)
 
@@ -2722,18 +3444,18 @@ ks_lat_long_dup <-
 
 table(ks_lat_long_dup$uic)
 
-# propogate dates
-ks_lat_long_dup <-
-  ks_lat_long_dup %>%
-  group_by(LATITUDE, LONGITUDE) %>%
-  fill(
-    permit_propogate,
-    spud_propogate,
-    completion_propogate,
-    plugging_propogate,
-    modified_propogate
-  ) %>%
-  ungroup()
+# # propogate dates
+# ks_lat_long_dup <-
+#   ks_lat_long_dup %>%
+#   group_by(LATITUDE, LONGITUDE) %>%
+#   fill(
+#     permit_propogate,
+#     spud_propogate,
+#     completion_propogate,
+#     plugging_propogate,
+#     modified_propogate
+#   ) %>%
+#   ungroup()
 
 
 
@@ -2749,7 +3471,7 @@ wells_to_drop_due_to_lat_long <-
   ks_lat_long_dup[ks_lat_long_drop_index, ]
 
 table(wells_to_drop_due_to_lat_long$uic)
-View(wells_to_drop_due_to_lat_long)
+# View(wells_to_drop_due_to_lat_long)
 
 # makes list of just the kids
 kids_of_wells_to_drop_due_to_lat_long <-   
@@ -2832,348 +3554,6 @@ save(ks_swd_full_for_map,
 
 
 
-
-#### ALTERNATE WELL ASSIGNMENT PROCEDURE ####
-
-# true 
-swd_status1s <-   # make vector of status1s that mean swd well
-  sort(c("OTHER(1O&1SWD)",
-         "OTHER(CBM/SWD)",
-         "OTHER(OIL,SWD)",
-         "OTHER(SWD-P&A)",
-         "OTHER-P&A(OIL-SWD)",
-         "SWD",
-         "SWD-P&A"))
-
-ks_swd_statii_one <- 
-  ks_working_with_block_groups[
-    which(
-      ks_working_with_block_groups$STATUS %in%
-        swd_status1s
-    ),
-    ]
-# View(ks_swd_statii_one)
-
-
-ks_swd_statii_two <- 
-  ks_working_with_block_groups[
-    which(
-      ks_working_with_block_groups$STATUS2 == "Converted to SWD Well" 
-      & ks_working_with_block_groups$STATUS %notin% swd_status1s),
-    ]
-
-# View(ks_swd_statii_two)
-# table(ks_swd_statii_two$STATUS)
-
-# pull the manual assignments 
-raw_assignments_exclude_swd <- 
-  raw_manual_well_assignments_dataframe[
-    which(raw_manual_well_assignments_dataframe$STATUS %notin% 
-            swd_status1s & 
-            raw_manual_well_assignments_dataframe$STATUS2 != 
-            "Converted to SWD Well"),
-  ]
-
-# View(raw_assignments_exclude_swd)
-
-raw_assignments_man_swd <- 
-  raw_assignments_exclude_swd[
-    which(raw_assignments_exclude_swd$man_well_type_swd == "yes"),]
-
-# View(raw_assignments_man_swd)
-
-# separate well api into event codes
-raw_assignments_man_swd <- 
-  raw_assignments_man_swd %>% 
-  separate(API_NUMBER, 
-           into = c("API_NUMBER_SIMPLE", "EVENT"), 
-           sep = 12, 
-           remove = F)
-
-# remove extraneous dashes from event codes
-raw_assignments_man_swd$EVENT <- 
-  substring(raw_assignments_man_swd$EVENT, 2)
-# View(raw_assignments_man_swd)
-
-#### find APIs of status II in status I and delete those
-# APIs of statusIs
-status1_apis <- 
-  as.character(unique(ks_swd_statii_one$API_NUMBER_SIMPLE))
-
-status2_apis <- 
-  as.character(unique(ks_swd_statii_two$API_NUMBER_SIMPLE))
-
-# View(status1_apis)
-
-# View(status2_apis)
-
-
-# make true/false vector to match status2 apis to status1 apis
-s2s_in_s1s_T_F <- status2_apis %in% status1_apis
-
-# list of status2 apis in status1 apis
-s2_apis_in_s1_apis <- status2_apis[s2s_in_s1s_T_F]
-
-ks_swd_statii_two_not_in_statii_one <- 
-  ks_swd_statii_two[which(
-    ks_swd_statii_two$API_NUMBER_SIMPLE %notin% 
-      s2_apis_in_s1_apis),]
-
-View(ks_swd_statii_two_not_in_statii_one)
-
-
-
-#### find APIs of manual assignments in status Is and delete those
-# pull manual assignment apis
-raw_assignment_apis <- 
-  as.character(unique(raw_assignments_man_swd$API_NUMBER_SIMPLE))
-
-# make true/false vector to match manual apis to status1 apis
-raws_in_s1s_T_F <- 
-  raw_assignment_apis %in% status1_apis
-
-# list of manual assignment apis in status1 apis
-raw_apis_in_s1_apis <- 
-   raw_assignment_apis[raws_in_s1s_T_F]
-  
-ks_swd_manual_not_in_statii_one <- 
-  raw_assignments_man_swd[which(
-    raw_assignments_man_swd$API_NUMBER_SIMPLE %notin% 
-      raw_apis_in_s1_apis),]
-
-View(ks_swd_manual_not_in_statii_one)
-
-
-
-#### find APIs of manual assignments in status2s and delete those
-# pull manual assignment apis
-ks_swd_manual_not_in_statii_one_apis <- 
-  as.character(unique(ks_swd_manual_not_in_statii_one$API_NUMBER_SIMPLE))
-
-# make true/false vector to match manual apis to status2 apis
-raws_in_s2s_T_F <- 
-  ks_swd_manual_not_in_statii_one_apis %in% status2_apis
-
-# list of manual assignment apis in status2 apis
-raw_apis_in_s2_apis <- 
-  ks_swd_manual_not_in_statii_one_apis[raws_in_s2s_T_F]
-
-ks_swd_manual_not_in_statii_two <- 
-  ks_swd_manual_not_in_statii_one[which(
-    ks_swd_manual_not_in_statii_one$API_NUMBER_SIMPLE %notin% 
-      raw_apis_in_s2_apis),]
-
-# View(ks_swd_manual_not_in_statii_two) DON'T USE THIS KEEP MANUAL WELL!
-
-# manually examine sole well in common
-# View(ks_working[which(ks_working$KID %in% c(1030278155, 1002886382)),])
-# want manual well, 1030278155
-
-# delete unwanted well 1002886382
-ks_swd_statii_two_not_in_statii_one_or_man <- 
-  ks_swd_statii_two_not_in_statii_one[which(
-    ks_swd_statii_two_not_in_statii_one$KID != 
-      "1002886382"
-  ),]
-
-# View(ks_swd_statii_two_not_in_statii_one_or_man)
-
-# ks_swd_s1_kids_for_master
-ks_swd_s1_kids_for_master_review <- 
-  ks_swd_statii_one$KID
-  
-# ks_swd_s2_kids_for_master
-ks_swd_s2_kids_for_master_review <- 
-  ks_swd_statii_two_not_in_statii_one_or_man$KID
-
-# ks_swd_man_kids_for_master
-ks_swd_man_kids_for_master_review <- 
-  ks_swd_manual_not_in_statii_one$KID
-
-# kids for master list
-kids_for_master_list_review <- 
-  c(ks_swd_s1_kids_for_master_review, 
-    ks_swd_s2_kids_for_master_review, 
-    ks_swd_man_kids_for_master_review)
-
-View(kids_for_master_list_review)
-
-# pull rows corresponding to above apis
-ks_swd_master_dataframe_for_review <- 
-  ks_working_with_block_groups[
-    which(
-      ks_working_with_block_groups$KID %in% 
-        kids_for_master_list_review
-    ),
-    ]
-
-# View(ks_swd_master_dataframe_for_review)
-
-# label rows by origin
-ks_swd_master_dataframe_for_review$origin <- NA
-
-ks_swd_master_dataframe_for_review <-   # label s1s
-  within(ks_swd_master_dataframe_for_review, 
-         origin[KID %in% 
-                  ks_swd_s1_kids_for_master_review] <- "s1")
-
-ks_swd_master_dataframe_for_review <-   # label s2s
-  within(ks_swd_master_dataframe_for_review, 
-         origin[KID %in% 
-                  ks_swd_s2_kids_for_master_review] <- "s2")
-
-ks_swd_master_dataframe_for_review <-   # label manuals
-  within(ks_swd_master_dataframe_for_review, 
-         origin[KID %in% 
-                  ks_swd_man_kids_for_master_review] <- "man")
-
-# View(ks_swd_master_dataframe_for_review)
-
-# find duplicates by latitude and longitude 
-ks_swd_master_lat_long_dup_index <- 
-  duplicated(ks_swd_master_dataframe_for_review[c("LATITUDE","LONGITUDE")]) | 
-  duplicated(ks_swd_master_dataframe_for_review[c("LATITUDE","LONGITUDE")], 
-             fromLast = TRUE)
-ks_swd_master_lat_long_dup <- 
-  ks_swd_master_dataframe_for_review[ks_swd_master_lat_long_dup_index, ]
-
-# View(ks_swd_master_lat_long_dup)
-
-# pull lat/long dup rows with s2 or manual origins
-ks_swd_lat_long_dup_s2_man <- 
-  ks_swd_master_lat_long_dup[which(
-    ks_swd_master_lat_long_dup$origin %in% c("s2", "man")
-  ),]
-
-# pull lat/long dup rows with s1 origins
-ks_swd_lat_long_dup_s1 <- 
-  ks_swd_master_lat_long_dup[which(
-    ks_swd_master_lat_long_dup$origin == 's1'
-  ),]
-
-# make s2/man dataframe simpler, pulling bare minimum of columns
-ks_swd_lat_long_s2_man_simple <- 
-  ks_swd_lat_long_dup_s2_man[,c("KID", "LATITUDE", "LONGITUDE", "origin")]
-colnames(ks_swd_lat_long_s2_man_simple)[1] <- "KID_S2_MAN"
-
-# make s1 dataframe simpler, pulling bare minimum of columns
-ks_swd_lat_long_s1_simple <- 
-  ks_swd_lat_long_dup_s1[,c("KID", "LATITUDE", "LONGITUDE", "origin")]
-colnames(ks_swd_lat_long_s1_simple)[1] <- "KID_S1"
-
-# merge s1 and s2/man kids into one dataframe by lat/long
-lat_long_duplicates_of_weirdos_only <- 
-  merge(ks_swd_lat_long_s2_man_simple,
-        ks_swd_lat_long_s1_simple,
-        by = c("LATITUDE", "LONGITUDE"))
-
-# kids of rows to pull for duplicate evaluation
-kids_of_rows_to_pull_for_duplicate_evaluation <- 
-  c(lat_long_duplicates_of_weirdos_only$KID_S2_MAN, 
-    lat_long_duplicates_of_weirdos_only$KID_S1)
-
-# View(kids_of_rows_to_pull_for_duplicate_evaluation)
-
-# make dataframe of duplicates of s1 wells by s2/manual wells by lat/long
-weirdo_duplicate_rows <- 
-  ks_swd_master_dataframe_for_review[which(
-    ks_swd_master_dataframe_for_review$KID %in% 
-      kids_of_rows_to_pull_for_duplicate_evaluation
-  ),]
-
-
-# kid 1030570876 is swd but no api, 
-# where dup has api and more dates, API 15-009-07176
-
-
-# manual check of sole weird well
-# View(ks_working_with_block_groups[which(
-#   ks_working_with_block_groups$API_NUMBER_SIMPLE == "15-009-07176"
-# ),])
-
-# kids of wells to keep (drop 6 of them)
-kids_keep_lat_long <- 
-  weirdo_duplicate_rows$KID[which(weirdo_duplicate_rows$origin == 's1')]
-
-# kids of wells to drop (drop 6 of them)
-kids_drop_lat_long <- 
-  weirdo_duplicate_rows$KID[which(weirdo_duplicate_rows$origin != 's1')]
-
-# remove 6 duplicates!
-ks_swd_master_no_weirdo_dups <- 
-  ks_swd_master_dataframe_for_review[which(
-    ks_swd_master_dataframe_for_review$KID %notin% 
-      kids_drop_lat_long
-  ),]
-
-View(ks_swd_master_no_weirdo_dups)
-str(ks_swd_master_no_weirdo_dups$API_NUMBER_SIMPLE)
-
-# fix that one api
-ks_swd_master_no_weirdo_dups <-   # fix big one
-  within(ks_swd_master_no_weirdo_dups, 
-         API_NUMBER[KID == "1030570876"] <- "15-009-01716")
-ks_swd_master_no_weirdo_dups <-   # fix simple one
-  within(ks_swd_master_no_weirdo_dups, 
-         API_NUMBER_SIMPLE[KID == "1030570876"] <- "15-009-01716")
-
-ks_s2_man_remaining <- 
-  filter(ks_swd_master_no_weirdo_dups, 
-         origin == 's2' | origin == 'man')
-
-
-
-#### remove those without APIs ####
-ks_swd_master_with_api <- 
-  filter(ks_swd_master_no_weirdo_dups, 
-         !is.na(API_NUMBER))
-
-# View(ks_swd_master_with_api)  # count 14,865
-
-
-
-#### check full API duplicates, match to list ####
-# view rows with duplicated APIs
-ks_swd_master_api_dup_index <-   # make the index to get the rows
-  duplicated(ks_swd_master_with_api$API_NUMBER) | 
-  duplicated(ks_swd_master_with_api$API_NUMBER, 
-             fromLast = TRUE)
-
-ks_swd_api_full_dups <-   # pull the duplicated rows
-  ks_swd_master_api_dup_index[index,]
-save(ks_api_full_dups, 
-     file = "ks_api_full_dups.rdata")
-
-
-#### check simple API duplicates, now not deleting SWD wells ####
-
-
-
-
-#### check lat/long duplicates ####
-  
-
-
-
-
-
-
-#### NOTES FOR THE END: GIVE API TO KID!!! ####
-
-
-
-
-
-
-
-# join to manual assignment columns
-
-
-
-  
-
-  
-# then label s1/s2/manual
 
 
 
@@ -4102,6 +4482,81 @@ class_1_wells <-
 #      file = "ks_wells_no_API_by_status.rdata") # save table of counts
 # 
 
+
+
+
+
+
+#### informal comparisons of old and new methods of duplicate removal ####
+# table(ks_swd_final_better_dups$STATUS)
+# table(ks_working_with_block_groups$STATUS)
+#
+# View(ks_swd_final_better_dups)
+# 
+# nrow(ks_swd_final_better_dups)
+# 
+# View(ks_swd_full_for_map)
+# 
+# little_new_dataframe <- 
+#   ks_swd_final_better_dups[,c("KID","API_NUMBER_SIMPLE")]
+# 
+# little_old_dataframe <- 
+#   ks_swd_full_for_map[,c("KID","API_NUMBER_SIMPLE")]
+# 
+# kids_of_differences_1 <- 
+#   setdiff(little_new_dataframe$KID, 
+#           little_old_dataframe$KID)
+# 
+# kids_of_differences_2 <- 
+#   setdiff(little_old_dataframe$KID, 
+#         little_new_dataframe$KID)
+# 
+# differences <- c(kids_of_differences_1, kids_of_differences_2)
+# 
+# dataframe_of_difference <- 
+#   filter(ks_working_with_block_groups, 
+#          KID %in% differences)
+# 
+# View(dataframe_of_difference)
+# 
+# dataframe_of_difference$old_or_new <- NA
+# 
+# dataframe_of_difference <- 
+#   within(dataframe_of_difference, 
+#          old_or_new[KID %in% kids_of_differences_1] <- "new")
+# dataframe_of_difference <- 
+#   within(dataframe_of_difference, 
+#          old_or_new[KID %in% kids_of_differences_2] <- "old")
+# 
+# View(dataframe_of_difference)
+# 
+# write.csv(dataframe_of_difference, 
+#           file = "dataframe_of_difference.csv")
+# 
+# # the one in the old without a matching in the new is 
+# # KID 1002916703, API 15-073-20645
+# 
+# figure_out <- 
+#   ks_working_with_block_groups[which(
+#     ks_working_with_block_groups$API_NUMBER_SIMPLE == "15-073-20645"),]
+# 
+# View(ks_working_with_block_groups)
+# 
+# figure_out_lat <- 
+#   ks_working_with_block_groups[which(
+#     ks_working_with_block_groups$LATITUDE == 38.03855),]
+# 
+# View(figure_out_lat)
+# 
+# # pair of weird one is 1036244004, typo in API between them but same lat/long
+# 
+# View(ks_swd_full_for_map[which(
+#   ks_swd_full_for_map$KID %in% c("1036244004", "1002916703")),])
+# 
+# View(ks_swd_final_better_dups[which(
+#   ks_swd_final_better_dups$KID %in% c("1036244004", "1002916703", "1044234469")),])
+# 
+# table(ks_swd_final_better_dups$STATUS)
 
 
 
