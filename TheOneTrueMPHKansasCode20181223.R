@@ -61,6 +61,7 @@ my_wait <- function() {
 }
 
 
+
 # #### raw acs data import ####
 # 
 # variable_names <-
@@ -314,11 +315,12 @@ write.csv(horizontal_wells_for_map,
 write.csv(horizontal_wells_post_2010_exclusions, 
           file = "horizontal_wells_post_2010_exclusions.csv")
 
-#### HERE WE PORT THE HORIZONTAL WELL DATA TO ARCGIS FOR MAPPING FUN ####
+# HERE WE PORT THE HORIZONTAL WELL DATA TO ARCGIS FOR MAPPING FUN.  THE END.
 
 
 
 #### UIC data work ####
+
 # View(ks_uic_2018_09_04)
 
 uic_small <- 
@@ -471,9 +473,7 @@ write.csv(swd_fluid_totals_by_well,
 
 
 
-
-
-#### pull ACS data I need ####
+#### ACS DATA ####
 
 # make working acs
 working_acs <-
@@ -1175,7 +1175,8 @@ variables_of_interest <-
        ling_iso,
        housing_tenure)
 
-#### merge different subset data together ####
+
+# merge different subset data together
 
 # define merge function
 merge_dataframes <-
@@ -1210,17 +1211,8 @@ write.csv(acs_select_geo, file = "acs_select_geo.csv")
 acs_geo_cats <-
   acs_select_geo
 
-### making variables ####
-# making variables
-# from Silva:
-# median household income (dollars),
-# median household value (dollars),
-# percent of population identifying as White only,
-# population density (population per square mile),
-# percent of population with a high school education/GED or higher, and
-# population median age
-# from RMF:  age categories
 
+#### CONSTRUCT NECESSARY VARIABLES ####
 
 # total population
 acs_geo_cats$pop_tot_B01001_001 <-
@@ -1638,7 +1630,7 @@ write.csv(acs_geo_cats,
 
 
 
-# # #### well data ####
+# #### WELL DATA ####
 # 
 # # make well data file for cleaning
 # ks_clean <-
@@ -1830,7 +1822,9 @@ write.csv(acs_geo_cats,
 # load file to start from here
 load(file = "ks_working_with_block_groups.rdata")
 
-##### checking ambiguous wells for inclusion or exclusion #####
+
+
+#### checking ambiguous wells for inclusion or exclusion ####
 
 # # get counts by well status1 (main status)
 # ks_well_counts_by_status1 <- 
@@ -2369,7 +2363,6 @@ lat_long_duplicates_of_weirdos_only <-
 kids_of_rows_to_pull_for_duplicate_evaluation <- 
   c(lat_long_duplicates_of_weirdos_only$KID_S2_MAN, 
     lat_long_duplicates_of_weirdos_only$KID_S1)
-
 # View(kids_of_rows_to_pull_for_duplicate_evaluation)
 
 # make dataframe of duplicates of s1 wells by s2/manual wells by lat/long
@@ -2380,11 +2373,9 @@ weirdo_duplicate_rows <-
   ),]
 
 # View(weirdo_duplicate_rows)
-
 # kid 1030570876 is swd but no api, 
 # where dup has api and more dates, API 15-009-07176
-
-
+# 
 # manual check of sole weird well
 # View(ks_working_with_block_groups[which(
 #   ks_working_with_block_groups$API_NUMBER_SIMPLE == "15-009-07176"
@@ -2412,7 +2403,7 @@ ks_swd_master_no_weirdo_dups <-
 # View(ks_swd_master_no_weirdo_dups)
 str(ks_swd_master_no_weirdo_dups$API_NUMBER_SIMPLE)
 
-# fix that one api
+# fix that one api missing from its well
 ks_swd_master_no_weirdo_dups <-   # fix big one
   within(ks_swd_master_no_weirdo_dups, 
          API_NUMBER[KID == "1030570876"] <- "15-009-07176")
@@ -2425,8 +2416,7 @@ ks_swd_master_no_weirdo_dups <-   # fix simple one
 #          origin == 's2' | origin == 'man')
 
 
-
-#### remove those without APIs ####
+#### remove wells without APIs ####
 ks_swd_master_with_api <- 
   filter(ks_swd_master_no_weirdo_dups, 
          !is.na(API_NUMBER))
@@ -2454,8 +2444,8 @@ save(ks_swd_api_full_dups,
 
 
 #### check simple API duplicates, now not deleting SWD wells ####
-# keep last modified
 
+# keep last modified
 ks_swd_api_full_dups <-   # order by modification date
   ks_swd_api_full_dups[order(ks_swd_api_full_dups$modified_as_date),]
 # View(ks_swd_api_full_dups)
@@ -2469,7 +2459,8 @@ ks_swd_full_api_drop_index <-
 ks_swd_full_api_drop_wells <-    
   ks_swd_api_full_dups[ks_swd_full_api_drop_index, ]
 
-kids_full_api_drops <-   # makes list of just the kids
+# makes list of just the kids
+kids_full_api_drops <-   
   ks_swd_full_api_drop_wells$KID
 
 # make a drop dup column
@@ -2486,35 +2477,34 @@ ks_swd_master_with_api <-
   within(ks_swd_master_with_api, 
          drop_dup[KID %in% kids_full_api_drops] <- 
            'drop_dup_full_api')
-
 # View(ks_swd_master_with_api[which(!is.na(ks_swd_master_with_api$drop_dup)),])
 
-ks_swd_master_for_small_api <- 
+# make dataframe without full api duplicates
+ks_swd_master_for_small_api <-   
   filter(ks_swd_master_with_api, 
          is.na(drop_dup) |
            drop_dup != "drop_dup_full_api")
-
-nrow(ks_swd_master_with_api)
-nrow(ks_swd_master_for_small_api)
+# nrow(ks_swd_master_with_api)
+# nrow(ks_swd_master_for_small_api)
 
 
 
 #### DROP PARTIAL API DUPLICATES HERE #### 
-
 # view rows with duplicated APIs
 ks_swd_master_small_dup_index <-   # make the index to get the rows
   duplicated(ks_swd_master_for_small_api$API_NUMBER_SIMPLE) | 
   duplicated(ks_swd_master_for_small_api$API_NUMBER_SIMPLE, 
              fromLast = TRUE)
 
-ks_swd_api_small_dups <-   # pull the duplicated rows
+# make dataframe of duplicated rows
+ks_swd_api_small_dups <-   
   ks_swd_master_for_small_api[ks_swd_master_small_dup_index,]
 save(ks_swd_api_small_dups, 
      file = "ks_swd_api_small_dups.rdata")
-
 # View(ks_swd_api_small_dups) # count of 2,218, 2 s2, 2,216 s1s
 
-ks_swd_api_small_dups <-   # order by full api number
+# order dataframe by full api number (latest last)
+ks_swd_api_small_dups <-   
   ks_swd_api_small_dups[order(ks_swd_api_small_dups$API_NUMBER),]
 # View(ks_swd_master_for_small_api)
 
@@ -2527,7 +2517,8 @@ ks_swd_api_small_drop_index <-
 ks_swd_api_small_drops <-    
   ks_swd_api_small_dups[ks_swd_api_small_drop_index, ]
 
-kids_api_small_drops <-   # makes list of just the kids
+# makes list of just the kids
+kids_api_small_drops <-   
   ks_swd_api_small_drops$KID
 
 # flag all full api dups
@@ -2543,7 +2534,6 @@ ks_swd_master_with_api <-
          drop_dup[KID %in% kids_api_small_drops] <- 
            'drop_dup_small_api')
 length(kids_api_small_drops) # 1152
-
 # View(ks_swd_master_with_api[which(!is.na(ks_swd_master_with_api$drop_dup)),])
 
 # drop full and small duplicates
@@ -2553,7 +2543,9 @@ ks_swd_master_dropped_all_apis <-
            drop_dup == "keep_dup_full_api" | 
            drop_dup == "keep_dup_small_api")
 
-table(ks_swd_master_with_api$drop_dup, ks_swd_master_with_api$origin)
+# table(ks_swd_master_with_api$drop_dup, ks_swd_master_with_api$origin)
+
+
 
 #### deal with lat/longs!  nearly done! ####
 # find duplicates by latitude and longitude 
@@ -2562,16 +2554,17 @@ ks_swd_last_lat_long_dup_index <-
   duplicated(ks_swd_master_dropped_all_apis[c("LATITUDE","LONGITUDE")], 
              fromLast = TRUE)
 
-ks_swd_last_lat_long_dups <-   # make dataframe of the duplicates
+# make dataframe of the duplicates
+ks_swd_last_lat_long_dups <-   
   ks_swd_master_dropped_all_apis[ks_swd_last_lat_long_dup_index, ]
 
 View(ks_swd_last_lat_long_dups)
 
-ks_swd_last_lat_long_dups <-   # order by modification date
+# order by modification date
+ks_swd_last_lat_long_dups <-   
   ks_swd_last_lat_long_dups[order(ks_swd_last_lat_long_dups$modified_as_date),]
 # View(ks_swd_last_lat_long_dups)
-
-table(ks_swd_last_lat_long_dups$origin)
+# table(ks_swd_last_lat_long_dups$origin)
 
 # marks all but latest lat/long for each well as TRUE
 ks_swd_last_lat_long_drop_index <-    
@@ -2583,7 +2576,8 @@ ks_swd_last_lat_long_drops <-
   ks_swd_last_lat_long_dups[ks_swd_last_lat_long_drop_index, ]
 nrow(ks_swd_last_lat_long_drops)
 
-kids_last_lat_long_drops <-   # makes list of just the kids
+# makes list of just the kids
+kids_last_lat_long_drops <-   
   ks_swd_last_lat_long_drops$KID
 
 # flag all lat-long dups
@@ -2604,19 +2598,21 @@ ks_swd_master_with_api <-
 
 # View(ks_swd_master_with_api[which(!is.na(ks_swd_master_with_api$drop_dup)),])
 
-ks_swd_without_any_dups <-   # make final dataset of wells
+# make final dataset of wells
+ks_swd_without_any_dups <-   
   filter(ks_swd_master_with_api, 
          is.na(drop_dup) |
            drop_dup %in% c("keep_dup_full_api", 
                            "keep_dup_small_api", 
                            "keep_dup_lat_long"))
+# View(ks_swd_without_any_dups)
 
-# # save and load chunk
-# # View(ks_swd_without_any_dups)
-# save(ks_swd_without_any_dups, 
-#      file = "ks_swd_without_any_dups.rdata")
-# write.csv(ks_swd_without_any_dups, 
-#           file = "ks_swd_without_any_dups.csv")
+# save and load chunk
+
+save(ks_swd_without_any_dups,
+     file = "ks_swd_without_any_dups.rdata")
+write.csv(ks_swd_without_any_dups,
+          file = "ks_swd_without_any_dups.csv")
 
 load(file = "ks_swd_without_any_dups.rdata")
 
