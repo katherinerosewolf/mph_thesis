@@ -36,8 +36,11 @@ library(spatstat)
 library(spdep)
 library(dplyr)
 library(tidyr)
-
-
+library(car)
+library(bestglm)
+library(safeBinaryRegression)
+library(scales)
+library(ResourceSelection)
 
 #### load fonts ####
 # font_import()
@@ -54,7 +57,6 @@ options(scipen = 999)
 # notin function
 `%notin%`  <-  function(x,y) !(x %in% y) # define "not-in" function
 
-# function to force R to stop
 my_wait <- function() {
   tt <- tktoplevel()
   tkpack(tkbutton(
@@ -66,6 +68,92 @@ my_wait <- function() {
   tkbind(tt, '<Key>', 
          function()tkdestroy(tt))
   tkwait.window(tt)
+}
+
+# function to plot the logit of the estimated probabilities of y from x
+logitloess <- function(x, y, t, nm, dat, s) {
+  
+  logit <- function(pr) {
+    log(pr/(1-pr))
+  }
+  
+  if (missing(s)) {
+    locspan <- 0.7
+  } else {
+    locspan <- s
+  }
+  
+  if (missing(dat)) {
+    thingie <- ks_analyze
+  } else {
+    thingie <- dat
+  }
+  
+  loessfit <- predict(loess(y~x,span=locspan), se = TRUE)
+
+  hey <- pmax(pmin(loessfit$fit,0.9999),0.0001)
+  
+  logitfitted <- logit(hey)
+  
+  ggplot(thingie, aes(x,logitfitted)) + 
+    geom_point(size = 0.8, alpha = 0.5, col = "slateblue1", shape = 18) + 
+    theme_bw() + 
+    theme(text = element_text(family = "Times New Roman")) + 
+    xlab(nm) + 
+    ggtitle(t) + 
+    theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
+    ylab("Logit") + 
+    scale_y_continuous(labels = comma) + 
+    scale_x_continuous(labels = comma)
+}
+
+
+ks_analyze$earnings_median_B20002_001[which(!is.na(ks_analyze$earnings_median_B20002_001))]
+
+# Multiple plot function
+#
+# ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
+# - cols:   Number of columns in layout
+# - layout: A matrix specifying the layout. If present, 'cols' is ignored.
+#
+# If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
+# then plot 1 will go in the upper left, 2 will go in the upper right, and
+# 3 will go all the way across the bottom.
+#
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+  
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+  
+  numPlots = length(plots)
+  
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+  
+  if (numPlots==1) {
+    print(plots[[1]])
+    
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
 }
 
 
@@ -1278,7 +1366,7 @@ write.csv(acs_select_geo, file = "acs_select_geo.csv")
 acs_geo_cats <-
   acs_select_geo
 
-
+  
 
 #### CONSTRUCT NECESSARY VARIABLES ####
 
@@ -1302,6 +1390,34 @@ acs_geo_cats$pop_dense_B01001_001_ALAND <-
 # median household income
 acs_geo_cats$income_house_median_B19013_001 <-
   acs_geo_cats$B19013_001
+
+# ice
+# 2017 US Census historical income tables
+income_house_2017_bottom_fifth_maximum <- 
+  24638
+income_house_2017_second_fifth_maximum <- 
+  47110
+income_house_2017_third_fifth_maximum <- 
+  77552
+income_house_2017_fourth_fifth_maximum <- 
+  126855
+
+acs_geo_cats$income_house_2017_bottom_quintile_24638 <- 
+  acs_geo_cats$B19001_002 +   # estimated as through $24999
+  acs_geo_cats$B19001_003 +
+  acs_geo_cats$B19001_004 +
+  acs_geo_cats$B19001_005
+acs_geo_cats$income_house_2017_top_quintile_126855 <- 
+  acs_geo_cats$B19001_015 +   # estimated as $125,000
+  acs_geo_cats$B19001_016 +
+  acs_geo_cats$B19001_017 
+acs_geo_cats$income_house_total_count_B19001_001 <-
+  acs_geo_cats$B19001_001
+
+acs_geo_cats$ice_B19001 <- 
+  (acs_geo_cats$income_house_2017_top_quintile_126855 - 
+     acs_geo_cats$income_house_2017_bottom_quintile_24638) /
+  acs_geo_cats$income_house_total_count_B19001_001
 
 # median age
 acs_geo_cats$age_median_B01002_001 <-
@@ -2351,7 +2467,9 @@ ks_swd_master_for_small_api <-
 # nrow(ks_swd_master_with_api)
 # nrow(ks_swd_master_for_small_api)
 
-
+View(ks_swd_master_with_api)
+View(ks_swd_master_with_api %>% filter(drop_dup == "drop_dup_full_api"))
+table(ks_swd_master_with_api$drop_dup, ks_swd_master_with_api$STATUS)
 
 #### DROP PARTIAL API DUPLICATES HERE ####
 # view rows with duplicated APIs
@@ -2784,6 +2902,16 @@ sum(ks_swd_working$all_from_2010)
 sum(ks_swd_working$extant_from_2010)
 
 
+View(ks_swd_working)
+
+ks_excludeds_abandoned <-
+  ks_swd_working %>% 
+  filter(ks_swd_working$activity %in% c('midway', 'ab_loc'))
+
+View(ks_excludeds_abandoned)
+
+table(ks_excludeds_abandoned$STATUS2)
+
 
 #### BEGIN BLOCK GROUP COUNTS ####
 
@@ -3074,7 +3202,8 @@ lime_fluid_swd_horiz_acs_analysis <-
     "ALAND_KM",
     "AWATER_KM",
     "pop_tot_B01001_001",
-    "pop_dense_B01001_001_ALAND",
+    "pop_dense_B01001_001_ALAND", 
+    "female_percent_B01001_026_001", 
     "age_0_to_17_percent_B01001",
     "age_65_plus_percent_B01001",
     "white_non_hisp_lat_percent_B03002_003_001",
@@ -3088,7 +3217,8 @@ lime_fluid_swd_horiz_acs_analysis <-
     "house_value_median_B25077_001",
     "no_health_insurance_percent_B27010_017_033_050_066",
     "poverty_below_100_percent_C17002_002_003_001",
-    "unemployed_percent_B23025_005_003"
+    "unemployed_percent_B23025_005_003", 
+    "ice_B19001"
     )]
 # View(lime_fluid_swd_horiz_acs_analysis)
 
@@ -3188,47 +3318,52 @@ write.csv(missing_value_totals,
 correlation_matrix_data  <-  
   ks_analysis_populated[,c(
     "GEOID",
-    "ALAND_KM", 
-    "AWATER_KM",
     "pop_tot_B01001_001",
     "pop_dense_B01001_001_ALAND", 
+    "female_percent_B01001_026_001",
     "age_0_to_17_percent_B01001", 
     "age_65_plus_percent_B01001", 
-    "white_non_hisp_lat_percent_B03002_003_001", 
+    "aian_percent_any_race_B02010_001", 
     "hisp_lat_percent_B03002_012_001", 
-    "aian_percent_any_race_B02010_001",
+    "white_non_hisp_lat_percent_B03002_003_001", 
     "education_high_school_plus_percent_B15003_017_to_025",
-    "renter_occupy_percent_B25003_003_001", 
     "limited_english_percent_C16002_004_007_010_013_001", 
+    "no_health_insurance_percent_B27010_017_033_050_066",
+    "renter_occupy_percent_B25003_003_001", 
+    "unemployed_percent_B23025_005_003", 
+    "poverty_below_100_percent_C17002_002_003_001", 
     "earnings_median_B20002_001", 
     "income_house_median_B19013_001", 
     "house_value_median_B25077_001", 
-    "no_health_insurance_percent_B27010_017_033_050_066", 
-    "poverty_below_100_percent_C17002_002_003_001", 
-    "unemployed_percent_B23025_005_003", 
+    "ice_B19001",
+    "ALAND_KM", 
+    "AWATER_KM",
     "shale_presence", 
     "horizontal_count")]
 
+
 # fix names to make them prettier on the heatmap
-colnames(correlation_matrix_data) <- c("GEOID", 
-                                       "Land area", 
-                                       "Water area", 
+colnames(correlation_matrix_data) <- c("GEOID",
                                        "Total population", 
                                        "Population density", 
+                                       "Female",
                                        "Age < 18", 
                                        "Age > 64", 
-                                       "White alone", 
-                                       "Hispanic or Latinx",
                                        "Native American", 
+                                       "Hispanic or Latinx", 
+                                       "White alone", 
                                        "High school education", 
-                                       "Renter-occupied households", 
                                        "Limited-English households", 
+                                       "No health insurance coverage", 
+                                       "Renter-occupied households", 
+                                       "Unemployment",   
+                                       "Poverty", 
                                        "Individual earnings", 
                                        "Household income", 
-                                       "Household value", 
-                                       "No health insurance coverage", 
-                                       "Poverty", 
-                                       "Unemployment", 
+                                       "Home value", 
+                                       "Income concentration at the extremes",
+                                       "Land area", 
+                                       "Water area", 
                                        "Mississippian Lime Play", 
                                        "Horizontal well count")
 
@@ -3239,7 +3374,8 @@ correlation_matrix_data <-
                             "Mississippian Lime Play", 
                             "Water area",
                             "Land area", 
-                            "Household value", 
+                            "Income concentration at the extremes",
+                            "Home value", 
                             "Household income", 
                             "Individual earnings", 
                             "Poverty", 
@@ -3247,12 +3383,13 @@ correlation_matrix_data <-
                             "Renter-occupied households", 
                             "No health insurance coverage", 
                             "Limited-English households", 
-                            "High school education", 
-                            "Age > 64", 
-                            "Age < 18", 
+                            "High school education",
                             "White alone", 
                             "Hispanic or Latinx", 
                             "Native American",
+                            "Age > 64", 
+                            "Age < 18", 
+                            "Female",
                             "Population density",
                             "Total population")]
 
@@ -3282,7 +3419,7 @@ correlation_matrix_data_complete <-
 # create the correlation matrix with all observations
 # rounds to 2 decimal places
 correlation_matrix  <-  
-  round(cor(correlation_matrix_data[,2:21], 
+  round(cor(correlation_matrix_data[,2:23], 
             method = "spearman", 
             use = "pairwise.complete.obs"), 
         2) 
@@ -3295,7 +3432,7 @@ write.csv(correlation_matrix, file = "correlation_matrix.csv")
 
 # count observations going into the correlation matrix
 counts_pairwise_correlations  <-  
-  count.pairwise(correlation_matrix_data_complete[,2:21], 
+  count.pairwise(correlation_matrix_data_complete[,2:23], 
                  y = NULL, 
                  diagonal=TRUE)
 
@@ -3469,2137 +3606,2355 @@ length(ks_analyze$horizontal_count[   # n = 486
 
 
 
-
-
-
-
 #### check normality by variable via qq and density plots ####
 
-# horizontal wells
-density_horizontal <-
-  density(ks_analyze$horizontal_count)
-density_horizontal_no_wells <- 
-  density(ks_analyze$horizontal_count[
-    which(ks_analyze$extant_swd_binary == 0
-    )])
-density_horizontal_with_wells <- 
-  density(ks_analyze$horizontal_count[
-    which(ks_analyze$extant_swd_binary == 1
-    )])
-# set up printing output
-par(mar=c(.5,.5,.5,.5))
-layout(matrix(c(1,1,1,
-                2,2,2,
-                4,5,6,
-                3,3,3,
-                7,8,9), 
-              ncol=3, 
-       byrow=TRUE), heights = c(.4,.4,3,.4,3))
-layout.show(n=9)
-plot.new()
-par(mar=c(0,1,0,1))
-text(0.5,0.5, "Horizontal Wells", 
-     cex=2.5, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Density Plots", 
-     cex=2, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Quantile-Quantile Plots", 
-     cex=2, 
-     family = "Times New Roman")
+# # ice
+# density_ice <-
+#   density(ks_analyze$ice_B19001)
+# density_ice_no_wells <- 
+#   density(ks_analyze$ice_B19001[
+#     which(ks_analyze$extant_swd_binary == 0
+#     )])
+# density_ice_with_wells <- 
+#   density(ks_analyze$ice_B19001[
+#     which(ks_analyze$extant_swd_binary == 1
+#     )])
+# # set up printing output
+# par(mar=c(.5,.5,.5,.5))
+# layout(matrix(c(1,1,1,
+#                 2,2,2,
+#                 4,5,6,
+#                 3,3,3,
+#                 7,8,9), 
+#               ncol=3, 
+#               byrow=TRUE), heights = c(.4,.4,3,.4,3))
+# # layout.show(n=9)
+# plot.new()
+# par(mar=c(0,1,0,1))
+# text(0.5,0.5, "Income Concentration at the Extremes", 
+#      cex=2.5, 
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5, 
+#      "Density Plots", 
+#      cex=2, 
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5, 
+#      "Quantile-Quantile Plots", 
+#      cex=2, 
+#      family = "Times New Roman")
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_ice, 
+#      family = "Times New Roman", 
+#      xlab = "Income concentration at the extremes", 
+#      main = "All Block Groups", 
+#      col = "orchid1")
+# par(mar=c(5,5,3,1))
+# plot(density_ice_no_wells,
+#      family = "Times New Roman", 
+#      xlab = "Income concentration at the extremes",
+#      main = "Block Groups with No Disposal Wells", 
+#      col = "slateblue1")
+# par(mar=c(5,5,3,1))
+# plot(density_ice_with_wells, 
+#      family = "Times New Roman", 
+#      xlab = "Income concentration at the extremes", 
+#      main = "Block Groups with Disposal Wells", 
+#      col = "springgreen1")
+# # polygon(density_ice, col="slateblue1", border="black")
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$ice_B19001, 
+#        col = 'orchid1', 
+#        pch = 18, 
+#        cex = 1,
+#        main = "All Block Groups", 
+#        family = "Times New Roman")
+# qqline(ks_analyze$ice_B19001[
+#   which(ks_analyze$extant_swd_binary == 0)], 
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$ice_B19001[
+#   which(ks_analyze$extant_swd_binary == 0)], 
+#   col = 'slateblue1', 
+#   pch = 18, 
+#   cex = 1,
+#   main = "Block Groups with No Disposal Wells", 
+#   family = "Times New Roman")
+# qqline(ks_analyze$ice_B19001[
+#   which(ks_analyze$extant_swd_binary == 0)], 
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$ice_B19001[
+#   which(ks_analyze$extant_swd_binary == 1)], 
+#   col = 'springgreen1', 
+#   pch = 18, 
+#   cex = 1,
+#   main = "Block Groups with Disposal Wells", 
+#   family = "Times New Roman")
+# qqline(ks_analyze$ice_B19001[
+#   which(ks_analyze$extant_swd_binary == 1)], 
+#   lwd=2)
+# 
+# 
+# 
+# 
+# # horizontal wells
+# density_horizontal <-
+#   density(ks_analyze$horizontal_count)
+# density_horizontal_no_wells <- 
+#   density(ks_analyze$horizontal_count[
+#     which(ks_analyze$extant_swd_binary == 0
+#     )])
+# density_horizontal_with_wells <- 
+#   density(ks_analyze$horizontal_count[
+#     which(ks_analyze$extant_swd_binary == 1
+#     )])
+# # set up printing output
+# par(mar=c(.5,.5,.5,.5))
+# layout(matrix(c(1,1,1,
+#                 2,2,2,
+#                 4,5,6,
+#                 3,3,3,
+#                 7,8,9), 
+#               ncol=3, 
+#        byrow=TRUE), heights = c(.4,.4,3,.4,3))
+# # layout.show(n=9)
+# plot.new()
+# par(mar=c(0,1,0,1))
+# text(0.5,0.5, "Horizontal Wells", 
+#      cex=2.5, 
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5, 
+#      "Density Plots", 
+#      cex=2, 
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5, 
+#      "Quantile-Quantile Plots", 
+#      cex=2, 
+#      family = "Times New Roman")
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_horizontal, 
+#      family = "Times New Roman", 
+#      xlab = "Horizontal well count", 
+#      main = "All Block Groups", 
+#      col = "orchid1")
+# par(mar=c(5,5,3,1))
+# plot(density_horizontal_no_wells,
+#      family = "Times New Roman", 
+#      xlab = "Horizontal well count",
+#      main = "Block Groups with No Disposal Wells", 
+#      col = "slateblue1")
+# par(mar=c(5,5,3,1))
+# plot(density_horizontal_with_wells, 
+#      family = "Times New Roman", 
+#      xlab = "Horizontal well count", 
+#      main = "Block Groups with Disposal Wells", 
+#      col = "springgreen1")
+# # polygon(density_horizontal, col="slateblue1", border="black")
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$horizontal_count, 
+#   col = 'orchid1', 
+#   pch = 18, 
+#   cex = 1,
+#   main = "All Block Groups", 
+#   family = "Times New Roman")
+# qqline(ks_analyze$horizontal_count[
+#   which(ks_analyze$extant_swd_binary == 0)], 
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$horizontal_count[
+#   which(ks_analyze$extant_swd_binary == 0)], 
+#        col = 'slateblue1', 
+#        pch = 18, 
+#        cex = 1,
+#        main = "Block Groups with No Disposal Wells", 
+#   family = "Times New Roman")
+# qqline(ks_analyze$horizontal_count[
+#   which(ks_analyze$extant_swd_binary == 0)], 
+#        lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$horizontal_count[
+#   which(ks_analyze$extant_swd_binary == 1)], 
+#   col = 'springgreen1', 
+#   pch = 18, 
+#   cex = 1,
+#   main = "Block Groups with Disposal Wells", 
+#   family = "Times New Roman")
+# qqline(ks_analyze$horizontal_count[
+#   which(ks_analyze$extant_swd_binary == 1)], 
+#   lwd=2)
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# # total population
+# 
+# density_population <-
+#   density(ks_analyze$pop_tot_B01001_001)
+# density_population_no_wells <-
+#   density(ks_analyze$pop_tot_B01001_001[
+#     which(ks_analyze$extant_swd_binary == 0
+#     )])
+# density_population_with_wells <-
+#   density(ks_analyze$pop_tot_B01001_001[
+#     which(ks_analyze$extant_swd_binary == 1
+#     )])
+# 
+# # set up printing output
+# par(mar=c(.5,.5,.5,.5))
+# layout(matrix(c(1,1,1,
+#                 2,2,2,
+#                 4,5,6,
+#                 3,3,3,
+#                 7,8,9),
+#               ncol=3,
+#               byrow=TRUE), heights = c(.4,.4,3,.4,3))
+# # layout.show(n=9)
+# plot.new()
+# par(mar=c(0,1,0,1))
+# text(0.5,0.5, "Total Population",
+#      cex=2.5,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Density Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Quantile-Quantile Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_population,
+#      main = "All Block Groups",
+#      family = "Times New Roman",
+#      xlab = "Population",
+#      col = "orchid1", xaxt='n')
+# axis(side=1, at=axTicks(1),
+#      labels=formatC(axTicks(1), format="d", big.mark=','),
+#      family = "Times New Roman")
+# par(mar=c(5,5,3,1))
+# plot(density_population_no_wells,
+#      main = "Block Groups with No Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = "Population",
+#      col = "slateblue1", xaxt='n')
+# axis(side=1, at=axTicks(1),
+#      labels=formatC(axTicks(1), format="d", big.mark=','),
+#      family = "Times New Roman")
+# par(mar=c(5,5,3,1))
+# plot(density_population_with_wells,
+#      main = "Block Groups with Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = "Population",
+#      col = "springgreen1", xaxt='n')
+# axis(side=1, at=axTicks(1),
+#      labels=formatC(axTicks(1), format="d", big.mark=','),
+#      family = "Times New Roman")
+# # polygon(density_population, col="slateblue1", border="black")
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$pop_tot_B01001_001,
+#        col = "orchid1",
+#        pch = 18,
+#        cex = 1,
+#        main = "All Block Groups",
+#        family = "Times New Roman",
+#        yaxt='n')
+# axis(side=2, at=axTicks(2),
+#      labels=formatC(axTicks(2), format="d", big.mark=','),
+#      family = "Times New Roman")
+# qqline(ks_analyze$pop_tot_B01001_001[
+#   which(ks_analyze$extant_swd_binary == 0)],
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$pop_tot_B01001_001[
+#   which(ks_analyze$extant_swd_binary == 0)],
+#   col = 'slateblue1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with No Disposal Wells",
+#   family = "Times New Roman", yaxt='n')
+# axis(side=2, at=axTicks(2),
+#      labels=formatC(axTicks(2),
+#                     format="d", big.mark=','),  family = "Times New Roman")
+# qqline(ks_analyze$pop_tot_B01001_001[
+#   which(ks_analyze$extant_swd_binary == 0)],
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$pop_tot_B01001_001[
+#   which(ks_analyze$extant_swd_binary == 1)],
+#   col = 'springgreen1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with Disposal Wells",
+#   family = "Times New Roman",
+#   yaxt='n')
+# axis(side=2, at=axTicks(2),
+#      labels=formatC(axTicks(2),
+#                     format="d", big.mark=','),  family = "Times New Roman")
+# qqline(ks_analyze$pop_tot_B01001_001[
+#   which(ks_analyze$extant_swd_binary == 1)],
+#   lwd=2)
+# 
+# 
+# 
+# # population density
+# 
+# density_pop_dense <-
+#   density(ks_analyze$pop_dense_B01001_001_ALAND)
+# density_pop_dense_no_wells <-
+#   density(ks_analyze$pop_dense_B01001_001_ALAND[
+#     which(ks_analyze$extant_swd_binary == 0
+#     )])
+# density_pop_dense_with_wells <-
+#   density(ks_analyze$pop_dense_B01001_001_ALAND[
+#     which(ks_analyze$extant_swd_binary == 1
+#     )])
+# 
+# # set up printing output
+# par(mar=c(.5,.5,.5,.5))
+# layout(matrix(c(1,1,1,
+#                 2,2,2,
+#                 4,5,6,
+#                 3,3,3,
+#                 7,8,9),
+#               ncol=3,
+#               byrow=TRUE), heights = c(.4,.4,3,.4,3))
+# # layout.show(n=9)
+# plot.new()
+# par(mar=c(0,1,0,1))
+# text(0.5,0.5, "Population Density",
+#      cex=2.5,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Density Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Quantile-Quantile Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_pop_dense,
+#      main = "All Block Groups",
+#      family = "Times New Roman",
+#      xlab = expression(paste("Population/km"^"2")),
+#      col = "orchid1", xaxt='n')
+# axis(side=1, at=axTicks(1),
+#      labels=formatC(axTicks(1), format="d", big.mark=','), family = "Times New Roman")
+# par(mar=c(5,5,3,1))
+# plot(density_pop_dense_no_wells,
+#      main = "Block Groups with No Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = expression(paste("Population/km"^"2")),
+#      col = "slateblue1", xaxt='n')
+# axis(side=1, at=axTicks(1),
+#      labels=formatC(axTicks(1), format="d", big.mark=','), family = "Times New Roman")
+# par(mar=c(5,5,3,1))
+# plot(density_pop_dense_with_wells,
+#      main = "Block Groups with Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = expression(paste("Population/km"^"2")),
+#      col = "springgreen1", xaxt='n')
+# axis(side=1, at=axTicks(1),
+#      labels=formatC(axTicks(1), format="d", big.mark=','), family = "Times New Roman")
+# # polygon(density_pop_dense, col="slateblue1", border="black")
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$pop_dense_B01001_001_ALAND,
+#        col = 'orchid1',
+#        pch = 18,
+#        cex = 1,
+#        main = "All Block Groups", family = "Times New Roman", xaxt='n')
+# axis(side=1, at=axTicks(1),
+#      labels=formatC(axTicks(1), format="d", big.mark=','), family = "Times New Roman")
+# qqline(ks_analyze$pop_dense_B01001_001_ALAND[
+#   which(ks_analyze$extant_swd_binary == 0)],
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$pop_dense_B01001_001_ALAND[
+#   which(ks_analyze$extant_swd_binary == 0)],
+#   col = 'slateblue1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with No Disposal Wells", family = "Times New Roman", xaxt='n')
+# axis(side=1, at=axTicks(1),
+#      labels=formatC(axTicks(1), format="d", big.mark=','), family = "Times New Roman")
+# qqline(ks_analyze$pop_dense_B01001_001_ALAND[
+#   which(ks_analyze$extant_swd_binary == 0)],
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$pop_dense_B01001_001_ALAND[
+#   which(ks_analyze$extant_swd_binary == 1)],
+#   col = 'springgreen1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with Disposal Wells", family = "Times New Roman", xaxt='n')
+# axis(side=1, at=axTicks(1),
+#      labels=formatC(axTicks(1), format="d", big.mark=','), family = "Times New Roman")
+# qqline(ks_analyze$pop_dense_B01001_001_ALAND[
+#   which(ks_analyze$extant_swd_binary == 1)],
+#   lwd=2)
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# # female
+# 
+# density_female <-
+#   density(ks_analyze$female_percent_B01001_026_001*100)
+# density_female_no_wells <-
+#   density(ks_analyze$female_percent_B01001_026_001[
+#     which(ks_analyze$extant_swd_binary == 0
+#     )]*100)
+# density_female_with_wells <-
+#   density(ks_analyze$female_percent_B01001_026_001[
+#     which(ks_analyze$extant_swd_binary == 1
+#     )]*100)
+# 
+# # set up printing output
+# par(mar=c(.5,.5,.5,.5))
+# layout(matrix(c(1,1,1,
+#                 2,2,2,
+#                 4,5,6,
+#                 3,3,3,
+#                 7,8,9),
+#               ncol=3,
+#               byrow=TRUE), heights = c(.4,.4,3,.4,3))
+# # layout.show(n=9)
+# plot.new()
+# par(mar=c(0,1,0,1))
+# text(0.5,0.5, "Female",
+#      cex=2.5,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Density Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Quantile-Quantile Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_female,
+#      main = "All Block Groups",
+#      family = "Times New Roman",
+#      xlab = "Female (%)",
+#      col = "orchid1", xaxt='n')
+# axis(side=1, at=axTicks(1),
+#      labels=formatC(axTicks(1), format="d", big.mark=','),
+#      family = "Times New Roman")
+# par(mar=c(5,5,3,1))
+# plot(density_female_no_wells,
+#      main = "Block Groups with No Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = "Female (%)",
+#      col = "slateblue1", xaxt='n')
+# axis(side=1, at=axTicks(1),
+#      labels=formatC(axTicks(1), format="d", big.mark=','),
+#      family = "Times New Roman")
+# par(mar=c(5,5,3,1))
+# plot(density_female_with_wells,
+#      main = "Block Groups with Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = "Female (%)",
+#      col = "springgreen1", xaxt='n')
+# axis(side=1, at=axTicks(1),
+#      labels=formatC(axTicks(1), format="d", big.mark=','),
+#      family = "Times New Roman")
+# # polygon(density_population, col="slateblue1", border="black")
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$female_percent_B01001_026_001*100,
+#        col = "orchid1",
+#        pch = 18,
+#        cex = 1,
+#        main = "All Block Groups",
+#        family = "Times New Roman",
+#        yaxt='n')
+# axis(side=2, at=axTicks(2),
+#      labels=formatC(axTicks(2), format="d", big.mark=','),
+#      family = "Times New Roman")
+# qqline(ks_analyze$female_percent_B01001_026_001[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$female_percent_B01001_026_001[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   col = 'slateblue1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with No Disposal Wells",
+#   family = "Times New Roman", yaxt='n')
+# axis(side=2, at=axTicks(2),
+#      labels=formatC(axTicks(2),
+#                     format="d", big.mark=','),  family = "Times New Roman")
+# qqline(ks_analyze$female_percent_B01001_026_001[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$female_percent_B01001_026_001[
+#   which(ks_analyze$extant_swd_binary == 1)]*100,
+#   col = 'springgreen1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with Disposal Wells",
+#   family = "Times New Roman",
+#   yaxt='n')
+# axis(side=2, at=axTicks(2),
+#      labels=formatC(axTicks(2),
+#                     format="d", big.mark=','),  family = "Times New Roman")
+# qqline(ks_analyze$female_percent_B01001_026_001[
+#   which(ks_analyze$extant_swd_binary == 1)]*100,
+#   lwd=2)
+# 
+# 
+# 
+# 
+# # age 0 to 17
+# 
+# # set up printing output
+# par(mar=c(.5,.5,.5,.5))
+# layout(matrix(c(1,1,1,
+#                 2,2,2,
+#                 4,5,6,
+#                 3,3,3,
+#                 7,8,9),
+#               ncol=3,
+#               byrow=TRUE), heights = c(.4,.4,3,.4,3))
+# # layout.show(n=9)
+# plot.new()
+# par(mar=c(0,1,0,1))
+# text(0.5,0.5, "Age < 18",
+#      cex=2.5,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Density Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Quantile-Quantile Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# 
+# density_age_0_to_17 <-
+#   density(ks_analyze$age_0_to_17_percent_B01001*100)
+# density_age_0_to_17_no_wells <-
+#   density(ks_analyze$age_0_to_17_percent_B01001[
+#     which(ks_analyze$extant_swd_binary == 0
+#     )]*100)
+# density_age_0_to_17_with_wells <-
+#   density(ks_analyze$age_0_to_17_percent_B01001[
+#     which(ks_analyze$extant_swd_binary == 1
+#     )]*100)
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_age_0_to_17,
+#      main = "All Block Groups",
+#      family = "Times New Roman",
+#      xlab = "% age < 18",
+#      col = 'orchid1')
+# par(mar=c(5,5,3,1))
+# plot(density_age_0_to_17_no_wells,
+#      main = "Block Groups with No Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = "% age < 18",
+#      col = 'slateblue1')
+# par(mar=c(5,5,3,1))
+# plot(density_age_0_to_17_with_wells,
+#      main = "Block Groups with Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = "% age < 18",
+#      col = 'springgreen1')
+# # polygon(density_age_0_to_17, col="slateblue1", border="black")
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$age_0_to_17_percent_B01001*100,
+#        col = 'orchid1',
+#        pch = 18,
+#        cex = 1,
+#        main = "All Block Groups",
+#        family = "Times New Roman")
+# qqline(ks_analyze$age_0_to_17_percent_B01001[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$age_0_to_17_percent_B01001[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   col = 'slateblue1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with No Disposal Wells",
+#   family = "Times New Roman")
+# qqline(ks_analyze$age_0_to_17_percent_B01001[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$age_0_to_17_percent_B01001[
+#   which(ks_analyze$extant_swd_binary == 1)]*100,
+#   col = 'springgreen1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with Disposal Wells",
+#   family = "Times New Roman")
+# qqline(ks_analyze$age_0_to_17_percent_B01001[
+#   which(ks_analyze$extant_swd_binary == 1)]*100,
+#   lwd=2)
+# 
+# 
+# 
+# # age 65+
+# 
+# # set up printing output
+# par(mar=c(.5,.5,.5,.5))
+# layout(matrix(c(1,1,1,
+#                 2,2,2,
+#                 4,5,6,
+#                 3,3,3,
+#                 7,8,9),
+#               ncol=3,
+#               byrow=TRUE), heights = c(.4,.4,3,.4,3))
+# # layout.show(n=9)
+# plot.new()
+# par(mar=c(0,1,0,1))
+# text(0.5,0.5, "Age > 64",
+#      cex=2.5,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Density Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Quantile-Quantile Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# 
+# density_age_65_plus <-
+#   density(ks_analyze$age_65_plus_percent_B01001*100)
+# density_age_65_plus_no_wells <-
+#   density(ks_analyze$age_65_plus_percent_B01001[
+#     which(ks_analyze$extant_swd_binary == 0
+#     )]*100)
+# density_age_65_plus_with_wells <-
+#   density(ks_analyze$age_65_plus_percent_B01001[
+#     which(ks_analyze$extant_swd_binary == 1
+#     )]*100)
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_age_65_plus,
+#      main = "All Block Groups",
+#      family = "Times New Roman",
+#      xlab = '% age > 64',
+#      col = 'orchid1')
+# par(mar=c(5,5,3,1))
+# plot(density_age_65_plus_no_wells,
+#      main = "Block Groups with No Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = '% age > 64',
+#      col = 'slateblue1')
+# par(mar=c(5,5,3,1))
+# plot(density_age_65_plus_with_wells,
+#      main = "Block Groups with Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = '% age > 64',
+#      col = 'springgreen1')
+# # polygon(density_age_65_plus, col="slateblue1", border="black")
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$age_65_plus_percent_B01001*100,
+#        col = 'orchid1',
+#        pch = 18,
+#        cex = 1,
+#        main = "All Block Groups",
+#        family = "Times New Roman")
+# qqline(ks_analyze$age_65_plus_percent_B01001[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$age_65_plus_percent_B01001[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   col = 'slateblue1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with No Disposal Wells",
+#   family = "Times New Roman")
+# qqline(ks_analyze$age_65_plus_percent_B01001[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$age_65_plus_percent_B01001[
+#   which(ks_analyze$extant_swd_binary == 1)]*100,
+#   col = 'springgreen1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with Disposal Wells",
+#   family = "Times New Roman")
+# qqline(ks_analyze$age_65_plus_percent_B01001[
+#   which(ks_analyze$extant_swd_binary == 1)]*100,
+#   lwd=2)
+# 
+# 
+# 
+# # percent white, non-Hispanic
+# 
+# # set up printing output
+# par(mar=c(.5,.5,.5,.5))
+# layout(matrix(c(1,1,1,
+#                 2,2,2,
+#                 4,5,6,
+#                 3,3,3,
+#                 7,8,9),
+#               ncol=3,
+#               byrow=TRUE), heights = c(.4,.4,3,.4,3))
+# # layout.show(n=9)
+# plot.new()
+# par(mar=c(0,1,0,1))
+# text(0.5,0.5, "White alone (not Hispanic or Latinx)",
+#      cex=2.5,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Density Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Quantile-Quantile Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# 
+# density_white <-
+#   density(ks_analyze$white_non_hisp_lat_percent_B03002_003_001*100)
+# density_white_no_wells <-
+#   density(ks_analyze$white_non_hisp_lat_percent_B03002_003_001[
+#     which(ks_analyze$extant_swd_binary == 0
+#     )]*100)
+# density_white_with_wells <-
+#   density(ks_analyze$white_non_hisp_lat_percent_B03002_003_001[
+#     which(ks_analyze$extant_swd_binary == 1
+#     )]*100)
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_white,
+#      main = "All Block Groups",
+#      family = "Times New Roman",
+#      xlab = "% white alone, not Hispanic or Latinx",
+#      col = 'orchid1')
+# par(mar=c(5,5,3,1))
+# plot(density_white_no_wells,
+#      main = "Block Groups with No Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = "% white alone, not Hispanic or Latinx",
+#      col = 'slateblue1')
+# par(mar=c(5,5,3,1))
+# plot(density_white_with_wells,
+#      main = "Block Groups with Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = "% white alone, not Hispanic or Latinx",
+#      col = 'springgreen1')
+# # polygon(density_white, col="slateblue1", border="black")
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$white_non_hisp_lat_percent_B03002_003_001*100,
+#        col = 'orchid1',
+#        pch = 18,
+#        cex = 1,
+#        main = "All Block Groups",
+#        family = "Times New Roman")
+# qqline(ks_analyze$white_non_hisp_lat_percent_B03002_003_001[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$white_non_hisp_lat_percent_B03002_003_001[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   col = 'slateblue1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with No Disposal Wells",
+#   family = "Times New Roman")
+# qqline(ks_analyze$white_non_hisp_lat_percent_B03002_003_001[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$white_non_hisp_lat_percent_B03002_003_001[
+#   which(ks_analyze$extant_swd_binary == 1)]*100,
+#   col = 'springgreen1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with Disposal Wells",
+#   family = "Times New Roman")
+# qqline(ks_analyze$white_non_hisp_lat_percent_B03002_003_001[
+#   which(ks_analyze$extant_swd_binary == 1)]*100,
+#   lwd=2)
+# 
+# 
+# 
+# # percent American Indian Alaska Native
+# 
+# # set up printing output
+# par(mar=c(.5,.5,.5,.5))
+# layout(matrix(c(1,1,1,
+#                 2,2,2,
+#                 4,5,6,
+#                 3,3,3,
+#                 7,8,9),
+#               ncol=3,
+#               byrow=TRUE), heights = c(.4,.4,3,.4,3))
+# # layout.show(n=9)
+# plot.new()
+# par(mar=c(0,1,0,1))
+# text(0.5,0.5, "Native American",
+#      cex=2.5,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Density Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Quantile-Quantile Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# 
+# density_aian <-
+#   density(ks_analyze$aian_percent_any_race_B02010_001*100)
+# density_aian_no_wells <-
+#   density(ks_analyze$aian_percent_any_race_B02010_001[
+#     which(ks_analyze$extant_swd_binary == 0
+#     )]*100)
+# density_aian_with_wells <-
+#   density(ks_analyze$aian_percent_any_race_B02010_001[
+#     which(ks_analyze$extant_swd_binary == 1
+#     )]*100)
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_aian,
+#      main = "All Block Groups",
+#      family = "Times New Roman",
+#      xlab = "% American Indian or Alaska Native",
+#      col = 'orchid1')
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_aian_no_wells,
+#      main = "Block Groups with No Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = "% American Indian or Alaska Native",
+#      col = 'slateblue1')
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_aian_with_wells,
+#      main = "Block Groups with Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = "% American Indian or Alaska Native",
+#      col = 'springgreen1')
+# # polygon(density_aian, col="slateblue1", border="black")
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$aian_percent_any_race_B02010_001*100,
+#        col = 'orchid1',
+#        pch = 18,
+#        cex = 1,
+#        main = "All Block Groups",
+#        family = "Times New Roman")
+# qqline(ks_analyze$aian_percent_any_race_B02010_001[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$aian_percent_any_race_B02010_001[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   col = 'slateblue1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with No Disposal Wells",
+#   family = "Times New Roman")
+# qqline(ks_analyze$aian_percent_any_race_B02010_001[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$aian_percent_any_race_B02010_001[
+#   which(ks_analyze$extant_swd_binary == 1)]*100,
+#   col = 'springgreen1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with Disposal Wells",
+#   family = "Times New Roman")
+# qqline(ks_analyze$aian_percent_any_race_B02010_001[
+#   which(ks_analyze$extant_swd_binary == 1)]*100,
+#   lwd=2)
+# 
+# 
+# 
+# # percent high school education or greater
+# 
+# # set up printing output
+# par(mar=c(.5,.5,.5,.5))
+# layout(matrix(c(1,1,1,
+#                 2,2,2,
+#                 4,5,6,
+#                 3,3,3,
+#                 7,8,9),
+#               ncol=3,
+#               byrow=TRUE), heights = c(.4,.4,3,.4,3))
+# # layout.show(n=9)
+# plot.new()
+# par(mar=c(0,1,0,1))
+# text(0.5,0.5, "High School Education",
+#      cex=2.5,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Density Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Quantile-Quantile Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# 
+# density_hs_ed <-
+#   density(ks_analyze$education_high_school_plus_percent_B15003_017_to_025*100)
+# density_hs_ed_no_wells <-
+#   density(ks_analyze$education_high_school_plus_percent_B15003_017_to_025[
+#     which(ks_analyze$extant_swd_binary == 0
+#     )]*100)
+# density_hs_ed_with_wells <-
+#   density(ks_analyze$education_high_school_plus_percent_B15003_017_to_025[
+#     which(ks_analyze$extant_swd_binary == 1
+#     )]*100)
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_hs_ed,
+#      main = "All Block Groups",
+#      family = "Times New Roman",
+#      xlab = "% high school graduate or equivalent",
+#      col = 'orchid1')
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_hs_ed_no_wells,
+#      main = "Block Groups with No Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = "% high school graduate or equivalent",
+#      col = 'slateblue1')
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_hs_ed_with_wells,
+#      main = "Block Groups with Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = "% high school graduate or equivalent",
+#      col = 'springgreen1')
+# # polygon(density_hs_ed, col="slateblue1", border="black")
+# 
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$education_high_school_plus_percent_B15003_017_to_025*100,
+#        col = 'orchid1',
+#        pch = 18,
+#        cex = 1,
+#        main = "All Block Groups",
+#        family = "Times New Roman")
+# qqline(ks_analyze$education_high_school_plus_percent_B15003_017_to_025[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$education_high_school_plus_percent_B15003_017_to_025[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   col = 'slateblue1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with No Disposal Wells",
+#   family = "Times New Roman",
+#   xaxt='n')
+# axis(side=1,
+#      at=axTicks(1),
+#      labels=formatC(axTicks(1),
+#                     format="d",
+#                     big.mark=','))
+# qqline(ks_analyze$education_high_school_plus_percent_B15003_017_to_025[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$education_high_school_plus_percent_B15003_017_to_025[
+#   which(ks_analyze$extant_swd_binary == 1)]*100,
+#   col = 'springgreen1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with Disposal Wells",
+#   family = "Times New Roman",
+#   xaxt='n')
+# axis(side=1,
+#      at=axTicks(1),
+#      labels=formatC(axTicks(1),
+#                     format="d",
+#                     big.mark=','))
+# qqline(ks_analyze$education_high_school_plus_percent_B15003_017_to_025[
+#   which(ks_analyze$extant_swd_binary == 1)]*100,
+#   lwd=2)
+# 
+# 
+# 
+# # renter occupy
+# 
+# # set up printing output
+# par(mar=c(.5,.5,.5,.5))
+# layout(matrix(c(1,1,1,
+#                 2,2,2,
+#                 4,5,6,
+#                 3,3,3,
+#                 7,8,9),
+#               ncol=3,
+#               byrow=TRUE), heights = c(.4,.4,3,.4,3))
+# # layout.show(n=9)
+# plot.new()
+# par(mar=c(0,1,0,1))
+# text(0.5,0.5, "Renter-Occupied Households",
+#      cex=2.5,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Density Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Quantile-Quantile Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# 
+# density_rent <-
+#   density(ks_analyze$renter_occupy_percent_B25003_003_001*100)
+# density_rent_no_wells <-
+#   density(ks_analyze$renter_occupy_percent_B25003_003_001[
+#     which(ks_analyze$extant_swd_binary == 0
+#     )]*100)
+# density_rent_with_wells <-
+#   density(ks_analyze$renter_occupy_percent_B25003_003_001[
+#     which(ks_analyze$extant_swd_binary == 1
+#     )]*100)
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_rent,
+#      main = "All Block Groups",
+#      family = "Times New Roman",
+#      xlab = "% of housing units renter occupied",
+#      col = 'orchid1')
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_rent_no_wells,
+#      main = "Block Groups with No Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = "% of housing units renter occupied",
+#      col = 'slateblue1')
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_rent_with_wells,
+#      main = "Block Groups with Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = "% of housing units renter occupied",
+#      col = 'springgreen1')
+# # polygon(density_rent, col="slateblue1", border="black")
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$renter_occupy_percent_B25003_003_001*100,
+#        col = 'orchid1',
+#        pch = 18,
+#        cex = 1,
+#        main = "All Block Groups",
+#        family = "Times New Roman")
+# qqline(ks_analyze$renter_occupy_percent_B25003_003_001[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$renter_occupy_percent_B25003_003_001[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   col = 'slateblue1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with No Disposal Wells",
+#   family = "Times New Roman")
+# qqline(ks_analyze$renter_occupy_percent_B25003_003_001[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$renter_occupy_percent_B25003_003_001[
+#   which(ks_analyze$extant_swd_binary == 1)]*100,
+#   col = 'springgreen1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with Disposal Wells",
+#   family = "Times New Roman")
+# qqline(ks_analyze$renter_occupy_percent_B25003_003_001[
+#   which(ks_analyze$extant_swd_binary == 1)]*100,
+#   lwd=2)
+# 
+# 
+# 
+# # limited English
+# 
+# # set up printing output
+# par(mar=c(.5,.5,.5,.5))
+# layout(matrix(c(1,1,1,
+#                 2,2,2,
+#                 4,5,6,
+#                 3,3,3,
+#                 7,8,9),
+#               ncol=3,
+#               byrow=TRUE), heights = c(.4,.4,3,.4,3))
+# # layout.show(n=9)
+# plot.new()
+# par(mar=c(0,1,0,1))
+# text(0.5,0.5, "Limited-English Households",
+#      cex=2.5,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Density Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Quantile-Quantile Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# 
+# density_no_eng <-
+#   density(ks_analyze$limited_english_percent_C16002_004_007_010_013_001*100)
+# density_no_eng_no_wells <-
+#   density(ks_analyze$limited_english_percent_C16002_004_007_010_013_001[
+#     which(ks_analyze$extant_swd_binary == 0
+#     )]*100)
+# density_no_eng_with_wells <-
+#   density(ks_analyze$limited_english_percent_C16002_004_007_010_013_001[
+#     which(ks_analyze$extant_swd_binary == 1
+#     )]*100)
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_no_eng,
+#      main = "All Block Groups",
+#      family = "Times New Roman",
+#      xlab = "% of households with limited English",
+#      col = 'orchid1')
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_no_eng_no_wells,
+#      main = "Block Groups with No Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = "% of households with limited English",
+#      col = 'slateblue1')
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_no_eng_with_wells,
+#      main = "Block Groups with Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = "% of households with limited English",
+#      col = 'springgreen1')
+# # polygon(density_no_eng, col="slateblue1", border="black")
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$limited_english_percent_C16002_004_007_010_013_001*100,
+#        col = 'orchid1',
+#        pch = 18,
+#        cex = 1,
+#        main = "All Block Groups",
+#        family = "Times New Roman")
+# qqline(ks_analyze$limited_english_percent_C16002_004_007_010_013_001[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$limited_english_percent_C16002_004_007_010_013_001[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   col = 'slateblue1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with No Disposal Wells",
+#   family = "Times New Roman")
+# qqline(ks_analyze$limited_english_percent_C16002_004_007_010_013_001[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$limited_english_percent_C16002_004_007_010_013_001[
+#   which(ks_analyze$extant_swd_binary == 1)]*100,
+#   col = 'springgreen1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with Disposal Wells",
+#   family = "Times New Roman")
+# qqline(ks_analyze$limited_english_percent_C16002_004_007_010_013_001[
+#   which(ks_analyze$extant_swd_binary == 1)]*100,
+#   lwd=2)
+# 
+# 
+# 
+# # median household income
+# 
+# # set up printing output
+# par(mar=c(.5,.5,.5,.5))
+# layout(matrix(c(1,1,1,
+#                 2,2,2,
+#                 4,5,6,
+#                 3,3,3,
+#                 7,8,9),
+#               ncol=3,
+#               byrow=TRUE), heights = c(.4,.4,3,.4,3))
+# # layout.show(n=9)
+# 
+# plot.new()
+# par(mar=c(0,1,0,1))
+# text(0.5,0.5, "Household Income",
+#      cex=2.5,
+#      family = "Times New Roman")
+# 
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Density Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# 
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Quantile-Quantile Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# 
+# density_income <-
+#   density(ks_analyze$income_house_median_B19013_001)
+# density_income_no_wells <-
+#   density(ks_analyze$income_house_median_B19013_001[
+#     which(ks_analyze$extant_swd_binary == 0
+#     )])
+# density_income_with_wells <-
+#   density(ks_analyze$income_house_median_B19013_001[
+#     which(ks_analyze$extant_swd_binary == 1
+#     )])
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_income,
+#      main = "All Block Groups",
+#      family = "Times New Roman",
+#      xlab = "Median household income ($)",
+#      col = 'orchid1',
+#      xaxt='n')
+# axis(side=1,
+#      at=axTicks(1),
+#      labels=formatC(axTicks(1),
+#                     format="d",
+#                     big.mark=','), family = "Times New Roman")
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_income_no_wells,
+#      main = "Block Groups with No Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = "Median household income ($)",
+#      col = 'slateblue1',
+#      xaxt='n')
+# axis(side=1,
+#      at=axTicks(1),
+#      labels=formatC(axTicks(1),
+#                     format="d",
+#                     big.mark=','), family = "Times New Roman")
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_income_with_wells,
+#      main = "Block Groups with Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = "Median household income ($)",
+#      col = 'springgreen1',
+#      xaxt='n')
+# axis(side=1,
+#      at=axTicks(1),
+#      labels=formatC(axTicks(1),
+#                     format="d",
+#                     big.mark=','), family = "Times New Roman")
+# # polygon(density_income, col="slateblue1", border="black")
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$income_house_median_B19013_001,
+#        col = 'orchid1',
+#        pch = 18,
+#        cex = 1,
+#        main = "All Block Groups",
+#        family = "Times New Roman",
+#        yaxt='n')
+# axis(side=2,
+#      at=axTicks(2),
+#      labels=formatC(axTicks(2),
+#                     format="d",
+#                     big.mark=','), family = "Times New Roman")
+# qqline(ks_analyze$income_house_median_B19013_001[
+#   which(ks_analyze$extant_swd_binary == 0)],
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$income_house_median_B19013_001[
+#   which(ks_analyze$extant_swd_binary == 0)],
+#   col = 'slateblue1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with No Disposal Wells",
+#   family = "Times New Roman",
+#   yaxt='n')
+# axis(side=2,
+#      at=axTicks(2),
+#      labels=formatC(axTicks(2),
+#                     format="d",
+#                     big.mark=','), family = "Times New Roman")
+# qqline(ks_analyze$income_house_median_B19013_001[
+#   which(ks_analyze$extant_swd_binary == 0)],
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$income_house_median_B19013_001[
+#   which(ks_analyze$extant_swd_binary == 1)],
+#   col = 'springgreen1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with Disposal Wells",
+#   family = "Times New Roman",
+#   yaxt='n')
+# axis(side=2,
+#      at=axTicks(2),
+#      labels=formatC(axTicks(2),
+#                     format="d",
+#                     big.mark=','),
+#      family = "Times New Roman")
+# qqline(ks_analyze$income_house_median_B19013_001[
+#   which(ks_analyze$extant_swd_binary == 1)],
+#   lwd=2)
+# 
+# 
+# 
+# # home value
+# 
+# # set up printing output
+# par(mar=c(.5,.5,.5,.5))
+# layout(matrix(c(1,1,1,
+#                 2,2,2,
+#                 4,5,6,
+#                 3,3,3,
+#                 7,8,9),
+#               ncol=3,
+#               byrow=TRUE), heights = c(.4,.4,3,.4,3))
+# # layout.show(n=9)
+# 
+# plot.new()
+# par(mar=c(0,1,0,1))
+# text(0.5,0.5, "Home Value",
+#      cex=2.5,
+#      family = "Times New Roman")
+# 
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Density Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# 
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Quantile-Quantile Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# 
+# density_house_value <-
+#   density(ks_analyze$house_value_median_B25077_001, na.rm = TRUE)
+# density_house_value_no_wells <-
+#   density(ks_analyze$house_value_median_B25077_001[
+#     which(ks_analyze$extant_swd_binary == 0
+#     )], na.rm = TRUE)
+# density_house_value_with_wells <-
+#   density(ks_analyze$house_value_median_B25077_001[
+#     which(ks_analyze$extant_swd_binary == 1
+#     )], na.rm = TRUE)
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_house_value,
+#      main = "All Block Groups",
+#      family = "Times New Roman",
+#      xlab = "Median home value ($)",
+#      col = 'orchid1',
+#      xaxt='n')
+# axis(side=1,
+#      at=axTicks(1),
+#      labels=formatC(axTicks(1),
+#                     format="d",
+#                     big.mark=','), family = "Times New Roman")
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_house_value_no_wells,
+#      main = "Block Groups with No Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = "Median home value ($)",
+#      col = 'slateblue1',
+#      xaxt='n')
+# axis(side=1,
+#      at=axTicks(1),
+#      labels=formatC(axTicks(1),
+#                     format="d",
+#                     big.mark=','), family = "Times New Roman")
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_house_value_with_wells,
+#      main = "Block Groups with Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = "Median home value ($)",
+#      col = 'springgreen1',
+#      xaxt='n')
+# axis(side=1,
+#      at=axTicks(1),
+#      labels=formatC(axTicks(1),
+#                     format="d",
+#                     big.mark=','), family = "Times New Roman")
+# # polygon(density_house_value, col="slateblue1", border="black")
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$house_value_median_B25077_001,
+#        col = 'orchid1',
+#        pch = 18,
+#        cex = 1,
+#        main = "All Block Groups",
+#        family = "Times New Roman",
+#        yaxt='n')
+# axis(side=2,
+#      at=axTicks(2),
+#      labels=formatC(axTicks(2),
+#                     format="d",
+#                     big.mark=','), family = "Times New Roman")
+# qqline(ks_analyze$house_value_median_B25077_001[
+#   which(ks_analyze$extant_swd_binary == 0)],
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$house_value_median_B25077_001[
+#   which(ks_analyze$extant_swd_binary == 0)],
+#   col = 'slateblue1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with No Disposal Wells",
+#   family = "Times New Roman",
+#   yaxt='n')
+# axis(side=2,
+#      at=axTicks(2),
+#      labels=formatC(axTicks(2),
+#                     format="d",
+#                     big.mark=','), family = "Times New Roman")
+# qqline(ks_analyze$house_value_median_B25077_001[
+#   which(ks_analyze$extant_swd_binary == 0)],
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$house_value_median_B25077_001[
+#   which(ks_analyze$extant_swd_binary == 1)],
+#   col = 'springgreen1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with Disposal Wells",
+#   family = "Times New Roman",
+#   yaxt='n')
+# axis(side=2,
+#      at=axTicks(2),
+#      labels=formatC(axTicks(2),
+#                     format="d",
+#                     big.mark=','), family = "Times New Roman")
+# qqline(ks_analyze$house_value_median_B25077_001[
+#   which(ks_analyze$extant_swd_binary == 1)],
+#   lwd=2)
+# 
+# 
+# 
+# # no health insurance
+# 
+# # set up printing output
+# par(mar=c(.5,.5,.5,.5))
+# layout(matrix(c(1,1,1,
+#                 2,2,2,
+#                 4,5,6,
+#                 3,3,3,
+#                 7,8,9),
+#               ncol=3,
+#               byrow=TRUE), heights = c(.4,.4,3,.4,3))
+# # layout.show(n=9)
+# plot.new()
+# par(mar=c(0,1,0,1))
+# text(0.5,0.5, "No Health Insurance Coverage",
+#      cex=2.5,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Density Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Quantile-Quantile Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# 
+# density_no_insure <-
+#   density(ks_analyze$no_health_insurance_percent_B27010_017_033_050_066*100)
+# density_no_insure_no_wells <-
+#   density(ks_analyze$no_health_insurance_percent_B27010_017_033_050_066[
+#     which(ks_analyze$extant_swd_binary == 0
+#     )]*100)
+# density_no_insure_with_wells <-
+#   density(ks_analyze$no_health_insurance_percent_B27010_017_033_050_066[
+#     which(ks_analyze$extant_swd_binary == 1
+#     )]*100)
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_no_insure,
+#      main = "All Block Groups",
+#      family = "Times New Roman",
+#      xlab = "% with no health insurance coverage",
+#      col = 'orchid1')
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_no_insure_no_wells,
+#      main = "Block Groups with No Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = "% with no health insurance coverage",
+#      col = 'slateblue1')
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_no_insure_with_wells,
+#      main = "Block Groups with Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = "% with no health insurance coverage",
+#      col = 'springgreen1')
+# # polygon(density_no_insure, col="slateblue1", border="black")
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$no_health_insurance_percent_B27010_017_033_050_066*100,
+#        col = 'orchid1',
+#        pch = 18,
+#        cex = 1,
+#        main = "All Block Groups",
+#        family = "Times New Roman")
+# qqline(ks_analyze$no_health_insurance_percent_B27010_017_033_050_066[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$no_health_insurance_percent_B27010_017_033_050_066[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   col = 'slateblue1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with No Disposal Wells",
+#   family = "Times New Roman")
+# qqline(ks_analyze$no_health_insurance_percent_B27010_017_033_050_066[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$no_health_insurance_percent_B27010_017_033_050_066[
+#   which(ks_analyze$extant_swd_binary == 1)]*100,
+#   col = 'springgreen1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with Disposal Wells",
+#   family = "Times New Roman")
+# qqline(ks_analyze$no_health_insurance_percent_B27010_017_033_050_066[
+#   which(ks_analyze$extant_swd_binary == 1)]*100,
+#   lwd=2)
+# 
+# 
+# 
+# # unemployment
+# 
+# density_unemploy <-
+#   density(ks_analyze$unemployed_percent_B23025_005_003*100)
+# density_unemploy_no_wells <-
+#   density(ks_analyze$unemployed_percent_B23025_005_003[
+#     which(ks_analyze$extant_swd_binary == 0
+#     )]*100)
+# density_unemploy_with_wells <-
+#   density(ks_analyze$unemployed_percent_B23025_005_003[
+#     which(ks_analyze$extant_swd_binary == 1
+#     )]*100)
+# 
+# # set up printing output
+# par(mar=c(.5,.5,.5,.5))
+# layout(matrix(c(1,1,1,
+#                 2,2,2,
+#                 4,5,6,
+#                 3,3,3,
+#                 7,8,9),
+#               ncol=3,
+#               byrow=TRUE), heights = c(.4,.4,3,.4,3))
+# # layout.show(n=9)
+# plot.new()
+# par(mar=c(0,1,0,1))
+# text(0.5,0.5, "Unemployment",
+#      cex=2.5,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Density Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Quantile-Quantile Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_unemploy,
+#      main = "All Block Groups",
+#      family = "Times New Roman",
+#      xlab = "% unemployed",
+#      col = "orchid1")
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_unemploy_no_wells,
+#      main = "Block Groups with No Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = "% unemployed",
+#      col = "slateblue1")
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_unemploy_with_wells,
+#      main = "Block Groups with Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = "% unemployed",
+#      col = 'springgreen1')
+# # polygon(density_unemploy, col="slateblue1", border="black")
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$unemployed_percent_B23025_005_003*100,
+#        col = 'orchid1',
+#        pch = 18,
+#        cex = 1,
+#        main = "All Block Groups",
+#        family = "Times New Roman")
+# qqline(ks_analyze$unemployed_percent_B23025_005_003[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$unemployed_percent_B23025_005_003[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   col = 'slateblue1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with No Disposal Wells",
+#   family = "Times New Roman")
+# qqline(ks_analyze$unemployed_percent_B23025_005_003[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$unemployed_percent_B23025_005_003[
+#   which(ks_analyze$extant_swd_binary == 1)]*100,
+#   col = 'springgreen',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with Disposal Wells",
+#   family = "Times New Roman")
+# qqline(ks_analyze$unemployed_percent_B23025_005_003[
+#   which(ks_analyze$extant_swd_binary == 1)]*100,
+#   lwd=2)
+# 
+# 
+# 
+# # land area
+# 
+# density_ALAND_KM <-
+#   density(ks_analyze$ALAND_KM)
+# density_ALAND_KM_no_wells <-
+#   density(ks_analyze$ALAND_KM[
+#     which(ks_analyze$extant_swd_binary == 0
+#     )])
+# density_ALAND_KM_with_wells <-
+#   density(ks_analyze$ALAND_KM[
+#     which(ks_analyze$extant_swd_binary == 1
+#     )])
+# 
+# # set up printing output
+# par(mar=c(.5,.5,.5,.5))
+# layout(matrix(c(1,1,1,
+#                 2,2,2,
+#                 4,5,6,
+#                 3,3,3,
+#                 7,8,9),
+#               ncol=3,
+#               byrow=TRUE), heights = c(.4,.4,3,.4,3))
+# # layout.show(n=9)
+# plot.new()
+# par(mar=c(0,1,0,1))
+# text(0.5,0.5, "Land Area",
+#      cex=2.5,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Density Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Quantile-Quantile Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_ALAND_KM,
+#      main = "All Block Groups",
+#      family = "Times New Roman",
+#      xlab = expression(paste("Land area (km"^"2",")")),
+#      col = 'orchid1',
+#      xaxt='n')
+# axis(side=1,
+#      at=axTicks(1),
+#      labels=formatC(axTicks(1),
+#                     format="d",
+#                     big.mark=','), family = "Times New Roman")
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_ALAND_KM_no_wells,
+#      main = "Block Groups with No Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = expression(paste("Land area (km"^"2",")")),
+#      col = 'slateblue1',
+#      xaxt='n')
+# axis(side=1,
+#      at=axTicks(1),
+#      labels=formatC(axTicks(1),
+#                     format="d",
+#                     big.mark=','), family = "Times New Roman")
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_ALAND_KM_with_wells,
+#      main = "Block Groups with Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = expression(paste("Land area (km"^"2",")")),
+#      col = 'springgreen1',
+#      xaxt='n')
+# axis(side=1,
+#      at=axTicks(1),
+#      labels=formatC(axTicks(1),
+#                     format="d",
+#                     big.mark=','), family = "Times New Roman")
+# # polygon(density_ALAND_KM, col="slateblue1", border="black")
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$ALAND_KM,
+#        col = 'orchid1',
+#        pch = 18,
+#        cex = 1,
+#        main = "All Block Groups",
+#        family = "Times New Roman",
+#        yaxt='n')
+# axis(side=2,
+#      at=axTicks(2),
+#      labels=formatC(axTicks(2),
+#                     format="d",
+#                     big.mark=','), family = "Times New Roman")
+# qqline(ks_analyze$ALAND_KM[
+#   which(ks_analyze$extant_swd_binary == 0)],
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$ALAND_KM[
+#   which(ks_analyze$extant_swd_binary == 0)],
+#   col = 'slateblue1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with No Disposal Wells",
+#   family = "Times New Roman",
+#   yaxt='n')
+# axis(side=2,
+#      at=axTicks(2),
+#      labels=formatC(axTicks(2),
+#                     format="d",
+#                     big.mark=','), family = "Times New Roman")
+# qqline(ks_analyze$ALAND_KM[
+#   which(ks_analyze$extant_swd_binary == 0)],
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$ALAND_KM[
+#   which(ks_analyze$extant_swd_binary == 1)],
+#   col = 'springgreen1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with Disposal Wells",
+#   family = "Times New Roman",
+#   yaxt='n')
+# axis(side=2,
+#      at=axTicks(2),
+#      labels=formatC(axTicks(2),
+#                     format="d",
+#                     big.mark=','), family = "Times New Roman")
+# qqline(ks_analyze$ALAND_KM[
+#   which(ks_analyze$extant_swd_binary == 1)],
+#   lwd=2)
+# 
+# 
+# 
+# # percent Hispanic or Latinx
+# 
+# density_hisp_lat <-
+#   density(ks_analyze$hisp_lat_percent_B03002_012_001*100)
+# density_hisp_lat_no_wells <-
+#   density(ks_analyze$hisp_lat_percent_B03002_012_001[
+#     which(ks_analyze$extant_swd_binary == 0
+#     )]*100)
+# density_hisp_lat_with_wells <-
+#   density(ks_analyze$hisp_lat_percent_B03002_012_001[
+#     which(ks_analyze$extant_swd_binary == 1
+#     )]*100)
+# 
+# # set up printing output
+# par(mar=c(.5,.5,.5,.5))
+# layout(matrix(c(1,1,1,
+#                 2,2,2,
+#                 4,5,6,
+#                 3,3,3,
+#                 7,8,9),
+#               ncol=3,
+#               byrow=TRUE), heights = c(.4,.4,3,.4,3))
+# # layout.show(n=9)
+# plot.new()
+# par(mar=c(0,1,0,1))
+# text(0.5,0.5, "Hispanic or Latinx",
+#      cex=2.5,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Density Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Quantile-Quantile Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_hisp_lat,
+#      main = "All Block Groups",
+#      family = "Times New Roman",
+#      xlab = "% Hispanic or Latinx (any race)",
+#      col = 'orchid1')
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_hisp_lat_no_wells,
+#      main = "Block Groups with No Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = "% Hispanic or Latinx (any race)",
+#      col = 'slateblue1')
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_hisp_lat_with_wells,
+#      main = "Block Groups with Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = "% Hispanic or Latinx (any race)",
+#      col = 'springgreen1')
+# # polygon(density_hisp_lat, col="slateblue1", border="black")
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$hisp_lat_percent_B03002_012_001*100,
+#        col = 'orchid1',
+#        pch = 18,
+#        cex = 1,
+#        main = "All Block Groups",
+#        family = "Times New Roman")
+# qqline(ks_analyze$hisp_lat_percent_B03002_012_001[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$hisp_lat_percent_B03002_012_001[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   col = 'slateblue1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with No Disposal Wells",
+#   family = "Times New Roman")
+# qqline(ks_analyze$hisp_lat_percent_B03002_012_001[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$hisp_lat_percent_B03002_012_001[
+#   which(ks_analyze$extant_swd_binary == 1)]*100,
+#   col = 'springgreen1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with Disposal Wells",
+#   family = "Times New Roman")
+# qqline(ks_analyze$hisp_lat_percent_B03002_012_001[
+#   which(ks_analyze$extant_swd_binary == 1)]*100,
+#   lwd=2)
+# 
+# 
+# 
+# # median earnings
+# 
+# density_earnings <-
+#   density(ks_analyze$earnings_median_B20002_001, na.rm = TRUE)
+# density_earnings_no_wells <-
+#   density(ks_analyze$earnings_median_B20002_001[
+#     which(ks_analyze$extant_swd_binary == 0
+#     )], na.rm = TRUE)
+# density_earnings_with_wells <-
+#   density(ks_analyze$earnings_median_B20002_001[
+#     which(ks_analyze$extant_swd_binary == 1
+#     )], na.rm = TRUE)
+# 
+# # set up printing output
+# par(mar=c(.5,.5,.5,.5))
+# layout(matrix(c(1,1,1,
+#                 2,2,2,
+#                 4,5,6,
+#                 3,3,3,
+#                 7,8,9),
+#               ncol=3,
+#               byrow=TRUE), heights = c(.4,.4,3,.4,3))
+# # layout.show(n=9)
+# plot.new()
+# par(mar=c(0,1,0,1))
+# text(0.5,0.5, "Individual Earnings",
+#      cex=2.5,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Density Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Quantile-Quantile Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_earnings,
+#      main = "All Block Groups",
+#      family = "Times New Roman",
+#      xlab = "Median individual earnings ($)",
+#      col = 'orchid1',
+#      xaxt='n')
+# axis(side=1,
+#      at=axTicks(1),
+#      labels=formatC(axTicks(1),
+#                     format="d",
+#                     big.mark=','), family = "Times New Roman")
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_earnings_no_wells,
+#      main = "Block Groups with No Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = "Median individual earnings ($)",
+#      col = 'slateblue1',
+#      xaxt='n')
+# axis(side=1,
+#      at=axTicks(1),
+#      labels=formatC(axTicks(1),
+#                     format="d",
+#                     big.mark=','), family = "Times New Roman")
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_earnings_with_wells,
+#      main = "Block Groups with Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = "Median individual earnings ($)",
+#      col = 'springgreen1',
+#      xaxt='n')
+# axis(side=1,
+#      at=axTicks(1),
+#      labels=formatC(axTicks(1),
+#                     format="d",
+#                     big.mark=','), family = "Times New Roman")
+# # polygon(density_earnings, col="slateblue1", border="black")
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$earnings_median_B20002_001,
+#        col = 'orchid1',
+#        pch = 18,
+#        cex = 1,
+#        main = "All Block Groups",
+#        family = "Times New Roman",
+#        yaxt='n')
+# axis(side=2,
+#      at=axTicks(2),
+#      labels=formatC(axTicks(2),
+#                     format="d",
+#                     big.mark=','), family = "Times New Roman")
+# qqline(ks_analyze$earnings_median_B20002_001[
+#   which(ks_analyze$extant_swd_binary == 0)],
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$earnings_median_B20002_001[
+#   which(ks_analyze$extant_swd_binary == 0)],
+#   col = 'slateblue1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with No Disposal Wells",
+#   family = "Times New Roman",
+#   xaxt='n')
+# axis(side=1,
+#      at=axTicks(1),
+#      labels=formatC(axTicks(1),
+#                     format="d",
+#                     big.mark=','), family = "Times New Roman")
+# qqline(ks_analyze$earnings_median_B20002_001[
+#   which(ks_analyze$extant_swd_binary == 0)],
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$earnings_median_B20002_001[
+#   which(ks_analyze$extant_swd_binary == 1)],
+#   col = 'springgreen1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with Disposal Wells",
+#   family = "Times New Roman",
+#   yaxt='n')
+# axis(side=2,
+#      at=axTicks(2),
+#      labels=formatC(axTicks(2),
+#                     format="d",
+#                     big.mark=','), family = "Times New Roman")
+# qqline(ks_analyze$earnings_median_B20002_001[
+#   which(ks_analyze$extant_swd_binary == 1)],
+#   lwd=2)
+# 
+# 
+# 
+# 
+# # percent in poverty
+# 
+# density_poverty <-
+#   density(ks_analyze$poverty_below_100_percent_C17002_002_003_001*100)
+# density_poverty_no_wells <-
+#   density(ks_analyze$poverty_below_100_percent_C17002_002_003_001[
+#     which(ks_analyze$extant_swd_binary == 0
+#     )]*100)
+# density_poverty_with_wells <-
+#   density(ks_analyze$poverty_below_100_percent_C17002_002_003_001[
+#     which(ks_analyze$extant_swd_binary == 1
+#     )]*100)
+# 
+# # set up printing output
+# par(mar=c(.5,.5,.5,.5))
+# layout(matrix(c(1,1,1,
+#                 2,2,2,
+#                 4,5,6,
+#                 3,3,3,
+#                 7,8,9),
+#               ncol=3,
+#               byrow=TRUE), heights = c(.4,.4,3,.4,3))
+# # layout.show(n=9)
+# plot.new()
+# par(mar=c(0,1,0,1))
+# text(0.5,0.5, "Poverty",
+#      cex=2.5,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Density Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Quantile-Quantile Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_poverty,
+#      main = "All Block Groups",
+#      family = "Times New Roman",
+#      xlab = "% in poverty",
+#      col = 'orchid1')
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_poverty_no_wells,
+#      main = "Block Groups with No Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = "% in poverty",
+#      col = 'slateblue1')
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_poverty_with_wells,
+#      main = "Block Groups with Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = "% in poverty",
+#      col = 'springgreen1')
+# # polygon(density_poverty, col="slateblue1", border="black")
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$poverty_below_100_percent_C17002_002_003_001*100,
+#        col = 'orchid1',
+#        pch = 18,
+#        cex = 1,
+#        main = "All Block Groups",
+#        family = "Times New Roman")
+# qqline(ks_analyze$poverty_below_100_percent_C17002_002_003_001[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$poverty_below_100_percent_C17002_002_003_001[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   col = 'slateblue1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with No Disposal Wells",
+#   family = "Times New Roman")
+# qqline(ks_analyze$poverty_below_100_percent_C17002_002_003_001[
+#   which(ks_analyze$extant_swd_binary == 0)]*100,
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$poverty_below_100_percent_C17002_002_003_001[
+#   which(ks_analyze$extant_swd_binary == 1)]*100,
+#   col = 'springgreen1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with Disposal Wells",
+#   family = "Times New Roman")
+# qqline(ks_analyze$poverty_below_100_percent_C17002_002_003_001[
+#   which(ks_analyze$extant_swd_binary == 1)]*100,
+#   lwd=2)
+# 
+# 
+# 
+# 
+# # water area
+# 
+# density_water <-
+#   density(ks_analyze$AWATER_KM)
+# density_water_no_wells <-
+#   density(ks_analyze$AWATER_KM[
+#     which(ks_analyze$extant_swd_binary == 0
+#     )])
+# density_water_with_wells <-
+#   density(ks_analyze$AWATER_KM[
+#     which(ks_analyze$extant_swd_binary == 1
+#     )])
+# 
+# # set up printing output
+# par(mar=c(.5,.5,.5,.5))
+# layout(matrix(c(1,1,1,
+#                 2,2,2,
+#                 4,5,6,
+#                 3,3,3,
+#                 7,8,9),
+#               ncol=3,
+#               byrow=TRUE), heights = c(.4,.4,3,.4,3))
+# # layout.show(n=9)
+# plot.new()
+# par(mar=c(0,1,0,1))
+# text(0.5,0.5, "Water Area",
+#      cex=2.5,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Density Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# plot.new()
+# par(mar=c(1,1,1,1))
+# text(0.5, 0.5,
+#      "Quantile-Quantile Plots",
+#      cex=2,
+#      family = "Times New Roman")
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_water,
+#      main = "All Block Groups",
+#      family = "Times New Roman",
+#      xlab = expression(paste("Water area (km"^"2",")")),
+#      col = 'orchid1',
+#      xaxt='n')
+# axis(side=1,
+#      at=axTicks(1),
+#      labels=formatC(axTicks(1),
+#                     format="d",
+#                     big.mark=','), family = "Times New Roman")
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_water_no_wells,
+#      main = "Block Groups with No Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = expression(paste("Water area (km"^"2",")")),
+#      col = 'slateblue1',
+#      xaxt='n')
+# axis(side=1,
+#      at=axTicks(1),
+#      labels=formatC(axTicks(1),
+#                     format="d",
+#                     big.mark=','), family = "Times New Roman")
+# 
+# par(mar=c(5,5,3,1))
+# plot(density_water_with_wells,
+#      main = "Block Groups with Disposal Wells",
+#      family = "Times New Roman",
+#      xlab = expression(paste("Water area (km"^"2",")")),
+#      col = 'springgreen1',
+#      xaxt='n')
+# axis(side=1,
+#      at=axTicks(1),
+#      labels=formatC(axTicks(1),
+#                     format="d",
+#                     big.mark=','), family = "Times New Roman")
+# # polygon(density_water, col="slateblue1", border="black")
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$AWATER_KM,
+#        col = 'orchid1',
+#        pch = 18,
+#        cex = 1,
+#        main = "All Block Groups",
+#        family = "Times New Roman",
+#        yaxt='n')
+# axis(side=2,
+#      at=axTicks(2),
+#      labels=formatC(axTicks(2),
+#                     format="d",
+#                     big.mark=','),
+#      xaxt='n')
+# axis(side=1,
+#      at=axTicks(1),
+#      labels=formatC(axTicks(1),
+#                     format="d",
+#                     big.mark=','), family = "Times New Roman")
+# qqline(ks_analyze$AWATER_KM[
+#   which(ks_analyze$extant_swd_binary == 0)],
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$AWATER_KM[
+#   which(ks_analyze$extant_swd_binary == 0)],
+#   col = 'slateblue1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with No Disposal Wells",
+#   family = "Times New Roman",
+#   yaxt='n')
+# axis(side=2,
+#      at=axTicks(2),
+#      labels=formatC(axTicks(2),
+#                     format="d",
+#                     big.mark=','), family = "Times New Roman")
+# qqline(ks_analyze$AWATER_KM[
+#   which(ks_analyze$extant_swd_binary == 0)],
+#   lwd=2)
+# 
+# par(mar=c(5,5,3,1))
+# qqnorm(ks_analyze$AWATER_KM[
+#   which(ks_analyze$extant_swd_binary == 1)],
+#   col = 'springgreen1',
+#   pch = 18,
+#   cex = 1,
+#   main = "Block Groups with Disposal Wells",
+#   family = "Times New Roman",
+#   yaxt='n')
+# axis(side=2,
+#      at=axTicks(2),
+#      labels=formatC(axTicks(2),
+#                     format="d",
+#                     big.mark=','), family = "Times New Roman")
+# qqline(ks_analyze$AWATER_KM[
+#   which(ks_analyze$extant_swd_binary == 1)],
+#   lwd=2)
 
-par(mar=c(5,5,3,1))
-plot(density_horizontal, 
-     family = "Times New Roman", 
-     xlab = "Horizontal well count", 
-     main = "All Block Groups", 
-     col = "orchid1")
-par(mar=c(5,5,3,1))
-plot(density_horizontal_no_wells,
-     family = "Times New Roman", 
-     xlab = "Horizontal well count",
-     main = "Block Groups with No Disposal Wells", 
-     col = "slateblue1")
-par(mar=c(5,5,3,1))
-plot(density_horizontal_with_wells, 
-     family = "Times New Roman", 
-     xlab = "Horizontal well count", 
-     main = "Block Groups with Disposal Wells", 
-     col = "springgreen1")
-# polygon(density_horizontal, col="slateblue1", border="black")
 
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$horizontal_count, 
-  col = 'orchid1', 
-  pch = 18, 
-  cex = 1,
-  main = "All Block Groups", 
-  family = "Times New Roman")
-qqline(ks_analyze$horizontal_count[
-  which(ks_analyze$extant_swd_binary == 0)], 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$horizontal_count[
-  which(ks_analyze$extant_swd_binary == 0)], 
-       col = 'slateblue1', 
-       pch = 18, 
-       cex = 1,
-       main = "Block Groups with No Disposal Wells", 
-  family = "Times New Roman")
-qqline(ks_analyze$horizontal_count[
-  which(ks_analyze$extant_swd_binary == 0)], 
-       lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$horizontal_count[
-  which(ks_analyze$extant_swd_binary == 1)], 
-  col = 'springgreen1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with Disposal Wells", 
-  family = "Times New Roman")
-qqline(ks_analyze$horizontal_count[
-  which(ks_analyze$extant_swd_binary == 1)], 
-  lwd=2)
-
-
-
-
-
-
-
-
-# total population
-
-density_population <-
-  density(ks_analyze$pop_tot_B01001_001)
-density_population_no_wells <- 
-  density(ks_analyze$pop_tot_B01001_001[
-    which(ks_analyze$extant_swd_binary == 0
-    )])
-density_population_with_wells <- 
-  density(ks_analyze$pop_tot_B01001_001[
-    which(ks_analyze$extant_swd_binary == 1
-    )])
-
-# set up printing output
-par(mar=c(.5,.5,.5,.5))
-layout(matrix(c(1,1,1,
-                2,2,2,
-                4,5,6,
-                3,3,3,
-                7,8,9), 
-              ncol=3, 
-              byrow=TRUE), heights = c(.4,.4,3,.4,3))
-layout.show(n=9)
-plot.new()
-par(mar=c(0,1,0,1))
-text(0.5,0.5, "Total Population", 
-     cex=2.5, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Density Plots", 
-     cex=2, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Quantile-Quantile Plots", 
-     cex=2, 
-     family = "Times New Roman")
-
-par(mar=c(5,5,3,1))
-plot(density_population, 
-     main = "All Block Groups", 
-     family = "Times New Roman", 
-     xlab = "Population", 
-     col = "orchid1", xaxt='n')
-axis(side=1, at=axTicks(1), 
-     labels=formatC(axTicks(1), format="d", big.mark=','), 
-     family = "Times New Roman")
-par(mar=c(5,5,3,1))
-plot(density_population_no_wells, 
-     main = "Block Groups with No Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = "Population", 
-     col = "slateblue1", xaxt='n')
-axis(side=1, at=axTicks(1), 
-     labels=formatC(axTicks(1), format="d", big.mark=','), 
-     family = "Times New Roman")
-par(mar=c(5,5,3,1))
-plot(density_population_with_wells, 
-     main = "Block Groups with Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = "Population", 
-     col = "springgreen1", xaxt='n')
-axis(side=1, at=axTicks(1), 
-     labels=formatC(axTicks(1), format="d", big.mark=','), 
-     family = "Times New Roman")
-# polygon(density_population, col="slateblue1", border="black")
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$pop_tot_B01001_001, 
-       col = "orchid1",
-       pch = 18, 
-       cex = 1,
-       main = "All Block Groups", 
-       family = "Times New Roman", 
-       yaxt='n')
-axis(side=2, at=axTicks(2), 
-     labels=formatC(axTicks(2), format="d", big.mark=','), 
-     family = "Times New Roman")
-qqline(ks_analyze$pop_tot_B01001_001[
-  which(ks_analyze$extant_swd_binary == 0)], 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$pop_tot_B01001_001[
-  which(ks_analyze$extant_swd_binary == 0)], 
-  col = 'slateblue1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with No Disposal Wells", 
-  family = "Times New Roman", yaxt='n')
-axis(side=2, at=axTicks(2), 
-     labels=formatC(axTicks(2), 
-                    format="d", big.mark=','),  family = "Times New Roman")
-qqline(ks_analyze$pop_tot_B01001_001[
-  which(ks_analyze$extant_swd_binary == 0)], 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$pop_tot_B01001_001[
-  which(ks_analyze$extant_swd_binary == 1)], 
-  col = 'springgreen1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with Disposal Wells", 
-  family = "Times New Roman", 
-  yaxt='n')
-axis(side=2, at=axTicks(2), 
-     labels=formatC(axTicks(2), 
-                    format="d", big.mark=','),  family = "Times New Roman")
-qqline(ks_analyze$pop_tot_B01001_001[
-  which(ks_analyze$extant_swd_binary == 1)], 
-  lwd=2)
-
-
-
-# population density
-
-density_pop_dense <-
-  density(ks_analyze$pop_dense_B01001_001_ALAND)
-density_pop_dense_no_wells <- 
-  density(ks_analyze$pop_dense_B01001_001_ALAND[
-    which(ks_analyze$extant_swd_binary == 0
-    )])
-density_pop_dense_with_wells <- 
-  density(ks_analyze$pop_dense_B01001_001_ALAND[
-    which(ks_analyze$extant_swd_binary == 1
-    )])
-
-# set up printing output
-par(mar=c(.5,.5,.5,.5))
-layout(matrix(c(1,1,1,
-                2,2,2,
-                4,5,6,
-                3,3,3,
-                7,8,9), 
-              ncol=3, 
-              byrow=TRUE), heights = c(.4,.4,3,.4,3))
-layout.show(n=9)
-plot.new()
-par(mar=c(0,1,0,1))
-text(0.5,0.5, "Population Density", 
-     cex=2.5, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Density Plots", 
-     cex=2, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Quantile-Quantile Plots", 
-     cex=2, 
-     family = "Times New Roman")
-
-par(mar=c(5,5,3,1))
-plot(density_pop_dense, 
-     main = "All Block Groups", 
-     family = "Times New Roman", 
-     xlab = expression(paste("Population/km"^"2")), 
-     col = "orchid1", xaxt='n')
-axis(side=1, at=axTicks(1), 
-     labels=formatC(axTicks(1), format="d", big.mark=','), family = "Times New Roman")
-par(mar=c(5,5,3,1))
-plot(density_pop_dense_no_wells, 
-     main = "Block Groups with No Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = expression(paste("Population/km"^"2")), 
-     col = "slateblue1", xaxt='n')
-axis(side=1, at=axTicks(1), 
-     labels=formatC(axTicks(1), format="d", big.mark=','), family = "Times New Roman")
-par(mar=c(5,5,3,1))
-plot(density_pop_dense_with_wells, 
-     main = "Block Groups with Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = expression(paste("Population/km"^"2")), 
-     col = "springgreen1", xaxt='n')
-axis(side=1, at=axTicks(1), 
-     labels=formatC(axTicks(1), format="d", big.mark=','), family = "Times New Roman")
-# polygon(density_pop_dense, col="slateblue1", border="black")
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$pop_dense_B01001_001_ALAND, 
-       col = 'orchid1', 
-       pch = 18, 
-       cex = 1,
-       main = "All Block Groups", family = "Times New Roman", xaxt='n')
-axis(side=1, at=axTicks(1), 
-     labels=formatC(axTicks(1), format="d", big.mark=','), family = "Times New Roman")
-qqline(ks_analyze$pop_dense_B01001_001_ALAND[
-  which(ks_analyze$extant_swd_binary == 0)], 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$pop_dense_B01001_001_ALAND[
-  which(ks_analyze$extant_swd_binary == 0)], 
-  col = 'slateblue1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with No Disposal Wells", family = "Times New Roman", xaxt='n')
-axis(side=1, at=axTicks(1), 
-     labels=formatC(axTicks(1), format="d", big.mark=','), family = "Times New Roman")
-qqline(ks_analyze$pop_dense_B01001_001_ALAND[
-  which(ks_analyze$extant_swd_binary == 0)], 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$pop_dense_B01001_001_ALAND[
-  which(ks_analyze$extant_swd_binary == 1)], 
-  col = 'springgreen1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with Disposal Wells", family = "Times New Roman", xaxt='n')
-axis(side=1, at=axTicks(1), 
-     labels=formatC(axTicks(1), format="d", big.mark=','), family = "Times New Roman")
-qqline(ks_analyze$pop_dense_B01001_001_ALAND[
-  which(ks_analyze$extant_swd_binary == 1)], 
-  lwd=2)
-
-
-
-# age 0 to 17
-
-# set up printing output
-par(mar=c(.5,.5,.5,.5))
-layout(matrix(c(1,1,1,
-                2,2,2,
-                4,5,6,
-                3,3,3,
-                7,8,9), 
-              ncol=3, 
-              byrow=TRUE), heights = c(.4,.4,3,.4,3))
-layout.show(n=9)
-plot.new()
-par(mar=c(0,1,0,1))
-text(0.5,0.5, "Age < 18", 
-     cex=2.5, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Density Plots", 
-     cex=2, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Quantile-Quantile Plots", 
-     cex=2, 
-     family = "Times New Roman")
-
-density_age_0_to_17 <-
-  density(ks_analyze$age_0_to_17_percent_B01001*100)
-density_age_0_to_17_no_wells <- 
-  density(ks_analyze$age_0_to_17_percent_B01001[
-    which(ks_analyze$extant_swd_binary == 0
-    )]*100)
-density_age_0_to_17_with_wells <- 
-  density(ks_analyze$age_0_to_17_percent_B01001[
-    which(ks_analyze$extant_swd_binary == 1
-    )]*100)
-
-par(mar=c(5,5,3,1))
-plot(density_age_0_to_17, 
-     main = "All Block Groups", 
-     family = "Times New Roman", 
-     xlab = "% age < 18", 
-     col = 'orchid1')
-par(mar=c(5,5,3,1))
-plot(density_age_0_to_17_no_wells, 
-     main = "Block Groups with No Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = "% age < 18", 
-     col = 'slateblue1')
-par(mar=c(5,5,3,1))
-plot(density_age_0_to_17_with_wells, 
-     main = "Block Groups with Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = "% age < 18", 
-     col = 'springgreen1')
-# polygon(density_age_0_to_17, col="slateblue1", border="black")
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$age_0_to_17_percent_B01001*100, 
-       col = 'orchid1', 
-       pch = 18, 
-       cex = 1,
-       main = "All Block Groups", 
-       family = "Times New Roman")
-qqline(ks_analyze$age_0_to_17_percent_B01001[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$age_0_to_17_percent_B01001[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  col = 'slateblue1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with No Disposal Wells", 
-  family = "Times New Roman")
-qqline(ks_analyze$age_0_to_17_percent_B01001[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$age_0_to_17_percent_B01001[
-  which(ks_analyze$extant_swd_binary == 1)]*100, 
-  col = 'springgreen1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with Disposal Wells", 
-  family = "Times New Roman")
-qqline(ks_analyze$age_0_to_17_percent_B01001[
-  which(ks_analyze$extant_swd_binary == 1)]*100, 
-  lwd=2)
-
-
-
-# age 65+
-
-# set up printing output
-par(mar=c(.5,.5,.5,.5))
-layout(matrix(c(1,1,1,
-                2,2,2,
-                4,5,6,
-                3,3,3,
-                7,8,9), 
-              ncol=3, 
-              byrow=TRUE), heights = c(.4,.4,3,.4,3))
-layout.show(n=9)
-plot.new()
-par(mar=c(0,1,0,1))
-text(0.5,0.5, "Age > 64", 
-     cex=2.5, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Density Plots", 
-     cex=2, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Quantile-Quantile Plots", 
-     cex=2, 
-     family = "Times New Roman")
-
-density_age_65_plus <-
-  density(ks_analyze$age_65_plus_percent_B01001*100)
-density_age_65_plus_no_wells <- 
-  density(ks_analyze$age_65_plus_percent_B01001[
-    which(ks_analyze$extant_swd_binary == 0
-    )]*100)
-density_age_65_plus_with_wells <- 
-  density(ks_analyze$age_65_plus_percent_B01001[
-    which(ks_analyze$extant_swd_binary == 1
-    )]*100)
-
-par(mar=c(5,5,3,1))
-plot(density_age_65_plus, 
-     main = "All Block Groups", 
-     family = "Times New Roman", 
-     xlab = '% age > 64', 
-     col = 'orchid1')
-par(mar=c(5,5,3,1))
-plot(density_age_65_plus_no_wells, 
-     main = "Block Groups with No Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = '% age > 64', 
-     col = 'slateblue1')
-par(mar=c(5,5,3,1))
-plot(density_age_65_plus_with_wells, 
-     main = "Block Groups with Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = '% age > 64', 
-     col = 'springgreen1')
-# polygon(density_age_65_plus, col="slateblue1", border="black")
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$age_65_plus_percent_B01001*100, 
-       col = 'orchid1', 
-       pch = 18, 
-       cex = 1,
-       main = "All Block Groups", 
-       family = "Times New Roman")
-qqline(ks_analyze$age_65_plus_percent_B01001[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$age_65_plus_percent_B01001[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  col = 'slateblue1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with No Disposal Wells", 
-  family = "Times New Roman")
-qqline(ks_analyze$age_65_plus_percent_B01001[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$age_65_plus_percent_B01001[
-  which(ks_analyze$extant_swd_binary == 1)]*100, 
-  col = 'springgreen1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with Disposal Wells", 
-  family = "Times New Roman")
-qqline(ks_analyze$age_65_plus_percent_B01001[
-  which(ks_analyze$extant_swd_binary == 1)]*100, 
-  lwd=2)
-
-
-
-# percent white, non-Hispanic
-
-# set up printing output
-par(mar=c(.5,.5,.5,.5))
-layout(matrix(c(1,1,1,
-                2,2,2,
-                4,5,6,
-                3,3,3,
-                7,8,9), 
-              ncol=3, 
-              byrow=TRUE), heights = c(.4,.4,3,.4,3))
-layout.show(n=9)
-plot.new()
-par(mar=c(0,1,0,1))
-text(0.5,0.5, "White alone (not Hispanic or Latinx)", 
-     cex=2.5, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Density Plots", 
-     cex=2, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Quantile-Quantile Plots", 
-     cex=2, 
-     family = "Times New Roman")
-
-density_white <-
-  density(ks_analyze$white_non_hisp_lat_percent_B03002_003_001*100)
-density_white_no_wells <- 
-  density(ks_analyze$white_non_hisp_lat_percent_B03002_003_001[
-    which(ks_analyze$extant_swd_binary == 0
-    )]*100)
-density_white_with_wells <- 
-  density(ks_analyze$white_non_hisp_lat_percent_B03002_003_001[
-    which(ks_analyze$extant_swd_binary == 1
-    )]*100)
-
-par(mar=c(5,5,3,1))
-plot(density_white, 
-     main = "All Block Groups", 
-     family = "Times New Roman", 
-     xlab = "% white alone, not Hispanic or Latinx", 
-     col = 'orchid1')
-par(mar=c(5,5,3,1))
-plot(density_white_no_wells, 
-     main = "Block Groups with No Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = "% white alone, not Hispanic or Latinx", 
-     col = 'slateblue1')
-par(mar=c(5,5,3,1))
-plot(density_white_with_wells, 
-     main = "Block Groups with Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = "% white alone, not Hispanic or Latinx", 
-     col = 'springgreen1')
-# polygon(density_white, col="slateblue1", border="black")
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$white_non_hisp_lat_percent_B03002_003_001*100, 
-       col = 'orchid1', 
-       pch = 18, 
-       cex = 1,
-       main = "All Block Groups", 
-       family = "Times New Roman")
-qqline(ks_analyze$white_non_hisp_lat_percent_B03002_003_001[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$white_non_hisp_lat_percent_B03002_003_001[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  col = 'slateblue1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with No Disposal Wells", 
-  family = "Times New Roman")
-qqline(ks_analyze$white_non_hisp_lat_percent_B03002_003_001[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$white_non_hisp_lat_percent_B03002_003_001[
-  which(ks_analyze$extant_swd_binary == 1)]*100, 
-  col = 'springgreen1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with Disposal Wells", 
-  family = "Times New Roman")
-qqline(ks_analyze$white_non_hisp_lat_percent_B03002_003_001[
-  which(ks_analyze$extant_swd_binary == 1)]*100, 
-  lwd=2)
-
-
-
-# percent American Indian Alaska Native
-
-# set up printing output
-par(mar=c(.5,.5,.5,.5))
-layout(matrix(c(1,1,1,
-                2,2,2,
-                4,5,6,
-                3,3,3,
-                7,8,9), 
-              ncol=3, 
-              byrow=TRUE), heights = c(.4,.4,3,.4,3))
-layout.show(n=9)
-plot.new()
-par(mar=c(0,1,0,1))
-text(0.5,0.5, "Native American", 
-     cex=2.5, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Density Plots", 
-     cex=2, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Quantile-Quantile Plots", 
-     cex=2, 
-     family = "Times New Roman")
-
-density_aian <-
-  density(ks_analyze$aian_percent_any_race_B02010_001*100)
-density_aian_no_wells <- 
-  density(ks_analyze$aian_percent_any_race_B02010_001[
-    which(ks_analyze$extant_swd_binary == 0
-    )]*100)
-density_aian_with_wells <- 
-  density(ks_analyze$aian_percent_any_race_B02010_001[
-    which(ks_analyze$extant_swd_binary == 1
-    )]*100)
-
-par(mar=c(5,5,3,1))
-plot(density_aian, 
-     main = "All Block Groups", 
-     family = "Times New Roman", 
-     xlab = "% American Indian or Alaska Native", 
-     col = 'orchid1')
-
-par(mar=c(5,5,3,1))
-plot(density_aian_no_wells, 
-     main = "Block Groups with No Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = "% American Indian or Alaska Native", 
-     col = 'slateblue1')
-
-par(mar=c(5,5,3,1))
-plot(density_aian_with_wells, 
-     main = "Block Groups with Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = "% American Indian or Alaska Native", 
-     col = 'springgreen1')
-# polygon(density_aian, col="slateblue1", border="black")
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$aian_percent_any_race_B02010_001*100, 
-       col = 'orchid1', 
-       pch = 18, 
-       cex = 1,
-       main = "All Block Groups", 
-       family = "Times New Roman")
-qqline(ks_analyze$aian_percent_any_race_B02010_001[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$aian_percent_any_race_B02010_001[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  col = 'slateblue1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with No Disposal Wells", 
-  family = "Times New Roman")
-qqline(ks_analyze$aian_percent_any_race_B02010_001[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$aian_percent_any_race_B02010_001[
-  which(ks_analyze$extant_swd_binary == 1)]*100, 
-  col = 'springgreen1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with Disposal Wells", 
-  family = "Times New Roman")
-qqline(ks_analyze$aian_percent_any_race_B02010_001[
-  which(ks_analyze$extant_swd_binary == 1)]*100, 
-  lwd=2)
-
-
-
-# percent high school education or greater
-
-# set up printing output
-par(mar=c(.5,.5,.5,.5))
-layout(matrix(c(1,1,1,
-                2,2,2,
-                4,5,6,
-                3,3,3,
-                7,8,9), 
-              ncol=3, 
-              byrow=TRUE), heights = c(.4,.4,3,.4,3))
-layout.show(n=9)
-plot.new()
-par(mar=c(0,1,0,1))
-text(0.5,0.5, "High School Education", 
-     cex=2.5, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Density Plots", 
-     cex=2, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Quantile-Quantile Plots", 
-     cex=2, 
-     family = "Times New Roman")
-
-density_hs_ed <-
-  density(ks_analyze$education_high_school_plus_percent_B15003_017_to_025*100)
-density_hs_ed_no_wells <- 
-  density(ks_analyze$education_high_school_plus_percent_B15003_017_to_025[
-    which(ks_analyze$extant_swd_binary == 0
-    )]*100)
-density_hs_ed_with_wells <- 
-  density(ks_analyze$education_high_school_plus_percent_B15003_017_to_025[
-    which(ks_analyze$extant_swd_binary == 1
-    )]*100)
-
-par(mar=c(5,5,3,1))
-plot(density_hs_ed, 
-     main = "All Block Groups", 
-     family = "Times New Roman", 
-     xlab = "% high school graduate or equivalent", 
-     col = 'orchid1')
-
-par(mar=c(5,5,3,1))
-plot(density_hs_ed_no_wells, 
-     main = "Block Groups with No Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = "% high school graduate or equivalent", 
-     col = 'slateblue1')
-
-par(mar=c(5,5,3,1))
-plot(density_hs_ed_with_wells, 
-     main = "Block Groups with Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = "% high school graduate or equivalent", 
-     col = 'springgreen1')
-# polygon(density_hs_ed, col="slateblue1", border="black")
-
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$education_high_school_plus_percent_B15003_017_to_025*100, 
-       col = 'orchid1', 
-       pch = 18, 
-       cex = 1,
-       main = "All Block Groups", 
-       family = "Times New Roman")
-qqline(ks_analyze$education_high_school_plus_percent_B15003_017_to_025[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$education_high_school_plus_percent_B15003_017_to_025[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  col = 'slateblue1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with No Disposal Wells", 
-  family = "Times New Roman", 
-  xaxt='n')
-axis(side=1, 
-     at=axTicks(1), 
-     labels=formatC(axTicks(1), 
-                    format="d", 
-                    big.mark=','))
-qqline(ks_analyze$education_high_school_plus_percent_B15003_017_to_025[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$education_high_school_plus_percent_B15003_017_to_025[
-  which(ks_analyze$extant_swd_binary == 1)]*100, 
-  col = 'springgreen1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with Disposal Wells", 
-  family = "Times New Roman", 
-  xaxt='n')
-axis(side=1, 
-     at=axTicks(1), 
-     labels=formatC(axTicks(1), 
-                    format="d", 
-                    big.mark=','))
-qqline(ks_analyze$education_high_school_plus_percent_B15003_017_to_025[
-  which(ks_analyze$extant_swd_binary == 1)]*100, 
-  lwd=2)
-
-
-
-# renter occupy
-
-# set up printing output
-par(mar=c(.5,.5,.5,.5))
-layout(matrix(c(1,1,1,
-                2,2,2,
-                4,5,6,
-                3,3,3,
-                7,8,9), 
-              ncol=3, 
-              byrow=TRUE), heights = c(.4,.4,3,.4,3))
-layout.show(n=9)
-plot.new()
-par(mar=c(0,1,0,1))
-text(0.5,0.5, "Renter-Occupied Households", 
-     cex=2.5, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Density Plots", 
-     cex=2, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Quantile-Quantile Plots", 
-     cex=2, 
-     family = "Times New Roman")
-
-density_rent <-
-  density(ks_analyze$renter_occupy_percent_B25003_003_001*100)
-density_rent_no_wells <- 
-  density(ks_analyze$renter_occupy_percent_B25003_003_001[
-    which(ks_analyze$extant_swd_binary == 0
-    )]*100)
-density_rent_with_wells <- 
-  density(ks_analyze$renter_occupy_percent_B25003_003_001[
-    which(ks_analyze$extant_swd_binary == 1
-    )]*100)
-
-par(mar=c(5,5,3,1))
-plot(density_rent, 
-     main = "All Block Groups", 
-     family = "Times New Roman", 
-     xlab = "% of housing units renter occupied", 
-     col = 'orchid1')
-
-par(mar=c(5,5,3,1))
-plot(density_rent_no_wells, 
-     main = "Block Groups with No Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = "% of housing units renter occupied", 
-     col = 'slateblue1')
-
-par(mar=c(5,5,3,1))
-plot(density_rent_with_wells, 
-     main = "Block Groups with Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = "% of housing units renter occupied", 
-     col = 'springgreen1')
-# polygon(density_rent, col="slateblue1", border="black")
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$renter_occupy_percent_B25003_003_001*100, 
-       col = 'orchid1', 
-       pch = 18, 
-       cex = 1,
-       main = "All Block Groups", 
-       family = "Times New Roman")
-qqline(ks_analyze$renter_occupy_percent_B25003_003_001[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$renter_occupy_percent_B25003_003_001[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  col = 'slateblue1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with No Disposal Wells", 
-  family = "Times New Roman")
-qqline(ks_analyze$renter_occupy_percent_B25003_003_001[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$renter_occupy_percent_B25003_003_001[
-  which(ks_analyze$extant_swd_binary == 1)]*100, 
-  col = 'springgreen1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with Disposal Wells", 
-  family = "Times New Roman")
-qqline(ks_analyze$renter_occupy_percent_B25003_003_001[
-  which(ks_analyze$extant_swd_binary == 1)]*100, 
-  lwd=2)
-
-
-
-# limited English
-
-# set up printing output
-par(mar=c(.5,.5,.5,.5))
-layout(matrix(c(1,1,1,
-                2,2,2,
-                4,5,6,
-                3,3,3,
-                7,8,9), 
-              ncol=3, 
-              byrow=TRUE), heights = c(.4,.4,3,.4,3))
-layout.show(n=9)
-plot.new()
-par(mar=c(0,1,0,1))
-text(0.5,0.5, "Limited-English Households", 
-     cex=2.5, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Density Plots", 
-     cex=2, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Quantile-Quantile Plots", 
-     cex=2, 
-     family = "Times New Roman")
-
-density_no_eng <-
-  density(ks_analyze$limited_english_percent_C16002_004_007_010_013_001*100)
-density_no_eng_no_wells <- 
-  density(ks_analyze$limited_english_percent_C16002_004_007_010_013_001[
-    which(ks_analyze$extant_swd_binary == 0
-    )]*100)
-density_no_eng_with_wells <- 
-  density(ks_analyze$limited_english_percent_C16002_004_007_010_013_001[
-    which(ks_analyze$extant_swd_binary == 1
-    )]*100)
-
-par(mar=c(5,5,3,1))
-plot(density_no_eng, 
-     main = "All Block Groups", 
-     family = "Times New Roman", 
-     xlab = "% of households with limited English", 
-     col = 'orchid1')
-
-par(mar=c(5,5,3,1))
-plot(density_no_eng_no_wells, 
-     main = "Block Groups with No Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = "% of households with limited English", 
-     col = 'slateblue1')
-
-par(mar=c(5,5,3,1))
-plot(density_no_eng_with_wells, 
-     main = "Block Groups with Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = "% of households with limited English", 
-     col = 'springgreen1')
-# polygon(density_no_eng, col="slateblue1", border="black")
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$limited_english_percent_C16002_004_007_010_013_001*100, 
-       col = 'orchid1', 
-       pch = 18, 
-       cex = 1,
-       main = "All Block Groups", 
-       family = "Times New Roman")
-qqline(ks_analyze$limited_english_percent_C16002_004_007_010_013_001[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$limited_english_percent_C16002_004_007_010_013_001[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  col = 'slateblue1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with No Disposal Wells", 
-  family = "Times New Roman")
-qqline(ks_analyze$limited_english_percent_C16002_004_007_010_013_001[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$limited_english_percent_C16002_004_007_010_013_001[
-  which(ks_analyze$extant_swd_binary == 1)]*100, 
-  col = 'springgreen1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with Disposal Wells", 
-  family = "Times New Roman")
-qqline(ks_analyze$limited_english_percent_C16002_004_007_010_013_001[
-  which(ks_analyze$extant_swd_binary == 1)]*100, 
-  lwd=2)
-
-
-
-# median household income
-
-# set up printing output
-par(mar=c(.5,.5,.5,.5))
-layout(matrix(c(1,1,1,
-                2,2,2,
-                4,5,6,
-                3,3,3,
-                7,8,9), 
-              ncol=3, 
-              byrow=TRUE), heights = c(.4,.4,3,.4,3))
-layout.show(n=9)
-
-plot.new()
-par(mar=c(0,1,0,1))
-text(0.5,0.5, "Household Income", 
-     cex=2.5, 
-     family = "Times New Roman")
-
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Density Plots", 
-     cex=2, 
-     family = "Times New Roman")
-
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Quantile-Quantile Plots", 
-     cex=2, 
-     family = "Times New Roman")
-
-density_income <-
-  density(ks_analyze$income_house_median_B19013_001)
-density_income_no_wells <- 
-  density(ks_analyze$income_house_median_B19013_001[
-    which(ks_analyze$extant_swd_binary == 0
-    )])
-density_income_with_wells <- 
-  density(ks_analyze$income_house_median_B19013_001[
-    which(ks_analyze$extant_swd_binary == 1
-    )])
-
-par(mar=c(5,5,3,1))
-plot(density_income, 
-     main = "All Block Groups", 
-     family = "Times New Roman", 
-     xlab = "Median household income ($)", 
-     col = 'orchid1', 
-     xaxt='n')
-axis(side=1, 
-     at=axTicks(1), 
-     labels=formatC(axTicks(1), 
-                    format="d", 
-                    big.mark=','), family = "Times New Roman")
-
-par(mar=c(5,5,3,1))
-plot(density_income_no_wells, 
-     main = "Block Groups with No Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = "Median household income ($)", 
-     col = 'slateblue1', 
-     xaxt='n')
-axis(side=1, 
-     at=axTicks(1), 
-     labels=formatC(axTicks(1), 
-                    format="d", 
-                    big.mark=','), family = "Times New Roman")
-
-par(mar=c(5,5,3,1))
-plot(density_income_with_wells, 
-     main = "Block Groups with Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = "Median household income ($)", 
-     col = 'springgreen1', 
-     xaxt='n')
-axis(side=1, 
-     at=axTicks(1), 
-     labels=formatC(axTicks(1), 
-                    format="d", 
-                    big.mark=','), family = "Times New Roman")
-# polygon(density_income, col="slateblue1", border="black")
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$income_house_median_B19013_001, 
-       col = 'orchid1', 
-       pch = 18, 
-       cex = 1,
-       main = "All Block Groups", 
-       family = "Times New Roman", 
-       yaxt='n')
-axis(side=2, 
-     at=axTicks(2), 
-     labels=formatC(axTicks(2), 
-                    format="d", 
-                    big.mark=','), family = "Times New Roman")
-qqline(ks_analyze$income_house_median_B19013_001[
-  which(ks_analyze$extant_swd_binary == 0)], 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$income_house_median_B19013_001[
-  which(ks_analyze$extant_swd_binary == 0)], 
-  col = 'slateblue1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with No Disposal Wells", 
-  family = "Times New Roman", 
-  yaxt='n')
-axis(side=2, 
-     at=axTicks(2), 
-     labels=formatC(axTicks(2), 
-                    format="d", 
-                    big.mark=','), family = "Times New Roman")
-qqline(ks_analyze$income_house_median_B19013_001[
-  which(ks_analyze$extant_swd_binary == 0)], 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$income_house_median_B19013_001[
-  which(ks_analyze$extant_swd_binary == 1)], 
-  col = 'springgreen1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with Disposal Wells", 
-  family = "Times New Roman", 
-  yaxt='n')
-axis(side=2, 
-     at=axTicks(2), 
-     labels=formatC(axTicks(2), 
-                    format="d", 
-                    big.mark=','), 
-     family = "Times New Roman")
-qqline(ks_analyze$income_house_median_B19013_001[
-  which(ks_analyze$extant_swd_binary == 1)], 
-  lwd=2)
-
-
-
-# home value
-
-# set up printing output
-par(mar=c(.5,.5,.5,.5))
-layout(matrix(c(1,1,1,
-                2,2,2,
-                4,5,6,
-                3,3,3,
-                7,8,9), 
-              ncol=3, 
-              byrow=TRUE), heights = c(.4,.4,3,.4,3))
-layout.show(n=9)
-
-plot.new()
-par(mar=c(0,1,0,1))
-text(0.5,0.5, "Home Value", 
-     cex=2.5, 
-     family = "Times New Roman")
-
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Density Plots", 
-     cex=2, 
-     family = "Times New Roman")
-
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Quantile-Quantile Plots", 
-     cex=2, 
-     family = "Times New Roman")
-
-density_house_value <-
-  density(ks_analyze$house_value_median_B25077_001, na.rm = TRUE)
-density_house_value_no_wells <- 
-  density(ks_analyze$house_value_median_B25077_001[
-    which(ks_analyze$extant_swd_binary == 0
-    )], na.rm = TRUE)
-density_house_value_with_wells <- 
-  density(ks_analyze$house_value_median_B25077_001[
-    which(ks_analyze$extant_swd_binary == 1
-    )], na.rm = TRUE)
-
-par(mar=c(5,5,3,1))
-plot(density_house_value, 
-     main = "All Block Groups", 
-     family = "Times New Roman", 
-     xlab = "Median home value ($)", 
-     col = 'orchid1', 
-     xaxt='n')
-axis(side=1, 
-     at=axTicks(1), 
-     labels=formatC(axTicks(1), 
-                    format="d", 
-                    big.mark=','), family = "Times New Roman")
-
-par(mar=c(5,5,3,1))
-plot(density_house_value_no_wells, 
-     main = "Block Groups with No Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = "Median home value ($)", 
-     col = 'slateblue1', 
-     xaxt='n')
-axis(side=1, 
-     at=axTicks(1), 
-     labels=formatC(axTicks(1), 
-                    format="d", 
-                    big.mark=','), family = "Times New Roman")
-
-par(mar=c(5,5,3,1))
-plot(density_house_value_with_wells, 
-     main = "Block Groups with Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = "Median home value ($)", 
-     col = 'springgreen1', 
-     xaxt='n')
-axis(side=1, 
-     at=axTicks(1), 
-     labels=formatC(axTicks(1), 
-                    format="d", 
-                    big.mark=','), family = "Times New Roman")
-# polygon(density_house_value, col="slateblue1", border="black")
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$house_value_median_B25077_001, 
-       col = 'orchid1', 
-       pch = 18, 
-       cex = 1,
-       main = "All Block Groups", 
-       family = "Times New Roman", 
-       yaxt='n')
-axis(side=2, 
-     at=axTicks(2), 
-     labels=formatC(axTicks(2), 
-                    format="d", 
-                    big.mark=','), family = "Times New Roman")
-qqline(ks_analyze$house_value_median_B25077_001[
-  which(ks_analyze$extant_swd_binary == 0)], 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$house_value_median_B25077_001[
-  which(ks_analyze$extant_swd_binary == 0)], 
-  col = 'slateblue1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with No Disposal Wells", 
-  family = "Times New Roman", 
-  yaxt='n')
-axis(side=2, 
-     at=axTicks(2), 
-     labels=formatC(axTicks(2), 
-                    format="d", 
-                    big.mark=','), family = "Times New Roman")
-qqline(ks_analyze$house_value_median_B25077_001[
-  which(ks_analyze$extant_swd_binary == 0)], 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$house_value_median_B25077_001[
-  which(ks_analyze$extant_swd_binary == 1)], 
-  col = 'springgreen1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with Disposal Wells", 
-  family = "Times New Roman", 
-  yaxt='n')
-axis(side=2, 
-     at=axTicks(2), 
-     labels=formatC(axTicks(2), 
-                    format="d", 
-                    big.mark=','), family = "Times New Roman")
-qqline(ks_analyze$house_value_median_B25077_001[
-  which(ks_analyze$extant_swd_binary == 1)], 
-  lwd=2)
-
-
-
-# no health insurance
-
-# set up printing output
-par(mar=c(.5,.5,.5,.5))
-layout(matrix(c(1,1,1,
-                2,2,2,
-                4,5,6,
-                3,3,3,
-                7,8,9), 
-              ncol=3, 
-              byrow=TRUE), heights = c(.4,.4,3,.4,3))
-layout.show(n=9)
-plot.new()
-par(mar=c(0,1,0,1))
-text(0.5,0.5, "No Health Insurance Coverage", 
-     cex=2.5, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Density Plots", 
-     cex=2, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Quantile-Quantile Plots", 
-     cex=2, 
-     family = "Times New Roman")
-
-density_no_insure <-
-  density(ks_analyze$no_health_insurance_percent_B27010_017_033_050_066*100)
-density_no_insure_no_wells <- 
-  density(ks_analyze$no_health_insurance_percent_B27010_017_033_050_066[
-    which(ks_analyze$extant_swd_binary == 0
-    )]*100)
-density_no_insure_with_wells <- 
-  density(ks_analyze$no_health_insurance_percent_B27010_017_033_050_066[
-    which(ks_analyze$extant_swd_binary == 1
-    )]*100)
-
-par(mar=c(5,5,3,1))
-plot(density_no_insure, 
-     main = "All Block Groups", 
-     family = "Times New Roman", 
-     xlab = "% with no health insurance coverage", 
-     col = 'orchid1')
-
-par(mar=c(5,5,3,1))
-plot(density_no_insure_no_wells, 
-     main = "Block Groups with No Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = "% with no health insurance coverage", 
-     col = 'slateblue1')
-
-par(mar=c(5,5,3,1))
-plot(density_no_insure_with_wells, 
-     main = "Block Groups with Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = "% with no health insurance coverage", 
-     col = 'springgreen1')
-# polygon(density_no_insure, col="slateblue1", border="black")
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$no_health_insurance_percent_B27010_017_033_050_066*100, 
-       col = 'orchid1', 
-       pch = 18, 
-       cex = 1,
-       main = "All Block Groups", 
-       family = "Times New Roman")
-qqline(ks_analyze$no_health_insurance_percent_B27010_017_033_050_066[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$no_health_insurance_percent_B27010_017_033_050_066[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  col = 'slateblue1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with No Disposal Wells", 
-  family = "Times New Roman")
-qqline(ks_analyze$no_health_insurance_percent_B27010_017_033_050_066[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$no_health_insurance_percent_B27010_017_033_050_066[
-  which(ks_analyze$extant_swd_binary == 1)]*100, 
-  col = 'springgreen1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with Disposal Wells", 
-  family = "Times New Roman")
-qqline(ks_analyze$no_health_insurance_percent_B27010_017_033_050_066[
-  which(ks_analyze$extant_swd_binary == 1)]*100, 
-  lwd=2)
-
-
-
-# unemployment
-
-density_unemploy <-
-  density(ks_analyze$unemployed_percent_B23025_005_003*100)
-density_unemploy_no_wells <- 
-  density(ks_analyze$unemployed_percent_B23025_005_003[
-    which(ks_analyze$extant_swd_binary == 0
-    )]*100)
-density_unemploy_with_wells <- 
-  density(ks_analyze$unemployed_percent_B23025_005_003[
-    which(ks_analyze$extant_swd_binary == 1
-    )]*100)
-
-# set up printing output
-par(mar=c(.5,.5,.5,.5))
-layout(matrix(c(1,1,1,
-                2,2,2,
-                4,5,6,
-                3,3,3,
-                7,8,9), 
-              ncol=3, 
-              byrow=TRUE), heights = c(.4,.4,3,.4,3))
-layout.show(n=9)
-plot.new()
-par(mar=c(0,1,0,1))
-text(0.5,0.5, "Unemployment", 
-     cex=2.5, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Density Plots", 
-     cex=2, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Quantile-Quantile Plots", 
-     cex=2, 
-     family = "Times New Roman")
-
-par(mar=c(5,5,3,1))
-plot(density_unemploy, 
-     main = "All Block Groups", 
-     family = "Times New Roman", 
-     xlab = "% unemployed", 
-     col = "orchid1")
-
-par(mar=c(5,5,3,1))
-plot(density_unemploy_no_wells, 
-     main = "Block Groups with No Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = "% unemployed", 
-     col = "slateblue1")
-
-par(mar=c(5,5,3,1))
-plot(density_unemploy_with_wells, 
-     main = "Block Groups with Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = "% unemployed", 
-     col = 'springgreen1')
-# polygon(density_unemploy, col="slateblue1", border="black")
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$unemployed_percent_B23025_005_003*100, 
-       col = 'orchid1', 
-       pch = 18, 
-       cex = 1,
-       main = "All Block Groups", 
-       family = "Times New Roman")
-qqline(ks_analyze$unemployed_percent_B23025_005_003[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$unemployed_percent_B23025_005_003[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  col = 'slateblue1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with No Disposal Wells", 
-  family = "Times New Roman")
-qqline(ks_analyze$unemployed_percent_B23025_005_003[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$unemployed_percent_B23025_005_003[
-  which(ks_analyze$extant_swd_binary == 1)]*100, 
-  col = 'springgreen', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with Disposal Wells", 
-  family = "Times New Roman")
-qqline(ks_analyze$unemployed_percent_B23025_005_003[
-  which(ks_analyze$extant_swd_binary == 1)]*100, 
-  lwd=2)
-
-
-
-# land area
-
-density_ALAND_KM <-
-  density(ks_analyze$ALAND_KM)
-density_ALAND_KM_no_wells <- 
-  density(ks_analyze$ALAND_KM[
-    which(ks_analyze$extant_swd_binary == 0
-    )])
-density_ALAND_KM_with_wells <- 
-  density(ks_analyze$ALAND_KM[
-    which(ks_analyze$extant_swd_binary == 1
-    )])
-
-# set up printing output
-par(mar=c(.5,.5,.5,.5))
-layout(matrix(c(1,1,1,
-                2,2,2,
-                4,5,6,
-                3,3,3,
-                7,8,9), 
-              ncol=3, 
-              byrow=TRUE), heights = c(.4,.4,3,.4,3))
-layout.show(n=9)
-plot.new()
-par(mar=c(0,1,0,1))
-text(0.5,0.5, "Land Area", 
-     cex=2.5, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Density Plots", 
-     cex=2, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Quantile-Quantile Plots", 
-     cex=2, 
-     family = "Times New Roman")
-
-par(mar=c(5,5,3,1))
-plot(density_ALAND_KM, 
-     main = "All Block Groups", 
-     family = "Times New Roman", 
-     xlab = expression(paste("Land area (km"^"2",")")), 
-     col = 'orchid1', 
-     xaxt='n')
-axis(side=1, 
-     at=axTicks(1), 
-     labels=formatC(axTicks(1), 
-                    format="d", 
-                    big.mark=','), family = "Times New Roman")
-
-par(mar=c(5,5,3,1))
-plot(density_ALAND_KM_no_wells, 
-     main = "Block Groups with No Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = expression(paste("Land area (km"^"2",")")), 
-     col = 'slateblue1', 
-     xaxt='n')
-axis(side=1, 
-     at=axTicks(1), 
-     labels=formatC(axTicks(1), 
-                    format="d", 
-                    big.mark=','), family = "Times New Roman")
-
-par(mar=c(5,5,3,1))
-plot(density_ALAND_KM_with_wells, 
-     main = "Block Groups with Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = expression(paste("Land area (km"^"2",")")), 
-     col = 'springgreen1', 
-     xaxt='n')
-axis(side=1, 
-     at=axTicks(1), 
-     labels=formatC(axTicks(1), 
-                    format="d", 
-                    big.mark=','), family = "Times New Roman")
-# polygon(density_ALAND_KM, col="slateblue1", border="black")
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$ALAND_KM, 
-       col = 'orchid1', 
-       pch = 18, 
-       cex = 1,
-       main = "All Block Groups", 
-       family = "Times New Roman", 
-       yaxt='n')
-axis(side=2, 
-     at=axTicks(2), 
-     labels=formatC(axTicks(2), 
-                    format="d", 
-                    big.mark=','), family = "Times New Roman")
-qqline(ks_analyze$ALAND_KM[
-  which(ks_analyze$extant_swd_binary == 0)], 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$ALAND_KM[
-  which(ks_analyze$extant_swd_binary == 0)], 
-  col = 'slateblue1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with No Disposal Wells", 
-  family = "Times New Roman", 
-  yaxt='n')
-axis(side=2, 
-     at=axTicks(2), 
-     labels=formatC(axTicks(2), 
-                    format="d", 
-                    big.mark=','), family = "Times New Roman")
-qqline(ks_analyze$ALAND_KM[
-  which(ks_analyze$extant_swd_binary == 0)], 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$ALAND_KM[
-  which(ks_analyze$extant_swd_binary == 1)], 
-  col = 'springgreen1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with Disposal Wells", 
-  family = "Times New Roman", 
-  yaxt='n')
-axis(side=2, 
-     at=axTicks(2), 
-     labels=formatC(axTicks(2), 
-                    format="d", 
-                    big.mark=','), family = "Times New Roman")
-qqline(ks_analyze$ALAND_KM[
-  which(ks_analyze$extant_swd_binary == 1)], 
-  lwd=2)
-
-
-
-# percent Hispanic or Latinx
-
-density_hisp_lat <-
-  density(ks_analyze$hisp_lat_percent_B03002_012_001*100)
-density_hisp_lat_no_wells <- 
-  density(ks_analyze$hisp_lat_percent_B03002_012_001[
-    which(ks_analyze$extant_swd_binary == 0
-    )]*100)
-density_hisp_lat_with_wells <- 
-  density(ks_analyze$hisp_lat_percent_B03002_012_001[
-    which(ks_analyze$extant_swd_binary == 1
-    )]*100)
-
-# set up printing output
-par(mar=c(.5,.5,.5,.5))
-layout(matrix(c(1,1,1,
-                2,2,2,
-                4,5,6,
-                3,3,3,
-                7,8,9), 
-              ncol=3, 
-              byrow=TRUE), heights = c(.4,.4,3,.4,3))
-layout.show(n=9)
-plot.new()
-par(mar=c(0,1,0,1))
-text(0.5,0.5, "Hispanic or Latinx", 
-     cex=2.5, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Density Plots", 
-     cex=2, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Quantile-Quantile Plots", 
-     cex=2, 
-     family = "Times New Roman")
-
-par(mar=c(5,5,3,1))
-plot(density_hisp_lat, 
-     main = "All Block Groups", 
-     family = "Times New Roman", 
-     xlab = "% Hispanic or Latinx (any race)", 
-     col = 'orchid1')
-
-par(mar=c(5,5,3,1))
-plot(density_hisp_lat_no_wells, 
-     main = "Block Groups with No Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = "% Hispanic or Latinx (any race)", 
-     col = 'slateblue1')
-
-par(mar=c(5,5,3,1))
-plot(density_hisp_lat_with_wells, 
-     main = "Block Groups with Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = "% Hispanic or Latinx (any race)", 
-     col = 'springgreen1')
-# polygon(density_hisp_lat, col="slateblue1", border="black")
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$hisp_lat_percent_B03002_012_001*100, 
-       col = 'orchid1', 
-       pch = 18, 
-       cex = 1,
-       main = "All Block Groups", 
-       family = "Times New Roman")
-qqline(ks_analyze$hisp_lat_percent_B03002_012_001[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$hisp_lat_percent_B03002_012_001[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  col = 'slateblue1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with No Disposal Wells", 
-  family = "Times New Roman")
-qqline(ks_analyze$hisp_lat_percent_B03002_012_001[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$hisp_lat_percent_B03002_012_001[
-  which(ks_analyze$extant_swd_binary == 1)]*100, 
-  col = 'springgreen1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with Disposal Wells", 
-  family = "Times New Roman")
-qqline(ks_analyze$hisp_lat_percent_B03002_012_001[
-  which(ks_analyze$extant_swd_binary == 1)]*100, 
-  lwd=2)
-
-
-
-# median earnings
-
-density_earnings <-
-  density(ks_analyze$earnings_median_B20002_001, na.rm = TRUE)
-density_earnings_no_wells <- 
-  density(ks_analyze$earnings_median_B20002_001[
-    which(ks_analyze$extant_swd_binary == 0
-    )], na.rm = TRUE)
-density_earnings_with_wells <- 
-  density(ks_analyze$earnings_median_B20002_001[
-    which(ks_analyze$extant_swd_binary == 1
-    )], na.rm = TRUE)
-
-# set up printing output
-par(mar=c(.5,.5,.5,.5))
-layout(matrix(c(1,1,1,
-                2,2,2,
-                4,5,6,
-                3,3,3,
-                7,8,9), 
-              ncol=3, 
-              byrow=TRUE), heights = c(.4,.4,3,.4,3))
-layout.show(n=9)
-plot.new()
-par(mar=c(0,1,0,1))
-text(0.5,0.5, "Individual Earnings", 
-     cex=2.5, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Density Plots", 
-     cex=2, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Quantile-Quantile Plots", 
-     cex=2, 
-     family = "Times New Roman")
-
-par(mar=c(5,5,3,1))
-plot(density_earnings, 
-     main = "All Block Groups", 
-     family = "Times New Roman", 
-     xlab = "Median individual earnings ($)", 
-     col = 'orchid1', 
-     xaxt='n')
-axis(side=1, 
-     at=axTicks(1), 
-     labels=formatC(axTicks(1), 
-                    format="d", 
-                    big.mark=','), family = "Times New Roman")
-
-par(mar=c(5,5,3,1))
-plot(density_earnings_no_wells, 
-     main = "Block Groups with No Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = "Median individual earnings ($)", 
-     col = 'slateblue1', 
-     xaxt='n')
-axis(side=1, 
-     at=axTicks(1), 
-     labels=formatC(axTicks(1), 
-                    format="d", 
-                    big.mark=','), family = "Times New Roman")
-
-par(mar=c(5,5,3,1))
-plot(density_earnings_with_wells, 
-     main = "Block Groups with Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = "Median individual earnings ($)", 
-     col = 'springgreen1', 
-     xaxt='n')
-axis(side=1, 
-     at=axTicks(1), 
-     labels=formatC(axTicks(1), 
-                    format="d", 
-                    big.mark=','), family = "Times New Roman")
-# polygon(density_earnings, col="slateblue1", border="black")
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$earnings_median_B20002_001, 
-       col = 'orchid1', 
-       pch = 18, 
-       cex = 1,
-       main = "All Block Groups", 
-       family = "Times New Roman", 
-       yaxt='n')
-axis(side=2, 
-     at=axTicks(2), 
-     labels=formatC(axTicks(2), 
-                    format="d", 
-                    big.mark=','), family = "Times New Roman")
-qqline(ks_analyze$earnings_median_B20002_001[
-  which(ks_analyze$extant_swd_binary == 0)], 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$earnings_median_B20002_001[
-  which(ks_analyze$extant_swd_binary == 0)], 
-  col = 'slateblue1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with No Disposal Wells", 
-  family = "Times New Roman", 
-  xaxt='n')
-axis(side=1, 
-     at=axTicks(1), 
-     labels=formatC(axTicks(1), 
-                    format="d", 
-                    big.mark=','), family = "Times New Roman")
-qqline(ks_analyze$earnings_median_B20002_001[
-  which(ks_analyze$extant_swd_binary == 0)], 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$earnings_median_B20002_001[
-  which(ks_analyze$extant_swd_binary == 1)], 
-  col = 'springgreen1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with Disposal Wells", 
-  family = "Times New Roman", 
-  yaxt='n')
-axis(side=2, 
-     at=axTicks(2), 
-     labels=formatC(axTicks(2), 
-                    format="d", 
-                    big.mark=','), family = "Times New Roman")
-qqline(ks_analyze$earnings_median_B20002_001[
-  which(ks_analyze$extant_swd_binary == 1)], 
-  lwd=2)
-
-
-
-
-# percent in poverty
-
-density_poverty <-
-  density(ks_analyze$poverty_below_100_percent_C17002_002_003_001*100)
-density_poverty_no_wells <- 
-  density(ks_analyze$poverty_below_100_percent_C17002_002_003_001[
-    which(ks_analyze$extant_swd_binary == 0
-    )]*100)
-density_poverty_with_wells <- 
-  density(ks_analyze$poverty_below_100_percent_C17002_002_003_001[
-    which(ks_analyze$extant_swd_binary == 1
-    )]*100)
-
-# set up printing output
-par(mar=c(.5,.5,.5,.5))
-layout(matrix(c(1,1,1,
-                2,2,2,
-                4,5,6,
-                3,3,3,
-                7,8,9), 
-              ncol=3, 
-              byrow=TRUE), heights = c(.4,.4,3,.4,3))
-layout.show(n=9)
-plot.new()
-par(mar=c(0,1,0,1))
-text(0.5,0.5, "Poverty", 
-     cex=2.5, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Density Plots", 
-     cex=2, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Quantile-Quantile Plots", 
-     cex=2, 
-     family = "Times New Roman")
-
-par(mar=c(5,5,3,1))
-plot(density_poverty, 
-     main = "All Block Groups", 
-     family = "Times New Roman", 
-     xlab = "% in poverty", 
-     col = 'orchid1')
-
-par(mar=c(5,5,3,1))
-plot(density_poverty_no_wells, 
-     main = "Block Groups with No Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = "% in poverty", 
-     col = 'slateblue1')
-
-par(mar=c(5,5,3,1))
-plot(density_poverty_with_wells, 
-     main = "Block Groups with Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = "% in poverty", 
-     col = 'springgreen1')
-# polygon(density_poverty, col="slateblue1", border="black")
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$poverty_below_100_percent_C17002_002_003_001*100, 
-       col = 'orchid1', 
-       pch = 18, 
-       cex = 1,
-       main = "All Block Groups", 
-       family = "Times New Roman")
-qqline(ks_analyze$poverty_below_100_percent_C17002_002_003_001[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$poverty_below_100_percent_C17002_002_003_001[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  col = 'slateblue1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with No Disposal Wells", 
-  family = "Times New Roman")
-qqline(ks_analyze$poverty_below_100_percent_C17002_002_003_001[
-  which(ks_analyze$extant_swd_binary == 0)]*100, 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$poverty_below_100_percent_C17002_002_003_001[
-  which(ks_analyze$extant_swd_binary == 1)]*100, 
-  col = 'springgreen1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with Disposal Wells", 
-  family = "Times New Roman")
-qqline(ks_analyze$poverty_below_100_percent_C17002_002_003_001[
-  which(ks_analyze$extant_swd_binary == 1)]*100, 
-  lwd=2)
-
-
-
-
-# water area
-
-density_water <-
-  density(ks_analyze$AWATER_KM)
-density_water_no_wells <- 
-  density(ks_analyze$AWATER_KM[
-    which(ks_analyze$extant_swd_binary == 0
-    )])
-density_water_with_wells <- 
-  density(ks_analyze$AWATER_KM[
-    which(ks_analyze$extant_swd_binary == 1
-    )])
-
-# set up printing output
-par(mar=c(.5,.5,.5,.5))
-layout(matrix(c(1,1,1,
-                2,2,2,
-                4,5,6,
-                3,3,3,
-                7,8,9), 
-              ncol=3, 
-              byrow=TRUE), heights = c(.4,.4,3,.4,3))
-layout.show(n=9)
-plot.new()
-par(mar=c(0,1,0,1))
-text(0.5,0.5, "Water Area", 
-     cex=2.5, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Density Plots", 
-     cex=2, 
-     family = "Times New Roman")
-plot.new()
-par(mar=c(1,1,1,1))
-text(0.5, 0.5, 
-     "Quantile-Quantile Plots", 
-     cex=2, 
-     family = "Times New Roman")
-
-par(mar=c(5,5,3,1))
-plot(density_water, 
-     main = "All Block Groups", 
-     family = "Times New Roman", 
-     xlab = expression(paste("Water area (km"^"2",")")), 
-     col = 'orchid1', 
-     xaxt='n')
-axis(side=1, 
-     at=axTicks(1), 
-     labels=formatC(axTicks(1), 
-                    format="d", 
-                    big.mark=','), family = "Times New Roman")
-
-par(mar=c(5,5,3,1))
-plot(density_water_no_wells, 
-     main = "Block Groups with No Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = expression(paste("Water area (km"^"2",")")), 
-     col = 'slateblue1', 
-     xaxt='n')
-axis(side=1, 
-     at=axTicks(1), 
-     labels=formatC(axTicks(1), 
-                    format="d", 
-                    big.mark=','), family = "Times New Roman")
-
-par(mar=c(5,5,3,1))
-plot(density_water_with_wells, 
-     main = "Block Groups with Disposal Wells", 
-     family = "Times New Roman", 
-     xlab = expression(paste("Water area (km"^"2",")")), 
-     col = 'springgreen1', 
-     xaxt='n')
-axis(side=1, 
-     at=axTicks(1), 
-     labels=formatC(axTicks(1), 
-                    format="d", 
-                    big.mark=','), family = "Times New Roman")
-# polygon(density_water, col="slateblue1", border="black")
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$AWATER_KM, 
-       col = 'orchid1', 
-       pch = 18, 
-       cex = 1,
-       main = "All Block Groups", 
-       family = "Times New Roman", 
-       yaxt='n')
-axis(side=2, 
-     at=axTicks(2), 
-     labels=formatC(axTicks(2), 
-                    format="d", 
-                    big.mark=','), 
-     xaxt='n')
-axis(side=1, 
-     at=axTicks(1), 
-     labels=formatC(axTicks(1), 
-                    format="d", 
-                    big.mark=','), family = "Times New Roman")
-qqline(ks_analyze$AWATER_KM[
-  which(ks_analyze$extant_swd_binary == 0)], 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$AWATER_KM[
-  which(ks_analyze$extant_swd_binary == 0)], 
-  col = 'slateblue1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with No Disposal Wells", 
-  family = "Times New Roman", 
-  yaxt='n')
-axis(side=2, 
-     at=axTicks(2), 
-     labels=formatC(axTicks(2), 
-                    format="d", 
-                    big.mark=','), family = "Times New Roman")
-qqline(ks_analyze$AWATER_KM[
-  which(ks_analyze$extant_swd_binary == 0)], 
-  lwd=2)
-
-par(mar=c(5,5,3,1))
-qqnorm(ks_analyze$AWATER_KM[
-  which(ks_analyze$extant_swd_binary == 1)], 
-  col = 'springgreen1', 
-  pch = 18, 
-  cex = 1,
-  main = "Block Groups with Disposal Wells", 
-  family = "Times New Roman", 
-  yaxt='n')
-axis(side=2, 
-     at=axTicks(2), 
-     labels=formatC(axTicks(2), 
-                    format="d", 
-                    big.mark=','), family = "Times New Roman")
-qqline(ks_analyze$AWATER_KM[
-  which(ks_analyze$extant_swd_binary == 1)], 
-  lwd=2)
 
 
 
@@ -5617,458 +5972,979 @@ ks_analyze <-
   within(ks_analyze, 
          extant_swd_binary_text[extant_swd_binary == 0] <- "0")
 
-# make function to display n
-give.n <- function(x){
-  return(c(y = mean(x), label = length(x)))
-}
+# # make function to display n
+# give.n <- function(x){
+#   return(c(y = mean(x), label = length(x)))
+# }
+# 
+# # ice
+# ice_boxplot <-
+#   ggplot(ks_analyze,
+#          aes(x = extant_swd_binary_text,
+#              y = ice_B19001,
+#              fill = extant_swd_binary_text)) +
+#   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
+#                outlier.colour = NULL) +
+#   scale_y_continuous(name = "Income concentration at the extremes") +
+#   scale_x_discrete(name = "Saltwater disposal well count") +
+#   ggtitle("Income Concentration at the Extremes") +
+#   theme_bw() +
+#   theme(plot.title = element_text(size = 14,
+#                                   family = "Times New Roman",
+#                                   face = "bold",
+#                                   hjust = 0.5),
+#         text = element_text(size = 12, family = "Times New Roman"),
+#         axis.title = element_text(face="bold"),
+#         axis.text.x=element_text(size = 11),
+#         legend.position = "none")
+# ice_boxplot
+# 
+# # age 18
+# age_18_boxplot <-
+#   ggplot(ks_analyze,
+#          aes(x = extant_swd_binary_text,
+#              y = age_0_to_17_percent_B01001*100,
+#              fill = extant_swd_binary_text)) +
+#   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
+#                outlier.colour = NULL) +
+#   scale_y_continuous(name = "% age < 18") +
+#   scale_x_discrete(name = "Saltwater disposal well count") +
+#   ggtitle("Age < 18") +
+#   theme_bw() +
+#   theme(plot.title = element_text(size = 14,
+#                                   family = "Times New Roman",
+#                                   face = "bold",
+#                                   hjust = 0.5),
+#         text = element_text(size = 12, family = "Times New Roman"),
+#         axis.title = element_text(face="bold"),
+#         axis.text.x=element_text(size = 11),
+#         legend.position = "none")
+# age_18_boxplot
+# 
+# 
+# # age 65
+# age_65_boxplot <-
+#   ggplot(ks_analyze,
+#          aes(x = extant_swd_binary_text,
+#              y = age_65_plus_percent_B01001*100,
+#              fill = extant_swd_binary_text)) +
+#   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
+#                outlier.colour = NULL) +
+#   scale_y_continuous(name = "% age > 64") +
+#   scale_x_discrete(name = "Saltwater disposal well count") +
+#   ggtitle("Age > 64") +
+#   theme_bw() +
+#   theme(plot.title = element_text(size = 14,
+#                                   family = "Times New Roman",
+#                                   face = "bold",
+#                                   hjust = 0.5),
+#         text = element_text(size = 12, family = "Times New Roman"),
+#         axis.title = element_text(face="bold"),
+#         axis.text.x=element_text(size = 11),
+#         legend.position = "none")
+# age_65_boxplot
+# 
+# 
+# # horizontal well count
+# horizontal_boxplot <-
+#   ggplot(ks_analyze,
+#          aes(x = extant_swd_binary_text,
+#              y = horizontal_count,
+#              fill = extant_swd_binary_text)) +
+#   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
+#                outlier.colour = NULL) +
+#   scale_y_continuous(name = "Horizontal well count") +
+#   scale_x_discrete(name = "Saltwater disposal well count") +
+#   ggtitle("Horizontal Well Count") +
+#   theme_bw() +
+#   theme(plot.title = element_text(size = 14,
+#                                   family = "Times New Roman",
+#                                   face = "bold",
+#                                   hjust = 0.5),
+#         text = element_text(size = 12, family = "Times New Roman"),
+#         axis.title = element_text(face="bold"),
+#         axis.text.x=element_text(size = 11),
+#         legend.position = "none")
+# horizontal_boxplot
+# 
+# 
+# # median household value 77 missing
+# home_value_boxplot <-
+#   ggplot(ks_analyze,
+#          aes(x = extant_swd_binary_text,
+#              y = ks_analyze$house_value_median_B25077_001,
+#              fill = extant_swd_binary_text)) +
+#   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
+#                outlier.colour = NULL) +
+#   scale_y_continuous(name = "Median home value ($)") +
+#   scale_x_discrete(name = "Saltwater disposal well count") +
+#   ggtitle("Home Value") +
+#   theme_bw() +
+#   theme(plot.title = element_text(size = 14,
+#                                   family = "Times New Roman",
+#                                   face = "bold",
+#                                   hjust = 0.5),
+#         text = element_text(size = 12, family = "Times New Roman"),
+#         axis.title = element_text(face="bold"),
+#         axis.text.x=element_text(size = 11),
+#         legend.position = "none")
+# home_value_boxplot
+# 
+# 
+# # median earnings   # missing 33 data points (1778 no wells, 482 with wells)
+# earnings_boxplot <-
+#   ggplot(ks_analyze,
+#          aes(x = extant_swd_binary_text,
+#              y = ks_analyze$earnings_median_B20002_001,
+#              fill = extant_swd_binary_text)) +
+#   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
+#                outlier.colour = NULL) +
+#   scale_y_continuous(name = "Median individual earnings ($)") +
+#   scale_x_discrete(name = "Saltwater disposal well count") +
+#   ggtitle("Individual Earnings") +
+#   theme_bw() +
+#   theme(plot.title = element_text(size = 14,
+#                                   family = "Times New Roman",
+#                                   face = "bold",
+#                                   hjust = 0.5),
+#         text = element_text(size = 12, family = "Times New Roman"),
+#         axis.title = element_text(face="bold"),
+#         axis.text.x=element_text(size = 11),
+#         legend.position = "none")
+# earnings_boxplot
+# 
+# 
+# # median household income
+# income_boxplot <-
+#   ggplot(ks_analyze,
+#          aes(x = extant_swd_binary_text,
+#              y = ks_analyze$income_house_median_B19013_001,
+#              fill = extant_swd_binary_text)) +
+#   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
+#                outlier.colour = NULL) +
+#   scale_y_continuous(name = "Median household income ($)") +
+#   scale_x_discrete(name = "Saltwater disposal well count") +
+#   ggtitle("Household Income") +
+#   theme_bw() +
+#   theme(plot.title = element_text(size = 14,
+#                                   family = "Times New Roman",
+#                                   face = "bold",
+#                                   hjust = 0.5),
+#         text = element_text(size = 12, family = "Times New Roman"),
+#         axis.title = element_text(face="bold"),
+#         axis.text.x=element_text(size = 11),
+#         legend.position = "none")
+# income_boxplot
+# 
+# 
+# # % with no health insurance
+# health_insurance_boxplot <-
+#   ggplot(ks_analyze,
+#          aes(x = extant_swd_binary_text,
+#              y = ks_analyze$no_health_insurance_percent_B27010_017_033_050_066,
+#              fill = extant_swd_binary_text)) +
+#   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
+#                outlier.colour = NULL) +
+#   scale_y_continuous(name = "% with no health insurance coverage") +
+#   scale_x_discrete(name = "Saltwater disposal well count") +
+#   ggtitle("Health Insurance") +
+#   theme_bw() +
+#   theme(plot.title = element_text(size = 14,
+#                                   family = "Times New Roman",
+#                                   face = "bold",
+#                                   hjust = 0.5),
+#         text = element_text(size = 12, family = "Times New Roman"),
+#         axis.title = element_text(face="bold"),
+#         axis.text.x=element_text(size = 11),
+#         legend.position = "none")
+# health_insurance_boxplot
+# 
+# 
+# # % limited-English households
+# lim_eng_boxplot <-
+#   ggplot(ks_analyze,
+#          aes(x = extant_swd_binary_text,
+#              y = ks_analyze$limited_english_percent_C16002_004_007_010_013_001,
+#              fill = extant_swd_binary_text)) +
+#   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
+#                outlier.colour = NULL) +
+#   scale_y_continuous(name = "% of households with limited English") +
+#   scale_x_discrete(name = "Saltwater disposal well count") +
+#   ggtitle("Limited English Households") +
+#   theme_bw() +
+#   theme(plot.title = element_text(size = 14,
+#                                   family = "Times New Roman",
+#                                   face = "bold",
+#                                   hjust = 0.5),
+#         text = element_text(size = 12, family = "Times New Roman"),
+#         axis.title = element_text(face="bold"),
+#         axis.text.x=element_text(size = 11),
+#         legend.position = "none")
+# lim_eng_boxplot
+# 
+# 
+# # % renter-occupied households
+# renter_boxplot <-
+#   ggplot(ks_analyze,
+#          aes(x = extant_swd_binary_text,
+#              y = ks_analyze$renter_occupy_percent_B25003_003_001,
+#              fill = extant_swd_binary_text)) +
+#   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
+#                outlier.colour = NULL) +
+#   scale_y_continuous(name = "% of households renter occupied") +
+#   scale_x_discrete(name = "Saltwater disposal well count") +
+#   ggtitle("Renter Occupancy") +
+#   theme_bw() +
+#   theme(plot.title = element_text(size = 14,
+#                                   family = "Times New Roman",
+#                                   face = "bold",
+#                                   hjust = 0.5),
+#         text = element_text(size = 12, family = "Times New Roman"),
+#         axis.title = element_text(face="bold"),
+#         axis.text.x=element_text(size = 11),
+#         legend.position = "none")
+# renter_boxplot
+# 
+# # % unemployed
+# unemploy_boxplot <-
+#   ggplot(ks_analyze,
+#          aes(x = extant_swd_binary_text,
+#              y = ks_analyze$unemployed_percent_B23025_005_003,
+#              fill = extant_swd_binary_text)) +
+#   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
+#                outlier.colour = NULL) +
+#   scale_y_continuous(name = "Unemployment rate (%)") +
+#   scale_x_discrete(name = "Saltwater disposal well count") +
+#   ggtitle("Unemployment") +
+#   theme_bw() +
+#   theme(plot.title = element_text(size = 14,
+#                                   family = "Times New Roman",
+#                                   face = "bold",
+#                                   hjust = 0.5),
+#         text = element_text(size = 12, family = "Times New Roman"),
+#         axis.title = element_text(face="bold"),
+#         axis.text.x=element_text(size = 11),
+#         legend.position = "none")
+# unemploy_boxplot
+# 
+# 
+# # % in poverty
+# poverty_boxplot <-
+#   ggplot(ks_analyze,
+#          aes(x = extant_swd_binary_text,
+#              y = ks_analyze$poverty_below_100_percent_C17002_002_003_001,
+#              fill = extant_swd_binary_text)) +
+#   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
+#                outlier.colour = NULL) +
+#   scale_y_continuous(name = "Poverty rate (%)") +
+#   scale_x_discrete(name = "Saltwater disposal well count") +
+#   ggtitle("Poverty") +
+#   theme_bw() +
+#   theme(plot.title = element_text(size = 14,
+#                                   family = "Times New Roman",
+#                                   face = "bold",
+#                                   hjust = 0.5),
+#         text = element_text(size = 12, family = "Times New Roman"),
+#         axis.title = element_text(face="bold"),
+#         axis.text.x=element_text(size = 11),
+#         legend.position = "none")
+# poverty_boxplot
+# 
+# 
+# # % high school education
+# education_boxplot <-
+#   ggplot(ks_analyze,
+#          aes(x = extant_swd_binary_text,
+#              y = ks_analyze$education_high_school_plus_percent_B15003_017_to_025*100,
+#              fill = extant_swd_binary_text)) +
+#   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
+#                outlier.colour = NULL) +
+#   scale_y_continuous(name = "% high school graduate or equivalent") +
+#   scale_x_discrete(name = "Saltwater disposal well count") +
+#   ggtitle("High School Education") +
+#   theme_bw() +
+#   theme(plot.title = element_text(size = 14,
+#                                   family = "Times New Roman",
+#                                   face = "bold",
+#                                   hjust = 0.5),
+#         text = element_text(size = 12, family = "Times New Roman"),
+#         axis.title = element_text(face="bold"),
+#         axis.text.x=element_text(size = 11),
+#         legend.position = "none")
+# education_boxplot
+# 
+# 
+# # % NHW
+# white_boxplot <-
+#   ggplot(ks_analyze,
+#          aes(x = extant_swd_binary_text,
+#              y = ks_analyze$white_non_hisp_lat_percent_B03002_003_001,
+#              fill = extant_swd_binary_text)) +
+#   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
+#                outlier.colour = NULL) +
+#   scale_y_continuous(name = "% white alone, not Hispanic or Latinx") +
+#   scale_x_discrete(name = "Saltwater disposal well count") +
+#   ggtitle("White Alone, Not Hispanic or Latinx") +
+#   theme_bw() +
+#   theme(plot.title = element_text(size = 14,
+#                                   family = "Times New Roman",
+#                                   face = "bold",
+#                                   hjust = 0.5),
+#         text = element_text(size = 12, family = "Times New Roman"),
+#         axis.title = element_text(face="bold"),
+#         axis.text.x=element_text(size = 11),
+#         legend.position = "none")
+# white_boxplot
+# 
+# 
+# # % native american
+# aian_boxplot <-
+#   ggplot(ks_analyze,
+#          aes(x = extant_swd_binary_text,
+#              y = ks_analyze$aian_percent_any_race_B02010_001,
+#              fill = extant_swd_binary_text)) +
+#   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
+#                outlier.colour = NULL) +
+#   scale_y_continuous(name = "% American Indian or Alaska Native") +
+#   scale_x_discrete(name = "Saltwater disposal well count") +
+#   ggtitle("American Indian or Alaska Native") +
+#   theme_bw() +
+#   theme(plot.title = element_text(size = 14,
+#                                   family = "Times New Roman",
+#                                   face = "bold",
+#                                   hjust = 0.5),
+#         text = element_text(size = 12, family = "Times New Roman"),
+#         axis.title = element_text(face="bold"),
+#         axis.text.x=element_text(size = 11),
+#         legend.position = "none")
+# aian_boxplot
+# 
+# 
+# # % hispanic/latinx
+# hisp_lat_boxplot <-
+#   ggplot(ks_analyze,
+#          aes(x = extant_swd_binary_text,
+#              y = ks_analyze$hisp_lat_percent_B03002_012_001,
+#              fill = extant_swd_binary_text)) +
+#   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
+#                outlier.colour = NULL) +
+#   scale_y_continuous(name = "% Hispanic or Latinx, any race") +
+#   scale_x_discrete(name = "Saltwater disposal well count") +
+#   ggtitle("Hispanic or Latinx") +
+#   theme_bw() +
+#   theme(plot.title = element_text(size = 14,
+#                                   family = "Times New Roman",
+#                                   face = "bold",
+#                                   hjust = 0.5),
+#         text = element_text(size = 12, family = "Times New Roman"),
+#         axis.title = element_text(face="bold"),
+#         axis.text.x=element_text(size = 11),
+#         legend.position = "none")
+# hisp_lat_boxplot
+# 
+# 
+# # % female
+# female_boxplot <-
+#   ggplot(ks_analyze,
+#          aes(x = extant_swd_binary_text,
+#              y = ks_analyze$female_percent_B01001_026_001,
+#              fill = extant_swd_binary_text)) +
+#   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
+#                outlier.colour = NULL) +
+#   scale_y_continuous(name = "Female (%)") +
+#   scale_x_discrete(name = "Saltwater disposal well count") +
+#   ggtitle("Female") +
+#   theme_bw() +
+#   theme(plot.title = element_text(size = 14,
+#                                   family = "Times New Roman",
+#                                   face = "bold",
+#                                   hjust = 0.5),
+#         text = element_text(size = 12, family = "Times New Roman"),
+#         axis.title = element_text(face="bold"),
+#         axis.text.x=element_text(size = 11),
+#         legend.position = "none")
+# female_boxplot
+# 
+# 
+# 
+# 
+# # population density
+# pop_dense_boxplot <-
+#   ggplot(ks_analyze,
+#          aes(x = extant_swd_binary_text,
+#              y = ks_analyze$pop_dense_B01001_001_ALAND,
+#              fill = extant_swd_binary_text)) +
+#   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
+#                outlier.colour = NULL) +
+#   scale_y_continuous(name = expression(bold(paste("Population/km"^" 2")))) +
+#   scale_x_discrete(name = "Saltwater disposal well count") +
+#   ggtitle("Population Density") +
+#   theme_bw() +
+#   theme(plot.title = element_text(size = 14,
+#                                   family = "Times New Roman",
+#                                   face = "bold",
+#                                   hjust = 0.5),
+#         text = element_text(size = 12, family = "Times New Roman"),
+#         axis.title = element_text(face="bold"),
+#         axis.text.x=element_text(size = 11),
+#         legend.position = "none")
+# pop_dense_boxplot
+# 
+# 
+# 
+# # total population
+# pop_boxplot <-
+#   ggplot(ks_analyze,
+#          aes(x = extant_swd_binary_text,
+#              y = ks_analyze$pop_tot_B01001_001,
+#              fill = extant_swd_binary_text)) +
+#   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
+#                outlier.colour = NULL) +
+#   scale_y_continuous(name = "Population") +
+#   scale_x_discrete(name = "Saltwater disposal well count") +
+#   ggtitle("Total Population") +
+#   theme_bw() +
+#   theme(plot.title = element_text(size = 14,
+#                                   family = "Times New Roman",
+#                                   face = "bold",
+#                                   hjust = 0.5),
+#         text = element_text(size = 12, family = "Times New Roman"),
+#         axis.title = element_text(face="bold"),
+#         axis.text.x=element_text(size = 11),
+#         legend.position = "none")
+# pop_boxplot
+# 
+# 
+# # water area
+# water_boxplot <-
+#   ggplot(ks_analyze,
+#          aes(x = extant_swd_binary_text,
+#              y = ks_analyze$AWATER_KM,
+#              fill = extant_swd_binary_text)) +
+#   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
+#                outlier.colour = NULL) +
+#   scale_y_continuous(name = expression(bold(paste("Water area (km"^" 2",")")))) +
+#   scale_x_discrete(name = "Saltwater disposal well count") +
+#   ggtitle("Water Area") +
+#   theme_bw() +
+#   theme(plot.title = element_text(size = 14,
+#                                   family = "Times New Roman",
+#                                   face = "bold",
+#                                   hjust = 0.5),
+#         text = element_text(size = 12, family = "Times New Roman"),
+#         axis.title = element_text(face="bold"),
+#         axis.text.x=element_text(size = 11),
+#         legend.position = "none")
+# water_boxplot
+# 
+# 
+# # land area  
+# land_boxplot <-
+#   ggplot(ks_analyze,
+#          aes(x = extant_swd_binary_text,
+#              y = ks_analyze$ALAND_KM,
+#              fill = extant_swd_binary_text)) +
+#   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
+#                outlier.colour = NULL) +
+#   scale_y_continuous(name = expression(bold(paste("Land area (km"^" 2",")")))) +
+#   scale_x_discrete(name = "Saltwater disposal well count") +
+#   ggtitle("Land Area") +
+#   theme_bw() +
+#   theme(plot.title = element_text(size = 14,
+#                                   family = "Times New Roman",
+#                                   face = "bold",
+#                                   hjust = 0.5),
+#         text = element_text(size = 12, family = "Times New Roman"),
+#         axis.title = element_text(face="bold"),
+#         axis.text.x=element_text(size = 11),
+#         legend.position = "none")
+# land_boxplot
+# 
+# View(ks_analyze[,c("ALAND_KM","AWATER_KM")])
+# 
+# 
+# # blank plot for layout
+# blank_plot <- 
+#   ggplot(total_pop, 
+#          aes(x = total_pop$B01001_001_margin, 
+#              y = total_pop$B01001_001_margin)) + 
+#   geom_blank() +
+#   scale_x_continuous(expand=c(0,0)) + 
+#   scale_y_continuous(expand=c(0,0)) +  
+# theme(axis.line=element_blank(),
+#       axis.text.x=element_blank(),
+#       axis.text.y=element_blank(),
+#       axis.ticks=element_blank(),
+#       axis.title.x=element_blank(),
+#       axis.title.y=element_blank(),
+#       legend.position="none",
+#       panel.background=element_blank(),
+#       panel.border=element_blank(),
+#       panel.grid.major=element_blank(),
+#       panel.grid.minor=element_blank(),
+#       plot.background=element_blank())
+# 
+# blank_plot
+# 
+# 
+# 
+# list_of_boxplots <-
+#   c(pop_boxplot,
+#     pop_dense_boxplot,
+#     female_boxplot,
+#     age_18_boxplot,
+#     age_65_boxplot,
+#     aian_boxplot,
+#     hisp_lat_boxplot,
+#     white_boxplot,
+#     education_boxplot,
+#     lim_eng_boxplot,
+#     health_insurance_boxplot,
+#     renter_boxplot,
+#     unemploy_boxplot,
+#     poverty_boxplot,
+#     earnings_boxplot,
+#     income_boxplot,
+#     home_value_boxplot,
+#     ice_boxplot,
+#     land_boxplot,
+#     water_boxplot,
+#     horizontal_boxplot)
+# 
+# 
+# 
+# # plot all the boxplots
+# multiplot(pop_boxplot,
+#           pop_dense_boxplot,
+#           female_boxplot,
+#           age_18_boxplot,
+#           age_65_boxplot,
+#           aian_boxplot,
+#           hisp_lat_boxplot,
+#           white_boxplot,
+#           education_boxplot,
+#           lim_eng_boxplot,
+#           health_insurance_boxplot,
+#           renter_boxplot,
+#           unemploy_boxplot,
+#           poverty_boxplot,
+#           earnings_boxplot,
+#           income_boxplot,
+#           home_value_boxplot,
+#           ice_boxplot,
+#           land_boxplot,
+#           water_boxplot,
+#           horizontal_boxplot,
+#           blank_plot, 
+#           blank_plot, 
+#           blank_plot, 
+#           blank_plot,
+#           layout = matrix(c(1,2,3,4,
+#                             5,6,7,8,
+#                             9,10,11,12,
+#                             13,14,15,16,
+#                             17,18,19,20,
+#                             21,22,23,24), nrow=6, byrow=TRUE))
 
-# age 18
-age_18_boxplot <- 
-  ggplot(ks_analyze, 
-         aes(x = extant_swd_binary_text, 
-             y = age_0_to_17_percent_B01001*100, 
-             fill = extant_swd_binary_text)) +
-  geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"), 
-               outlier.colour = NULL) +
-  scale_y_continuous(name = "% age < 18") +
-  scale_x_discrete(name = "Saltwater disposal well count") +
-  ggtitle("Age < 18") +
-  theme_bw() +
-  theme(plot.title = element_text(size = 14, 
-                                  family = "Times New Roman", 
-                                  face = "bold", 
-                                  hjust = 0.5),
-        text = element_text(size = 12, family = "Times New Roman"),
-        axis.title = element_text(face="bold"),
-        axis.text.x=element_text(size = 11),
-        legend.position = "none")
-age_18_boxplot
 
 
-# age 65
-age_65_boxplot <- 
-  ggplot(ks_analyze, 
-         aes(x = extant_swd_binary_text, 
-             y = age_65_plus_percent_B01001*100, 
-             fill = extant_swd_binary_text)) +
-  geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"), 
-               outlier.colour = NULL) +
-  scale_y_continuous(name = "% age > 64") +
-  scale_x_discrete(name = "Saltwater disposal well count") +
-  ggtitle("Age > 64") +
-  theme_bw() +
-  theme(plot.title = element_text(size = 14, 
-                                  family = "Times New Roman", 
-                                  face = "bold", 
-                                  hjust = 0.5),
-        text = element_text(size = 12, family = "Times New Roman"),
-        axis.title = element_text(face="bold"),
-        axis.text.x=element_text(size = 11),
-        legend.position = "none")
-age_65_boxplot
+# levene's test homogenous variances
+pop_levene <- 
+  leveneTest(pop_tot_B01001_001 ~ 
+               extant_swd_binary_text, 
+             data = ks_analyze)
+pop_dense_levene <-  
+  leveneTest(pop_dense_B01001_001_ALAND ~ 
+               extant_swd_binary_text, 
+             data = ks_analyze)
+female_levene <-  
+  leveneTest(female_percent_B01001_026_001 ~ 
+               extant_swd_binary_text, 
+             data = ks_analyze)
+age_18_levene <-  
+  leveneTest(age_0_to_17_percent_B01001 ~ 
+               extant_swd_binary_text, 
+             data = ks_analyze)
+age_65_levene <-  
+  leveneTest(age_65_plus_percent_B01001 ~ 
+               extant_swd_binary_text, 
+             data = ks_analyze)
+aian_levene <-  
+  leveneTest(aian_percent_any_race_B02010_001 ~ 
+               extant_swd_binary_text, 
+             data = ks_analyze)
+hisp_lat_levene <-  
+  leveneTest(hisp_lat_percent_B03002_012_001 ~ 
+               extant_swd_binary_text, 
+             data = ks_analyze)
+white_levene <-  
+  leveneTest(white_non_hisp_lat_percent_B03002_003_001 ~ 
+               extant_swd_binary_text, 
+             data = ks_analyze)
+education_levene <-  
+  leveneTest(education_high_school_plus_percent_B15003_017_to_025 ~ 
+               extant_swd_binary_text, 
+             data = ks_analyze)
+lim_eng_levene <-  
+  leveneTest(limited_english_percent_C16002_004_007_010_013_001 ~ 
+               extant_swd_binary_text, 
+             data = ks_analyze)
+health_insurance_levene <-  
+  leveneTest(no_health_insurance_percent_B27010_017_033_050_066 ~ 
+               extant_swd_binary_text, 
+             data = ks_analyze)
+renter_levene <-  
+  leveneTest(renter_occupy_percent_B25003_003_001 ~ 
+               extant_swd_binary_text, 
+             data = ks_analyze)
+unemploy_levene <-  
+  leveneTest(unemployed_percent_B23025_005_003 ~ 
+               extant_swd_binary_text, 
+             data = ks_analyze)
+poverty_levene <-  
+  leveneTest(poverty_below_100_percent_C17002_002_003_001 ~ 
+               extant_swd_binary_text, 
+             data = ks_analyze)
+earnings_levene <-  
+  leveneTest(earnings_median_B20002_001 ~ 
+               extant_swd_binary_text, 
+             data = ks_analyze)
+income_levene <-  
+  leveneTest(income_house_median_B19013_001 ~ 
+               extant_swd_binary_text, 
+             data = ks_analyze)
+home_value_levene <-  
+  leveneTest(house_value_median_B25077_001 ~ 
+               extant_swd_binary_text, 
+             data = ks_analyze)
+ice_levene <-  
+  leveneTest(house_value_median_B25077_001 ~ 
+               extant_swd_binary_text, 
+             data = ks_analyze)
+land_levene <-  
+  leveneTest(ALAND_KM ~ 
+               extant_swd_binary_text, 
+             data = ks_analyze)
+water_levene <-  
+  leveneTest(AWATER_KM ~ 
+               extant_swd_binary_text, 
+             data = ks_analyze)
+horizontal_levene <-  
+  leveneTest(horizontal_count ~ 
+               extant_swd_binary_text, 
+             data = ks_analyze)
+
+# list_of_levenes <- 
+#   c(pop_levene,
+#   pop_dense_levene,
+#   female_levene,
+#   age_18_levene,
+#   age_65_levene,
+#   aian_levene,
+#   hisp_lat_levene,
+#   white_levene,
+#   education_levene,
+#   lim_eng_levene,
+#   health_insurance_levene,
+#   renter_levene,
+#   unemploy_levene,
+#   poverty_levene,
+#   earnings_levene,
+#   income_levene,
+#   home_value_levene,
+#   land_levene,
+#   water_levene,
+#   horizontal_levene)
+# 
+# 
+# pop_levene
+# pop_dense_levene
+# female_levene
+# age_18_levene
+# age_65_levene
+# aian_levene
+# hisp_lat_levene
+# white_levene
+# education_levene
+# lim_eng_levene
+# health_insurance_levene
+# renter_levene
+# unemploy_levene
+# poverty_levene
+# earnings_levene
+# income_levene
+# home_value_levene
+# land_levene
+# water_levene
+# horizontal_levene
+  
 
 
-# horizontal well count
-horizontal_boxplot <- 
-  ggplot(ks_analyze, 
-         aes(x = extant_swd_binary_text, 
-             y = horizontal_count, 
-             fill = extant_swd_binary_text)) +
-  geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"), 
-               outlier.colour = NULL) + 
-  scale_y_continuous(name = "Horizontal well count") +
-  scale_x_discrete(name = "Saltwater disposal well count") +
-  ggtitle("Horizontal Well Count") +
-  theme_bw() +
-  theme(plot.title = element_text(size = 14, 
-                                  family = "Times New Roman", 
-                                  face = "bold", 
-                                  hjust = 0.5),
-        text = element_text(size = 12, family = "Times New Roman"),
-        axis.title = element_text(face="bold"),
-        axis.text.x=element_text(size = 11),
-        legend.position = "none")
-horizontal_boxplot
+#### chi-square tests
+# chi-square test for shale presence
+swd_shale <- sum(ks_analyze$extant_swd_binary[which(
+  ks_analyze$shale_presence == 1)])
+swd_no_shale <- sum(ks_analyze$extant_swd_binary[which(
+  ks_analyze$shale_presence == 0)])
+no_swd_shale <- sum(ks_analyze$shale_presence[which(
+  ks_analyze$extant_swd_binary == 0)])
+no_swd_no_shale <- 2293 - (swd_shale + 
+                             swd_no_shale + 
+                             no_swd_shale)
+
+shale_matrix <- 
+  matrix(c(
+    swd_shale, 
+    swd_no_shale, 
+    no_swd_shale, 
+    no_swd_no_shale), 
+    ncol = 2)
+
+shale_chisquare <- 
+  chisq.test(shale_matrix)
+
+shale_chisquare$statistic
+shale_chisquare$p.value
+shale_chisquare$method
 
 
-# median household value 77 missing
-home_value_boxplot <- 
-  ggplot(ks_analyze, 
-         aes(x = extant_swd_binary_text, 
-             y = ks_analyze$house_value_median_B25077_001, 
-             fill = extant_swd_binary_text)) +
-  geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"), 
-               outlier.colour = NULL) + 
-  scale_y_continuous(name = "Median home value ($)") +
-  scale_x_discrete(name = "Saltwater disposal well count") +
-  ggtitle("Home Value") +
-  theme_bw() +
-  theme(plot.title = element_text(size = 14, 
-                                  family = "Times New Roman", 
-                                  face = "bold", 
-                                  hjust = 0.5),
-        text = element_text(size = 12, family = "Times New Roman"),
-        axis.title = element_text(face="bold"),
-        axis.text.x=element_text(size = 11),
-        legend.position = "none")
-home_value_boxplot
+# chi-square test for horiztonal well presence
+swd_horiz <- sum(ks_analyze$extant_swd_binary[which(
+  ks_analyze$horizontal_binary == 1)])
+swd_no_horiz <- sum(ks_analyze$extant_swd_binary[which(
+  ks_analyze$horizontal_binary == 0)])
+no_swd_horiz <- sum(ks_analyze$horizontal_binary[which(
+  ks_analyze$extant_swd_binary == 0)])
+no_swd_no_horiz <- 2293 - (swd_horiz + 
+                             swd_no_horiz + 
+                             no_swd_horiz)
 
+horiz_matrix <- 
+  matrix(c(
+    swd_horiz, 
+    swd_no_horiz, 
+    no_swd_horiz, 
+    no_swd_no_horiz), 
+    ncol = 2)
 
-# median earnings   # missing 33 data points (1778 no wells, 482 with wells)
-earnings_boxplot <- 
-  ggplot(ks_analyze, 
-         aes(x = extant_swd_binary_text, 
-             y = ks_analyze$earnings_median_B20002_001, 
-             fill = extant_swd_binary_text)) +
-  geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"), 
-               outlier.colour = NULL) + 
-  scale_y_continuous(name = "Median individual earnings ($)") +
-  scale_x_discrete(name = "Saltwater disposal well count") +
-  ggtitle("Individual Earnings") +
-  theme_bw() +
-  theme(plot.title = element_text(size = 14, 
-                                  family = "Times New Roman", 
-                                  face = "bold", 
-                                  hjust = 0.5),
-        text = element_text(size = 12, family = "Times New Roman"),
-        axis.title = element_text(face="bold"),
-        axis.text.x=element_text(size = 11),
-        legend.position = "none")
-earnings_boxplot
+horiz_chisquare <- 
+  chisq.test(horiz_matrix)
 
+  
 
-# median household income
-income_boxplot <- 
-  ggplot(ks_analyze, 
-         aes(x = extant_swd_binary_text, 
-             y = ks_analyze$income_house_median_B19013_001, 
-             fill = extant_swd_binary_text)) +
-  geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"), 
-               outlier.colour = NULL) + 
-  scale_y_continuous(name = "Median household income ($)") +
-  scale_x_discrete(name = "Saltwater disposal well count") +
-  ggtitle("Household Income") +
-  theme_bw() +
-  theme(plot.title = element_text(size = 14, 
-                                  family = "Times New Roman", 
-                                  face = "bold", 
-                                  hjust = 0.5),
-        text = element_text(size = 12, family = "Times New Roman"),
-        axis.title = element_text(face="bold"),
-        axis.text.x=element_text(size = 11),
-        legend.position = "none")
-income_boxplot
+#### t-tests ####
 
+pop_t_test <-
+  t.test(pop_tot_B01001_001 ~ extant_swd_binary,
+         data = ks_analyze)
+pop_t_test
 
-# % with no health insurance
-health_insurance_boxplot <- 
-  ggplot(ks_analyze, 
-         aes(x = extant_swd_binary_text, 
-             y = ks_analyze$no_health_insurance_percent_B27010_017_033_050_066, 
-             fill = extant_swd_binary_text)) +
-  geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"), 
-               outlier.colour = NULL) + 
-  scale_y_continuous(name = "% with no health insurance coverage") +
-  scale_x_discrete(name = "Saltwater disposal well count") +
-  ggtitle("Health Insurance") +
-  theme_bw() +
-  theme(plot.title = element_text(size = 14, 
-                                  family = "Times New Roman", 
-                                  face = "bold", 
-                                  hjust = 0.5),
-        text = element_text(size = 12, family = "Times New Roman"),
-        axis.title = element_text(face="bold"),
-        axis.text.x=element_text(size = 11),
-        legend.position = "none")
-health_insurance_boxplot
+pop_dense_t_test <- 
+  t.test(pop_dense_B01001_001_ALAND ~ extant_swd_binary,
+         data = ks_analyze)
+pop_dense_t_test
+  
+female_t_test <-
+  t.test(female_percent_B01001_026_001 ~ extant_swd_binary,
+         data = ks_analyze)
+female_t_test
 
+age_18_t_test <- 
+  t.test(age_0_to_17_percent_B01001 ~ extant_swd_binary,
+         data = ks_analyze)
+age_18_t_test
 
-# % limited-English households
-lim_eng_boxplot <- 
-  ggplot(ks_analyze, 
-         aes(x = extant_swd_binary_text, 
-             y = ks_analyze$limited_english_percent_C16002_004_007_010_013_001, 
-             fill = extant_swd_binary_text)) +
-  geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"), 
-               outlier.colour = NULL) + 
-  scale_y_continuous(name = "% of households with limited English") +
-  scale_x_discrete(name = "Saltwater disposal well count") +
-  ggtitle("Limited English Households") +
-  theme_bw() +
-  theme(plot.title = element_text(size = 14, 
-                                  family = "Times New Roman", 
-                                  face = "bold", 
-                                  hjust = 0.5),
-        text = element_text(size = 12, family = "Times New Roman"),
-        axis.title = element_text(face="bold"),
-        axis.text.x=element_text(size = 11),
-        legend.position = "none")
-lim_eng_boxplot
+age_65_t_test <- 
+  t.test(age_65_plus_percent_B01001 ~ extant_swd_binary,
+         data = ks_analyze)
+age_65_t_test
 
+aian_t_test <- 
+  t.test(aian_percent_any_race_B02010_001 ~ extant_swd_binary,
+         data = ks_analyze)
+aian_t_test
 
-# % renter-occupied households
-renter_boxplot <- 
-  ggplot(ks_analyze, 
-         aes(x = extant_swd_binary_text, 
-             y = ks_analyze$renter_occupy_percent_B25003_003_001, 
-             fill = extant_swd_binary_text)) +
-  geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"), 
-               outlier.colour = NULL) + 
-  scale_y_continuous(name = "% of households renter occupied") +
-  scale_x_discrete(name = "Saltwater disposal well count") +
-  ggtitle("Renter Occupancy") +
-  theme_bw() +
-  theme(plot.title = element_text(size = 14, 
-                                  family = "Times New Roman", 
-                                  face = "bold", 
-                                  hjust = 0.5),
-        text = element_text(size = 12, family = "Times New Roman"),
-        axis.title = element_text(face="bold"),
-        axis.text.x=element_text(size = 11),
-        legend.position = "none")
-renter_boxplot
+hisp_lat_t_test <- 
+  t.test(hisp_lat_percent_B03002_012_001 ~ extant_swd_binary,
+         data = ks_analyze)
+hisp_lat_t_test
 
-# % unemployed
-unemploy_boxplot <- 
-  ggplot(ks_analyze, 
-         aes(x = extant_swd_binary_text, 
-             y = ks_analyze$unemployed_percent_B23025_005_003, 
-             fill = extant_swd_binary_text)) +
-  geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"), 
-               outlier.colour = NULL) + 
-  scale_y_continuous(name = "Unemployment rate (%)") +
-  scale_x_discrete(name = "Saltwater disposal well count") +
-  ggtitle("Unemployment") +
-  theme_bw() +
-  theme(plot.title = element_text(size = 14, 
-                                  family = "Times New Roman", 
-                                  face = "bold", 
-                                  hjust = 0.5),
-        text = element_text(size = 12, family = "Times New Roman"),
-        axis.title = element_text(face="bold"),
-        axis.text.x=element_text(size = 11),
-        legend.position = "none")
-unemploy_boxplot
+white_t_test <- 
+  t.test(white_non_hisp_lat_percent_B03002_003_001 ~ extant_swd_binary,
+         data = ks_analyze)
+white_t_test
 
+education_t_test <-
+  t.test(education_high_school_plus_percent_B15003_017_to_025 ~ 
+           extant_swd_binary,
+         data = ks_analyze)
+education_t_test
 
-# % in poverty
-poverty_boxplot <- 
-  ggplot(ks_analyze, 
-         aes(x = extant_swd_binary_text, 
-             y = ks_analyze$poverty_below_100_percent_C17002_002_003_001, 
-             fill = extant_swd_binary_text)) +
-  geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"), 
-               outlier.colour = NULL) + 
-  scale_y_continuous(name = "Poverty rate (%)") +
-  scale_x_discrete(name = "Saltwater disposal well count") +
-  ggtitle("Poverty") +
-  theme_bw() +
-  theme(plot.title = element_text(size = 14, 
-                                  family = "Times New Roman", 
-                                  face = "bold", 
-                                  hjust = 0.5),
-        text = element_text(size = 12, family = "Times New Roman"),
-        axis.title = element_text(face="bold"),
-        axis.text.x=element_text(size = 11),
-        legend.position = "none")
-poverty_boxplot
+lim_eng_t_test <- 
+  t.test(limited_english_percent_C16002_004_007_010_013_001 ~ 
+           extant_swd_binary,
+         data = ks_analyze)
+lim_eng_t_test
 
+health_ins_t_test <-
+  t.test(no_health_insurance_percent_B27010_017_033_050_066 ~ 
+           extant_swd_binary,
+         data = ks_analyze)
+health_ins_t_test
 
-# % high school education
-education_boxplot <- 
-  ggplot(ks_analyze, 
-         aes(x = extant_swd_binary_text, 
-             y = ks_analyze$education_high_school_plus_percent_B15003_017_to_025*100, 
-             fill = extant_swd_binary_text)) +
-  geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"), 
-               outlier.colour = NULL) + 
-  scale_y_continuous(name = "% high school graduate or equivalent") +
-  scale_x_discrete(name = "Saltwater disposal well count") +
-  ggtitle("High School Education") +
-  theme_bw() +
-  theme(plot.title = element_text(size = 14, 
-                                  family = "Times New Roman", 
-                                  face = "bold", 
-                                  hjust = 0.5),
-        text = element_text(size = 12, family = "Times New Roman"),
-        axis.title = element_text(face="bold"),
-        axis.text.x=element_text(size = 11),
-        legend.position = "none")
-education_boxplot
+renter_t_test <- 
+  t.test(renter_occupy_percent_B25003_003_001 ~ 
+           extant_swd_binary,
+         data = ks_analyze)
+renter_t_test
 
+unemploy_t_test <- 
+  t.test(unemployed_percent_B23025_005_003 ~ extant_swd_binary,
+         data = ks_analyze)
+unemploy_t_test
 
-# % NHW
-white_boxplot <- 
-  ggplot(ks_analyze, 
-         aes(x = extant_swd_binary_text, 
-             y = ks_analyze$white_non_hisp_lat_percent_B03002_003_001, 
-             fill = extant_swd_binary_text)) +
-  geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"), 
-               outlier.colour = NULL) + 
-  scale_y_continuous(name = "% white alone, not Hispanic or Latinx") +
-  scale_x_discrete(name = "Saltwater disposal well count") +
-  ggtitle("White Alone, Not Hispanic or Latinx") +
-  theme_bw() +
-  theme(plot.title = element_text(size = 14, 
-                                  family = "Times New Roman", 
-                                  face = "bold", 
-                                  hjust = 0.5),
-        text = element_text(size = 12, family = "Times New Roman"),
-        axis.title = element_text(face="bold"),
-        axis.text.x=element_text(size = 11),
-        legend.position = "none")
-white_boxplot
+poverty_t_test <- 
+  t.test(poverty_below_100_percent_C17002_002_003_001 ~ extant_swd_binary,
+         data = ks_analyze)
+poverty_t_test
 
+earnings_t_test <- 
+  t.test(earnings_median_B20002_001 ~ extant_swd_binary,
+         data = ks_analyze)
+earnings_t_test
 
-# % native american
-aian_boxplot <- 
-  ggplot(ks_analyze, 
-         aes(x = extant_swd_binary_text, 
-             y = ks_analyze$aian_percent_any_race_B02010_001, 
-             fill = extant_swd_binary_text)) +
-  geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"), 
-               outlier.colour = NULL) + 
-  scale_y_continuous(name = "% American Indian or Alaska Native") +
-  scale_x_discrete(name = "Saltwater disposal well count") +
-  ggtitle("American Indian or Alaska Native") +
-  theme_bw() +
-  theme(plot.title = element_text(size = 14, 
-                                  family = "Times New Roman", 
-                                  face = "bold", 
-                                  hjust = 0.5),
-        text = element_text(size = 12, family = "Times New Roman"),
-        axis.title = element_text(face="bold"),
-        axis.text.x=element_text(size = 11),
-        legend.position = "none")
-aian_boxplot
+income_t_test <- 
+  t.test(income_house_median_B19013_001 ~ extant_swd_binary,
+         data = ks_analyze)
+income_t_test
 
+home_value_t_test <- 
+  t.test(house_value_median_B25077_001 ~ extant_swd_binary,
+         data = ks_analyze)
+home_value_t_test
 
-# population density
-pop_dense_boxplot <- 
-  ggplot(ks_analyze, 
-         aes(x = extant_swd_binary_text, 
-             y = ks_analyze$pop_dense_B01001_001_ALAND, 
-             fill = extant_swd_binary_text)) +
-  geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"), 
-               outlier.colour = NULL) + 
-  scale_y_continuous(name = expression(paste("Population/km"^"2",")"))) +
-  scale_x_discrete(name = "Saltwater disposal well count") +
-  ggtitle("Population Density") +
-  theme_bw() +
-  theme(plot.title = element_text(size = 14, 
-                                  family = "Times New Roman", 
-                                  face = "bold", 
-                                  hjust = 0.5),
-        text = element_text(size = 12, family = "Times New Roman"),
-        axis.title = element_text(face="bold"),
-        axis.text.x=element_text(size = 11),
-        legend.position = "none")
-pop_dense_boxplot
+ice_t_test <- 
+  t.test(ice_B19001 ~ extant_swd_binary,
+         data = ks_analyze)
+ice_t_test
+
+land_t_test <- 
+  t.test(ALAND_KM ~ extant_swd_binary,
+         data = ks_analyze)
+land_t_test
+
+water_t_test <- 
+  t.test(AWATER_KM ~ extant_swd_binary,
+         data = ks_analyze)
+water_t_test
+
+horizontal_t_test <- 
+  t.test(horizontal_count ~ extant_swd_binary,
+         data = ks_analyze)
+horizontal_t_test
+
+income_t_test
 
 
 
-# total population
-pop_boxplot <- 
-  ggplot(ks_analyze, 
-         aes(x = extant_swd_binary_text, 
-             y = ks_analyze$pop_tot_B01001_001, 
-             fill = extant_swd_binary_text)) +
-  geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"), 
-               outlier.colour = NULL) + 
-  scale_y_continuous(name = "Population") +
-  scale_x_discrete(name = "Saltwater disposal well count") +
-  ggtitle("Total Population") +
-  theme_bw() +
-  theme(plot.title = element_text(size = 14, 
-                                  family = "Times New Roman", 
-                                  face = "bold", 
-                                  hjust = 0.5),
-        text = element_text(size = 12, family = "Times New Roman"),
-        axis.title = element_text(face="bold"),
-        axis.text.x=element_text(size = 11),
-        legend.position = "none")
-pop_boxplot
+# collect p-values for correction
+label_categories <- c("Total population", 
+            "Population density", 
+            "% female", 
+            "% age < 18", 
+            "% age > 64", 
+            "% Native American", 
+            "% Hispanic or Latinx", 
+            "% non-Hispanic white", 
+            "% high school education", 
+            "% limited-English households",
+            "% with no health insurance", 
+            "% renter-occupied households",
+            "% unemployed", 
+            "% in poverty",
+            "Median earnings",
+            "Median household income", 
+            "Median home value",
+            "Income concentration at the extremes", 
+            "Land area", 
+            "Water area", 
+            "Horizontal well count", 
+            "Mississippian Lime Play")
 
+p_values_t_tests <- 
+  as.numeric(c(pop_t_test$p.value, 
+               pop_dense_t_test$p.value, 
+               female_t_test$p.value,
+               age_18_t_test$p.value, 
+               age_65_t_test$p.value, 
+               aian_t_test$p.value, 
+               hisp_lat_t_test$p.value, 
+               white_t_test$p.value, 
+               education_t_test$p.value, 
+               lim_eng_t_test$p.value, 
+               health_ins_t_test$p.value, 
+               renter_t_test$p.value, 
+               unemploy_t_test$p.value, 
+               poverty_t_test$p.value, 
+               earnings_t_test$p.value, 
+               income_t_test$p.value, 
+               home_value_t_test$p.value, 
+               ice_t_test$p.value, 
+               land_t_test$p.value, 
+               water_t_test$p.value,
+               horizontal_t_test$p.value, 
+               shale_chisquare$p.value))
 
-# water area
-water_boxplot <- 
-  ggplot(ks_analyze, 
-         aes(x = extant_swd_binary_text, 
-             y = ks_analyze$AWATER_KM, 
-             fill = extant_swd_binary_text)) +
-  geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"), 
-               outlier.colour = NULL) + 
-  scale_y_continuous(name = expression(paste("Water area (km"^"2",")"))) +
-  scale_x_discrete(name = "Saltwater disposal well count") +
-  ggtitle("Water area") +
-  theme_bw() +
-  theme(plot.title = element_text(size = 14, 
-                                  family = "Times New Roman", 
-                                  face = "bold", 
-                                  hjust = 0.5),
-        text = element_text(size = 12, family = "Times New Roman"),
-        axis.title = element_text(face="bold"),
-        axis.text.x=element_text(size = 11),
-        legend.position = "none")
-water_boxplot
+p_values_corrections_t_tests <- 
+  as.data.frame(cbind(label_categories))
+colnames(p_values_corrections_t_tests) <- 
+  c("labels")
 
+p_values_corrections_t_tests$original_p <- 
+  p_values_t_tests
 
-# land area
-land_boxplot <- 
-  ggplot(ks_analyze, 
-         aes(x = extant_swd_binary_text, 
-             y = ks_analyze$ALAND_KM, 
-             fill = extant_swd_binary_text)) +
-  geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"), 
-               outlier.colour = NULL) + 
-  scale_y_continuous(name = expression(paste("Land area (km"^"2",")"))) +
-  scale_x_discrete(name = "Saltwater disposal well count") +
-  ggtitle("Land area") +
-  theme_bw() +
-  theme(plot.title = element_text(size = 14, 
-                                  family = "Times New Roman", 
-                                  face = "bold", 
-                                  hjust = 0.5),
-        text = element_text(size = 12, family = "Times New Roman"),
-        axis.title = element_text(face="bold"),
-        axis.text.x=element_text(size = 11),
-        legend.position = "none")
-land_boxplot
+p_values_corrections_t_tests$holm <- 
+  p.adjust(p_values_t_tests, 
+           method = "holm")
 
-View(ks_analyze[,c("ALAND_KM","AWATER_KM")])
-
-list_of_boxplots <- c(pop_boxplot, 
-                      pop_dense_boxplot, 
-                      water_boxplot, 
-                      land_boxplot 
-                      )
+View(p_values_corrections_t_tests)
+write.csv(p_values_corrections_t_tests, 
+          file = "p_values_t_tests.csv")
 
 
 
-# reorder the columns
-correlation_matrix_data <- 
-  correlation_matrix_data[c("GEOID", 
-                            "Horizontal well count",
-                            "Mississippi Lime Play",
-                            "Median household value", 
-                            "Median earnings", 
-                            "Median household income", 
-                            "% with no health insurance", 
-                            "% limited-English households", 
-                            "% renter-occupied households", 
-                            "% unemployed", 
-                            "% in poverty", 
-                            "% high school education", 
-                            "% age >65", 
-                            "% age <18", 
-                            "% non-Hispanic white", 
-                            "% Hispanic or Latinx", 
-                            "% Native American", 
-                            "Population density", 
-                            "Total population",
-                            "Water area",
-                            "Land area")]
 
+
+
+#### BIVARIATE ANALYSES ####
+
+# make dataset with just analysis variables
+ks_analyze_for_loops <- 
+  ks_analyze[c(
+    "GEOID",
+    "extant_swd_binary",
+    "pop_tot_B01001_001",
+    "pop_dense_B01001_001_ALAND", 
+    "female_percent_B01001_026_001",
+    "age_0_to_17_percent_B01001", 
+    "age_65_plus_percent_B01001", 
+    "aian_percent_any_race_B02010_001", 
+    "hisp_lat_percent_B03002_012_001", 
+    "white_non_hisp_lat_percent_B03002_003_001", 
+    "education_high_school_plus_percent_B15003_017_to_025",
+    "limited_english_percent_C16002_004_007_010_013_001", 
+    "no_health_insurance_percent_B27010_017_033_050_066",
+    "renter_occupy_percent_B25003_003_001", 
+    "unemployed_percent_B23025_005_003", 
+    "poverty_below_100_percent_C17002_002_003_001", 
+    "earnings_median_B20002_001", 
+    "income_house_median_B19013_001", 
+    "house_value_median_B25077_001", 
+    "ice_B19001",
+    "ALAND_KM", 
+    "AWATER_KM",
+    "shale_presence", 
+    "horizontal_count")]
 
 
 
@@ -6094,6 +6970,17 @@ pop_dense_wilcox <-
               paired = FALSE, 
               alternative = "t")
 pop_dense_wilcox
+
+# female %
+female_wilcox <- 
+  wilcox.test(ks_analyze$female_percent_B01001_026_001[
+    which(ks_analyze$extant_swd_binary == 0)],  
+    ks_analyze$female_percent_B01001_026_001[
+      which(ks_analyze$extant_swd_binary == 1)],
+    data = ks_analyze, 
+    paired = FALSE, 
+    alternative = "t")
+female_wilcox
 
 # native American
 aian_wilcox <- 
@@ -6247,6 +7134,17 @@ home_value_wilcox <-
               alternative = "t")
 home_value_wilcox
 
+# ice
+ice_wilcox <- 
+  wilcox.test(ks_analyze$ice_B19001[
+    which(ks_analyze$extant_swd_binary == 0)], 
+    ks_analyze$ice_B19001[
+      which(ks_analyze$extant_swd_binary == 1)], 
+    data = ks_analyze, 
+    paired = FALSE, 
+    alternative = "t")
+ice_wilcox
+
 # land area
 land_wilcox <- 
   wilcox.test(ks_analyze$ALAND_KM[which(ks_analyze$extant_swd_binary == 0)], 
@@ -6282,29 +7180,37 @@ horiz_wilcox <-
               alternative = "t")
 horiz_wilcox
 
+
+
+
+
 # collect p-values for correction
 label_thing = c("Total population", 
-                                "Population density", 
+                "Population density", 
+                                "% female",
                                 "% Native American", 
                                 "% Hispanic or Latinx", 
                                 "% non-Hispanic white", 
                                 "Age < 18", 
                                 "% age > 64", 
                                 "% high school education", 
-                                "% limited-English households", 
+                                "% limited-English households",
                                 "% with no health insurance", 
-                                "% renter-occupied households", 
+                                "% renter-occupied households",
                                 "% unemployed", 
                                 "% in poverty",
                                 "Median earnings",
                                 "Median household income", 
                                 "Median home value",
+                                "Income concentration at the extremes", 
                                 "Land area", 
                                 "Water area", 
-                                "Horizontal well count")
+                                "Horizontal well count", 
+                                "Mississippian Lime Play")
 
 p_values_thing = as.numeric(c(pop_wilcox$p.value, 
                    pop_dense_wilcox$p.value, 
+                   female_wilcox$p.value,
                    aian_wilcox$p.value, 
                    hisp_lat_wilcox$p.value, 
                    white_wilcox$p.value, 
@@ -6319,9 +7225,11 @@ p_values_thing = as.numeric(c(pop_wilcox$p.value,
                    earn_wilcox$p.value, 
                    income_wilcox$p.value, 
                    home_value_wilcox$p.value, 
+                   ice_wilcox$p.value, 
                    land_wilcox$p.value, 
                    water_wilcox$p.value,
-                   horiz_wilcox$p.value))
+                   horiz_wilcox$p.value, 
+                   shale_chisquare$p.value))
 
 p_values_wilcox <- 
   as.data.frame(cbind(label_thing))
@@ -6337,12 +7245,18 @@ View(p_values_wilcox)
 write.csv(p_values_wilcox, 
           file = "p_values_wilcox.csv")
 
+
+
+
+
+
 # calculate basic summary statistics   # select variables to summarise
 summary_statistics <- ks_analyze %>% 
   select("ALAND_KM",
          "AWATER_KM",
          "pop_tot_B01001_001",
-         "pop_dense_B01001_001_ALAND",
+         "pop_dense_B01001_001_ALAND", 
+         "female_percent_B01001_026_001", 
          "age_0_to_17_percent_B01001",
          "age_65_plus_percent_B01001",
          "white_non_hisp_lat_percent_B03002_003_001",
@@ -6356,7 +7270,8 @@ summary_statistics <- ks_analyze %>%
          "house_value_median_B25077_001",
          "no_health_insurance_percent_B27010_017_033_050_066",
          "poverty_below_100_percent_C17002_002_003_001",
-         "unemployed_percent_B23025_005_003",
+         "unemployed_percent_B23025_005_003", 
+         "ice_B19001", 
          "shale_presence",
          "horizontal_count") %>% 
   summarise_all(funs(oooo_min = min, 
@@ -6385,7 +7300,8 @@ summary_statistics_no_wells <-
   select("ALAND_KM",
          "AWATER_KM",
          "pop_tot_B01001_001",
-         "pop_dense_B01001_001_ALAND",
+         "pop_dense_B01001_001_ALAND", 
+         "female_percent_B01001_026_001", 
          "age_0_to_17_percent_B01001",
          "age_65_plus_percent_B01001",
          "white_non_hisp_lat_percent_B03002_003_001",
@@ -6399,7 +7315,8 @@ summary_statistics_no_wells <-
          "house_value_median_B25077_001",
          "no_health_insurance_percent_B27010_017_033_050_066",
          "poverty_below_100_percent_C17002_002_003_001",
-         "unemployed_percent_B23025_005_003",
+         "unemployed_percent_B23025_005_003", 
+         "ice_B19001",
          "shale_presence",
          "horizontal_count", 
          "extant_swd_binary") %>% 
@@ -6431,7 +7348,8 @@ summary_statistics_with_wells <-
   select("ALAND_KM",
          "AWATER_KM",
          "pop_tot_B01001_001",
-         "pop_dense_B01001_001_ALAND",
+         "pop_dense_B01001_001_ALAND", 
+         "female_percent_B01001_026_001", 
          "age_0_to_17_percent_B01001",
          "age_65_plus_percent_B01001",
          "white_non_hisp_lat_percent_B03002_003_001",
@@ -6446,6 +7364,7 @@ summary_statistics_with_wells <-
          "no_health_insurance_percent_B27010_017_033_050_066",
          "poverty_below_100_percent_C17002_002_003_001",
          "unemployed_percent_B23025_005_003",
+         "ice_B19001",
          "shale_presence",
          "horizontal_count", 
          "extant_swd_binary") %>% 
@@ -6467,17 +7386,797 @@ View(ks_stats_with_wells)
 
 write.csv(ks_stats_with_wells, file = "ks_stats_with_wells.csv")
 
-
 # horizontal well summary statistics
-sum(ks_analyze$horizontal_binary[  # horizontal well
+sum(ks_analyze$horizontal_binary[  # swd
   which(ks_analyze$extant_swd_binary == 1)])
 
-sum(ks_analyze$horizontal_binary[   # no horizontal well
+sum(ks_analyze$horizontal_binary[   # no swd
+  which(ks_analyze$extant_swd_binary == 0)])
+
+# shale presence summary statistics
+sum(ks_analyze$shale_presence[  # swd
+  which(ks_analyze$extant_swd_binary == 1)])
+
+sum(ks_analyze$shale_presence[   # no swd
   which(ks_analyze$extant_swd_binary == 0)])
 
 
 
+
+
+
+
+
+#### logistic regression and summary statistics ####
+
+# check linear assumptions
+pop_loess <- 
+  logitloess(ks_analyze$pop_tot_B01001_001, 
+             ks_analyze$extant_swd_binary, 
+             "Population", "Population")
+
+pop_dense_loess <- 
+  logitloess(ks_analyze$pop_dense_B01001_001_ALAND, 
+             ks_analyze$extant_swd_binary, 
+             "Population Density", 
+             expression(paste("Population/km"^"2")))
+             
+female_loess <- 
+  logitloess(ks_analyze$female_percent_B01001_026_001*100, 
+             ks_analyze$extant_swd_binary, 
+             "Female", 
+             "% female")
+age_18_loess <- 
+  logitloess(ks_analyze$age_0_to_17_percent_B01001*100, 
+             ks_analyze$extant_swd_binary, 
+             "Age < 18", 
+             "% < age 18")
+age_65_loess <- 
+  logitloess(ks_analyze$age_65_plus_percent_B01001*100, 
+             ks_analyze$extant_swd_binary, 
+             "Age > 65", 
+             "% < age 65")
+aian_loess <- 
+  logitloess(ks_analyze$aian_percent_any_race_B02010_001*100, 
+             ks_analyze$extant_swd_binary, 
+             "Native American", 
+             "% American Indian or Alaksa Native")
+hisp_loess <- 
+  logitloess(ks_analyze$hisp_lat_percent_B03002_012_001*100, 
+             ks_analyze$extant_swd_binary, 
+             "Hispanic or Latinx", 
+             "% Hispanic or Latinx, any race")
+white_loess <- 
+  logitloess(ks_analyze$white_non_hisp_lat_percent_B03002_003_001*100, 
+             ks_analyze$extant_swd_binary, 
+             "White Alone", 
+             "% white alone, not Hispanic or Latinx")
+education_loess <- 
+  logitloess(ks_analyze$education_high_school_plus_percent_B15003_017_to_025*100, 
+             ks_analyze$extant_swd_binary, 
+             "High School Education", 
+             "% high school graduate or equivalent")
+lim_eng_loess <- 
+  logitloess(ks_analyze$limited_english_percent_C16002_004_007_010_013_001*100, 
+             ks_analyze$extant_swd_binary, 
+             "Limited-English Households", 
+             "% of household with limited English")
+health_insurance_loess <- 
+  logitloess(ks_analyze$no_health_insurance_percent_B27010_017_033_050_066*100, 
+             ks_analyze$extant_swd_binary, 
+             "Health Insurance Coverage", 
+             "% with no health insurance coverage")
+renter_loess <- 
+  logitloess(ks_analyze$renter_occupy_percent_B25003_003_001*100, 
+             ks_analyze$extant_swd_binary, 
+             "Renter Occupancy", "% of housing units renter occupied")
+unemploy_loess <- 
+  logitloess(ks_analyze$unemployed_percent_B23025_005_003*100, 
+             ks_analyze$extant_swd_binary, 
+             "Unemployment", 
+             "% unemployed")
+poverty_loess <- 
+  logitloess(ks_analyze$poverty_below_100_percent_C17002_002_003_001*100, 
+             ks_analyze$extant_swd_binary, 
+             "Poverty", 
+             "% in poverty")
+poverty_loess
+
+# make dataframe of complete earnings cases
+ks_earnings_cases <- 
+  ks_analyze[which(!is.na(ks_analyze$earnings_median_B20002_001)),]
+
+earnings_loess <- 
+  logitloess(ks_earnings_cases$earnings_median_B20002_001,
+             ks_earnings_cases$extant_swd_binary, 
+             "Individual Earnings", 
+             "Median individual earnings ($)", 
+             ks_earnings_cases)
+earnings_loess
+
+income_loess <- 
+  logitloess(ks_analyze$income_house_median_B19013_001, 
+             ks_analyze$extant_swd_binary, 
+             "Household Income", 
+             "Median household income ($)")
+
+# make dataframe of complete home value cases
+home_value_cases <- 
+  ks_analyze[which(!is.na(ks_analyze$house_value_median_B25077_001)),]
+home_value_loess <- 
+  logitloess(home_value_cases$house_value_median_B25077_001, 
+             home_value_cases$extant_swd_binary, 
+           "Home Value", 
+           "Median home value ($)", 
+           home_value_cases)
+ice_loess <- 
+  logitloess(ks_analyze$ice_B19001, 
+             ks_analyze$extant_swd_binary, 
+             "Income concentration\nat the extremes", 
+             "Income concentration at the extremes")
+land_loess <- 
+  logitloess(ks_analyze$ALAND_KM, 
+             ks_analyze$extant_swd_binary, 
+             "Land Area", 
+             expression(paste("Land area (km"^"2",")")))
+
+water_loess <- 
+  logitloess(ks_analyze$AWATER_KM, 
+             ks_analyze$extant_swd_binary, 
+             "Water Area", 
+             expression(paste("Water area (km"^"2",")")))
+  
+# horizontal_loess <- 
+#   logitloess(ks_analyze$horizontal_count, 
+#              ks_analyze$extant_swd_binary, 
+#              "Horizontal Wells", 
+#              "Horizontal well count") 
+
+# shale_loess <- 
+#   logitloess(ks_analyze$shale_presence, 
+#              ks_analyze$extant_swd_binary, 
+#              "Mississippian Lime Play", 
+#              "Presence on the play")
+
+blank_loess <- 
+  ggplot(ks_analyze, aes(x = pop_tot_B01001_001, 
+                         y = house_value_median_B25077_001)) + theme_bw() + theme(panel.border = element_blank(), text = element_text(color = "white"), panel.grid.major = element_blank(),                    panel.grid.minor = element_blank(), axis.line = element_line(colour = "white"), axis.text = element_text(color = "white"), axis.ticks = element_blank())
+blank_loess
+
+# earnings_predict <- 
+#   predict(loess(ks_analyze$extant_swd_binary ~ ks_analyze$earnings_median_B20002_001))
 # 
+# View(earnings_predict)
+  
+# plot all the loess plots
+par(mfrow = c(1,1))
+multiplot(pop_loess,
+          pop_dense_loess,
+          female_loess,
+          age_18_loess,
+          age_65_loess,
+          aian_loess,
+          hisp_loess,
+          white_loess,
+          education_loess,
+          lim_eng_loess,
+          health_insurance_loess,
+          renter_loess,
+          unemploy_loess,
+          poverty_loess,
+          earnings_loess,
+          income_loess,
+          home_value_loess,
+          ice_loess,
+          land_loess,
+          water_loess,
+          layout = matrix(c(1,2,3,4,
+                            5,6,7,8,
+                            9,10,11,12,
+                            13,14,15,16,
+                            17,18,19,20), nrow=5, byrow=TRUE))
+
+logistic_model_data <- 
+  ks_analyze %>% 
+         c("pop_dense_B01001_001_ALAND", 
+         "female_percent_B01001_026_001",
+         "aian_percent_any_race_B02010_001", 
+         "white_non_hisp_lat_percent_B03002_003_001", 
+         "age_0_to_17_percent_B01001", 
+         "age_65_plus_percent_B01001", 
+         "education_high_school_plus_percent_B15003_017_to_025", 
+         "limited_english_percent_C16002_004_007_010_013_001", 
+         "no_health_insurance_percent_B27010_017_033_050_066", 
+         "renter_occupy_percent_B25003_003_001", 
+         "unemployed_percent_B23025_005_003", 
+         "income_house_median_B19013_001", 
+         "shale_presence", 
+         "horizontal_binary")
+
+
+# fit the big regression
+logistic_model_70_cutoff <- 
+  stats::glm(extant_swd_binary ~ 
+        pop_dense_B01001_001_ALAND + 
+        female_percent_B01001_026_001 + 
+        aian_percent_any_race_B02010_001 +  
+        white_non_hisp_lat_percent_B03002_003_001 +  
+        age_0_to_17_percent_B01001 +  
+        age_65_plus_percent_B01001 +  
+        education_high_school_plus_percent_B15003_017_to_025 +  
+        limited_english_percent_C16002_004_007_010_013_001 +  
+        no_health_insurance_percent_B27010_017_033_050_066 +  
+        renter_occupy_percent_B25003_003_001 +  
+        unemployed_percent_B23025_005_003 +  
+        income_house_median_B19013_001 +  
+        shale_presence + 
+        horizontal_binary, 
+      data = ks_analyze, 
+      family = binomial)
+
+# all data model that I should not run (SHAME)
+logistic_model_big <- 
+  stats::glm(extant_swd_binary ~ 
+               pop_tot_B01001_001 +
+               pop_dense_B01001_001_ALAND + 
+               female_percent_B01001_026_001 + 
+               age_0_to_17_percent_B01001 +  
+               age_65_plus_percent_B01001 +  
+               aian_percent_any_race_B02010_001 +  
+               hisp_lat_percent_B03002_012_001 +
+               white_non_hisp_lat_percent_B03002_003_001 +  
+               education_high_school_plus_percent_B15003_017_to_025 +  
+               limited_english_percent_C16002_004_007_010_013_001 +  
+               no_health_insurance_percent_B27010_017_033_050_066 +  
+               renter_occupy_percent_B25003_003_001 +  
+               unemployed_percent_B23025_005_003 +  
+               poverty_below_100_percent_C17002_002_003_001 + 
+               earnings_median_B20002_001 +
+               income_house_median_B19013_001 +  
+               house_value_median_B25077_001 + 
+               ice_B19001 + 
+               ALAND_KM + 
+               AWATER_KM +
+               shale_presence + 
+               horizontal_binary, 
+             data = ks_analyze, 
+             family = binomial)
+
+# list the dependent variable names
+dependent_variable_names <- 
+  c("pop_tot_B01001_001", 
+    "pop_dense_B01001_001_ALAND", 
+    "female_percent_B01001_026_001", 
+    "age_0_to_17_percent_B01001", 
+    "age_65_plus_percent_B01001",   
+    "aian_percent_any_race_B02010_001",   
+    "hisp_lat_percent_B03002_012_001", 
+    "white_non_hisp_lat_percent_B03002_003_001",   
+    "education_high_school_plus_percent_B15003_017_to_025",   
+    "limited_english_percent_C16002_004_007_010_013_001",   
+    "no_health_insurance_percent_B27010_017_033_050_066",   
+    "renter_occupy_percent_B25003_003_001",   
+    "unemployed_percent_B23025_005_003",   
+    "poverty_below_100_percent_C17002_002_003_001",  
+    "earnings_median_B20002_001", 
+    "income_house_median_B19013_001",   
+    "house_value_median_B25077_001",  
+    "ice_B19001",  
+    "ALAND_KM",  
+    "AWATER_KM", 
+    "shale_presence",  
+    "horizontal_binary")
+
+# make model to run all the univariable logistic regressions AT ONCE (MWAHAHA)
+univariable_logistic_model_function <- 
+  sapply(dependent_variable_names, function(x) {
+    glm(substitute(extant_swd_binary ~ indy, 
+        list(indy = as.name(x))), 
+        data = ks_analyze, 
+        family = binomial)})
+
+# run it
+univariable_logistic_model_summaries <-   # get summary
+  lapply(univariable_logistic_model_function, summary)
+univariable_logistic_Wald_intervals <-   # get confidence intervals
+  lapply(univariable_logistic_model_function, confint.default)
+univariable_logistic_model_p_values <-   # get p values
+  lapply(univariable_logistic_model_function, summary)$p.value 
+univariable_logistic_model_coefficients <- 
+  lapply(univariable_logistic_model_function, summary)$coefficients
+  
+# predict confidence intervals
+
+
+  
+
+# list to catch regressions
+little_log_list <- list()
+
+# individual regressions
+logistic_pop_tot <- 
+  glm(extant_swd_binary ~ 
+        pop_tot_B01001_001, 
+      data = ks_analyze, 
+      family = binomial)
+little_log_list <-                # add to the list
+  append(little_log_list, 
+         logistic_pop_tot)
+
+logistic_pop_dense <- 
+  glm(extant_swd_binary ~ 
+      pop_dense_B01001_001_ALAND, 
+      data = ks_analyze, 
+      family = binomial)
+little_log_list <- 
+  append(little_log_list, 
+         logistic_pop_dense)
+
+logistic_female <- 
+  glm(extant_swd_binary ~ 
+        female_percent_B01001_026_001, 
+      data = ks_analyze, 
+      family = binomial)
+little_log_list <- 
+  append(little_log_list, 
+         logistic_female)
+
+logistic_age_0_17 <- 
+  glm(extant_swd_binary ~ 
+        age_0_to_17_percent_B01001, 
+      data = ks_analyze, 
+      family = binomial)
+little_log_list <- 
+  append(little_log_list, 
+         logistic_age_0_17)
+
+logistic_age_65_plus <- 
+  glm(extant_swd_binary ~ 
+        age_65_plus_percent_B01001, 
+      data = ks_analyze, 
+      family = binomial)
+little_log_list <- 
+  append(little_log_list, 
+         logistic_age_65_plus)
+
+logistic_aian <- 
+  glm(extant_swd_binary ~ 
+        aian_percent_any_race_B02010_001, 
+      data = ks_analyze, 
+      family = binomial)
+little_log_list <- 
+  append(little_log_list, 
+         logistic_aian)
+
+logistic_hisp_lat <- 
+  glm(extant_swd_binary ~ 
+        hisp_lat_percent_B03002_012_001, 
+      data = ks_analyze, 
+      family = binomial)
+little_log_list <- 
+  append(little_log_list, 
+         logistic_hisp_lat)
+
+logistic_white <- 
+  glm(extant_swd_binary ~ 
+        white_non_hisp_lat_percent_B03002_003_001, 
+      data = ks_analyze, 
+      family = binomial)
+little_log_list <- 
+  append(little_log_list, 
+         logistic_white)
+
+logistic_education <- 
+  glm(extant_swd_binary ~ 
+        education_high_school_plus_percent_B15003_017_to_025, 
+      data = ks_analyze, 
+      family = binomial)
+little_log_list <- 
+  append(little_log_list, 
+         logistic_pop_dense)
+
+logistic_english <- 
+  glm(extant_swd_binary ~ 
+        limited_english_percent_C16002_004_007_010_013_001,
+      data = ks_analyze, 
+      family = binomial)
+little_log_list <- 
+  append(little_log_list, 
+         logistic_pop_dense)
+
+logistic_insurance <- 
+  glm(extant_swd_binary ~ 
+        no_health_insurance_percent_B27010_017_033_050_066, 
+      data = ks_analyze, 
+      family = binomial)
+little_log_list <- 
+  append(little_log_list, 
+         logistic_pop_dense)
+
+logistic_renter_occupy <- 
+  glm(extant_swd_binary ~ 
+        renter_occupy_percent_B25003_003_001, 
+      data = ks_analyze, 
+      family = binomial)
+little_log_list <- 
+  append(little_log_list, 
+         logistic_pop_dense)
+
+logistic_unemploy <- 
+  glm(extant_swd_binary ~ 
+        unemployed_percent_B23025_005_003, 
+      data = ks_analyze, 
+      family = binomial)
+little_log_list <- 
+  append(little_log_list, 
+         logistic_pop_dense)
+
+logistic_poverty <- 
+  glm(extant_swd_binary ~ 
+        poverty_below_100_percent_C17002_002_003_001, 
+      data = ks_analyze, 
+      family = binomial)
+little_log_list <- 
+  append(little_log_list, 
+         logistic_pop_dense)
+
+logistic_earn <- 
+  glm(extant_swd_binary ~ 
+        earnings_median_B20002_001, 
+      data = ks_analyze, 
+      family = binomial)
+little_log_list <- 
+  append(little_log_list, 
+         logistic_pop_dense)
+
+logistic_income <- 
+  glm(extant_swd_binary ~ 
+        income_house_median_B19013_001, 
+      data = ks_analyze, 
+      family = binomial)
+little_log_list <- 
+  append(little_log_list, 
+         logistic_pop_dense)
+
+logistic_home <- 
+  glm(extant_swd_binary ~ 
+        house_value_median_B25077_001, 
+      data = ks_analyze, 
+      family = binomial)
+little_log_list <- 
+  append(little_log_list, 
+         logistic_pop_dense)
+
+logistic_ice <- 
+  glm(extant_swd_binary ~ 
+        ice_B19001, 
+      data = ks_analyze, 
+      family = binomial)
+little_log_list <- 
+  append(little_log_list, 
+         logistic_pop_dense)
+
+logistic_land <- 
+  glm(extant_swd_binary ~ 
+        ALAND_KM, 
+      data = ks_analyze, 
+      family = binomial)
+little_log_list <- 
+  append(little_log_list, 
+         logistic_pop_dense)
+
+logistic_water <- 
+  glm(extant_swd_binary ~ 
+        AWATER_KM, 
+      data = ks_analyze, 
+      family = binomial)
+little_log_list <- 
+  append(little_log_list, 
+         logistic_pop_dense)
+
+logistic_horiz <- 
+  glm(extant_swd_binary ~ 
+        horizontal_binary, 
+      data = ks_analyze, 
+      family = binomial)
+little_log_list <- 
+  append(little_log_list, 
+         logistic_pop_dense)
+
+logistic_shale <- 
+  glm(extant_swd_binary ~ 
+        shale_presence, 
+      data = ks_analyze, 
+      family = binomial)
+little_log_list <- 
+  append(little_log_list, 
+         logistic_pop_dense)
+
+
+
+
+# review model summaries
+summary(logistic_pop_tot)
+confint.default(logistic_pop_tot)
+summary(logistic_pop_dense)
+confint.default(logistic_pop_dense)
+summary(logistic_female)
+confint.default(logistic_female)
+summary(logistic_age_0_17)
+confint.default(logistic_age_0_17)
+summary(logistic_age_65_plus)
+confint.default(logistic_age_65_plus)
+summary(logistic_aian)
+confint.default(logistic_aian)
+summary(logistic_hisp_lat)
+confint.default(logistic_hisp_lat)
+summary(logistic_white)
+confint.default(logistic_white)
+summary(logistic_education)
+confint.default(logistic_education)
+summary(logistic_english)
+confint.default(logistic_english)
+summary(logistic_insurance)
+confint.default(logistic_insurance)
+summary(logistic_renter_occupy)
+confint.default(logistic_renter_occupy)
+summary(logistic_unemploy)
+confint.default(logistic_unemploy)
+summary(logistic_poverty)
+confint.default(logistic_poverty)
+summary(logistic_earn)
+confint.default(logistic_earn)
+summary(logistic_income)
+confint.default(logistic_income)
+summary(house_value_median_B25077_001)
+confint.default(house_value_median_B25077_001)
+summary(logistic_ice)
+confint.default(logistic_ice)
+summary(logistic_land)
+confint.default(logistic_land)
+summary(logistic_water)
+confint.default(logistic_water)
+summary(logistic_shale)
+confint.default(logistic_shale)
+summary(logistic_horiz)
+confint.default(logistic_horiz)
+
+
+# automated choice of best fit
+logistic_matrix <- 
+  data.matrix(logistic_model_data)
+
+output_variable <- ks_analyze$extant_swd_binary
+
+test_for_automatic_selection <- 
+  as.data.frame(cbind(logistic_matrix,output_variable))
+
+View(test_for_automatic_selection)
+
+bestAIC <- bestglm(test_for_automatic_selection, IC = "AIC", family = binomial)
+bestBIC <- bestglm(test_for_automatic_selection, IC = "BIC", family = binomial)
+
+write.csv(bestAIC$BestModels, 
+          file = "bestmodelsAIC.csv")
+
+bestAIC$BestModels
+
+bestAIC$BestModel$residuals
+
+write.csv(bestBIC$BestModels, 
+          file = "bestmodelsBIC.csv")
+
+bestBIC$BestModel
+bestAIC$BestModel
+
+bestAIC
+
+summary(logistic_model_big)
+
+best_glm_run <- 
+  stats::glm(extant_swd_binary ~ 
+        pop_tot_B01001_001 + 
+        pop_dense_B01001_001_ALAND + 
+        aian_percent_any_race_B02010_001 +  
+        white_non_hisp_lat_percent_B03002_003_001 +  
+        education_high_school_plus_percent_B15003_017_to_025 + 
+        renter_occupy_percent_B25003_003_001 +  
+        unemployed_percent_B23025_005_003 +  
+        income_house_median_B19013_001 +  
+        shale_presence + 
+        horizontal_binary, 
+      data = ks_analyze, 
+      family = binomial)
+
+
+
+
+
+thing <- safeBinaryRegression::glm(extant_swd_binary ~ 
+                            pop_tot_B01001_001 + 
+                            pop_dense_B01001_001_ALAND + 
+                            aian_percent_any_race_B02010_001 +  
+                            white_non_hisp_lat_percent_B03002_003_001 +  
+                            education_high_school_plus_percent_B15003_017_to_025 + 
+                            renter_occupy_percent_B25003_003_001 +  
+                            unemployed_percent_B23025_005_003 +  
+                            income_house_median_B19013_001 +  
+                            shale_presence + 
+                            horizontal_binary, 
+                          data = ks_analyze, 
+                          family = binomial, 
+                          separation = "test")
+
+second_best_glm_run <- 
+  stats::glm(extant_swd_binary ~ 
+        pop_tot_B01001_001 + 
+        pop_dense_B01001_001_ALAND + 
+        white_non_hisp_lat_percent_B03002_003_001 +  
+        education_high_school_plus_percent_B15003_017_to_025 + 
+        renter_occupy_percent_B25003_003_001 +  
+        unemployed_percent_B23025_005_003 +  
+        income_house_median_B19013_001 +  
+        shale_presence + 
+        horizontal_binary, 
+      data = ks_analyze, 
+      family = binomial)
+
+sec
+
+second_best_glm_run
+
+
+
+summary(thing)
+  
+best_glm_run
+
+write.csv(ks_analyze, 
+          file = "ks_analyze.csv")
+
+
+# pop tot model evaluation
+logistic_pop_tot
+
+summary(logistic_pop_tot)
+
+pop_tot_residuals <- 
+  residuals(logistic_pop_tot, type = "deviance") 
+plot.new()
+plot_pop_tot_residuals <- 
+  ggplot(aes())
+  
+  plot(predict(logistic_pop_tot), 
+       pop_tot_residuals, 
+       col = "slateblue1",
+       xlab="Fitted values", 
+       ylab = "Deviance residuals",
+       ylim = max(abs(pop_tot_residuals)) * c(-1,1), 
+       family = "Times New Roman", 
+       main = "Total Population")
+abline(h = 0, lty = 2)
+dev.off()
+
+
+plot_pop_tot_residuals
+
+
+
+# population 
+pop_tot_residuals <- 
+  residuals(logistic_pop_tot, type = "deviance") 
+plot.new()
+plot_pop_tot_residuals <- 
+  plot(predict(logistic_pop_tot), 
+       pop_tot_residuals, 
+       col = "slateblue1",
+       xlab="Fitted values", 
+       ylab = "Deviance residuals",
+       ylim = max(abs(pop_tot_residuals)) * c(-1,1), 
+       family = "Times New Roman", 
+       main = "Total Population")
+abline(h = 0, lty = 2)
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Predict the probability (p) of swd well presence
+probabilities <- 
+  predict(logistic_model_no_tinies, type = "response")
+View(probabilities)
+predicted.classes <- 
+  ifelse(probabilities > 0.5, "yes", "no")
+head(predicted.classes)
+
+
+
+
+
+# Predict the probability (p) of swd well presence
+probabilities <- predict(logistic_model, type = "response")
+View(probabilities)
+predicted.classes <- ifelse(probabilities > 0.5, "yes", "no")
+head(predicted.classes)
+
+
+
+summary(logistic_model)
+
+predictors <- 
+  colnames(logistic_model_data)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+logistic_data_for_little_plots <- 
+  logistic_model_data %>%
+  mutate(logit = log(probabilities/(1-probabilities))) %>%
+  gather(key = "predictors", value = "predictor.value", -logit)
+
+ggplot(logistic_data_for_little_plots_no_tinies, 
+       aes(predictor.value, logit)) +
+  geom_point(size = 0.5, alpha = 0.5) +
+  geom_smooth(method = "loess") + 
+  theme_bw() + 
+  facet_wrap(~predictors, 
+             scales = "free_x")
+
+
+
+logistic_model_pop_tot <- 
+  glm(extant_swd_binary ~ 
+        pop_tot_B01001_001, 
+      data = ks_analyze, 
+      family = binomial)
+
+summary(logistic_model_pop_tot)
+
+
+
+
+
+
+
+
+
+mydata <- PimaIndiansDiabetes2 %>%
+  dplyr::select_if(is.numeric) 
+predictors <- colnames(mydata)
+# Bind the logit and tidying the data for plot
+mydata <- mydata %>%
+  mutate(logit = log(probabilities/(1-probabilities))) %>%
+  gather(key = "predictors", value = "predictor.value", -logit)
+
+
+ggplot(mydata, aes(logit, predictor.value))+
+  geom_point(size = 0.5, alpha = 0.5) +
+  geom_smooth(method = "loess") + 
+  theme_bw() + 
+  facet_wrap(~predictors, scales = "free_y")
+
+
 
 
 
@@ -6545,7 +8244,7 @@ sum(ks_analyze$horizontal_binary[   # no horizontal well
 
 
 
-# #### checking normality ####
+# #### checking normality
 # 
 # par(mfrow=c(2,2))
 # 
@@ -6586,13 +8285,13 @@ sum(ks_analyze$horizontal_binary[   # no horizontal well
 # 
 # 
 # 
-# #### analysis by presence and absence of swd ####
+# #### analysis by presence and absence of swd
 # # number of block groups with and without swd wells
 # table(ks_analysis_dataset$any_swd_binary)
 #
 #
 #
-# #### HAVE NOT RUN PAST HERE WITH THE CURRENT DATA 2018-12-15 ####
+# #### HAVE NOT RUN PAST HERE WITH THE CURRENT DATA 2018-12-15
 # 
 # ## median household income
 # # median
@@ -6759,8 +8458,8 @@ sum(ks_analyze$horizontal_binary[   # no horizontal well
 
 
 
-#### HERE BEGINS THE REVISED WELL ASSIGNMENT PROCEDURE ####
-
+#### HERE BEGINS THE REVISED WELL ASSIGNMENT PROCEDURE
+#
 # #### assignments for categories now moot 
 # # make variable for is/is not swd
 # ks_swd_working$is_swd <- NA 
