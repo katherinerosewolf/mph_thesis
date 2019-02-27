@@ -19,7 +19,6 @@ getwd() # this directory should be the one with your data files in it!
 # if not, use "setwd()" to set the working directory
 
 
-
 #### load libraries ####
 
 library(data.table)
@@ -108,7 +107,7 @@ logitloess <- function(x, y, t, nm, dat, s) {
 }
 
 
-ks_analyze$earnings_median_B20002_001[which(!is.na(ks_analyze$earnings_median_B20002_001))]
+
 
 # Multiple plot function
 #
@@ -2467,8 +2466,8 @@ ks_swd_master_for_small_api <-
 # nrow(ks_swd_master_with_api)
 # nrow(ks_swd_master_for_small_api)
 
-View(ks_swd_master_with_api)
-View(ks_swd_master_with_api %>% filter(drop_dup == "drop_dup_full_api"))
+# View(ks_swd_master_with_api)
+# View(ks_swd_master_with_api %>% filter(drop_dup == "drop_dup_full_api"))
 table(ks_swd_master_with_api$drop_dup, ks_swd_master_with_api$STATUS)
 
 #### DROP PARTIAL API DUPLICATES HERE ####
@@ -2911,6 +2910,17 @@ ks_excludeds_abandoned <-
 View(ks_excludeds_abandoned)
 
 table(ks_excludeds_abandoned$STATUS2)
+
+# make mapping well data
+simple_ks_swd_working <- 
+  ks_swd_working[,c("GEOID","LATITUDE","LONGITUDE", "extant_swd")]
+
+just_swd <- 
+  simple_ks_swd_working[which(simple_ks_swd_working$extant_swd == "1"),]
+
+# save ks_swd_working to file
+write.csv(ks_swd_working, file = "ks_swd_working.csv")
+write.csv(just_swd, file = "just_swd.csv")
 
 
 #### BEGIN BLOCK GROUP COUNTS ####
@@ -3592,7 +3602,7 @@ ks_analysis_populated_complete <-
 
 ks_analyze <- 
   ks_analysis_populated_complete
-View(ks_analyze)
+# View(ks_analyze)
   
 # number of rows with and without disposal wells
 length(ks_analyze$horizontal_count[  # n = 1807
@@ -6907,7 +6917,7 @@ p_values_corrections_t_tests$holm <-
   p.adjust(p_values_t_tests, 
            method = "holm")
 
-View(p_values_corrections_t_tests)
+# View(p_values_corrections_t_tests)
 write.csv(p_values_corrections_t_tests, 
           file = "p_values_t_tests.csv")
 
@@ -7241,7 +7251,7 @@ p_values_wilcox$original <-
 p_values_wilcox$holm <- 
   p.adjust(p_values_thing, method = "holm")
 
-View(p_values_wilcox)
+# View(p_values_wilcox)
 write.csv(p_values_wilcox, 
           file = "p_values_wilcox.csv")
 
@@ -7281,7 +7291,7 @@ summary_statistics <- ks_analyze %>%
                      oooo_max = max,
                      oooo_mean = mean, 
                      oooo_sd = sd), na.rm = TRUE)
-View(summary_statistics)
+# View(summary_statistics)
 
 ks_stats_tidy <- summary_statistics %>% gather(stat, val) %>%
   separate(stat, into = c("var", "stat"), sep = "ooo") %>%
@@ -7291,7 +7301,7 @@ ks_stats_tidy <- summary_statistics %>% gather(stat, val) %>%
 write.csv(ks_stats_tidy, 
           file = "ks_stats_tidy.csv")
 
-View(ks_stats_tidy)
+# View(ks_stats_tidy)
 
 # summary statistics for individual groups
 
@@ -7328,13 +7338,13 @@ summary_statistics_no_wells <-
                      oooo_max = max,
                      oooo_mean = mean, 
                      oooo_sd = sd), na.rm = TRUE)
-View(summary_statistics_no_wells)
+# View(summary_statistics_no_wells)
 
 ks_stats_no_wells <- summary_statistics_no_wells %>% gather(stat, val) %>%
   separate(stat, into = c("var", "stat"), sep = "ooo") %>%
   spread(stat, val) %>%
   select(var, o_min, o_q25, o_median, o_q75, o_max, o_mean, o_sd)
-View(ks_stats_no_wells)
+# View(ks_stats_no_wells)
 
 write.csv(ks_stats_no_wells, file = "ks_stats_no_wells.csv")
 
@@ -7376,13 +7386,13 @@ summary_statistics_with_wells <-
                      oooo_max = max,
                      oooo_mean = mean, 
                      oooo_sd = sd), na.rm = TRUE)
-View(summary_statistics_with_wells)
+# View(summary_statistics_with_wells)
 
 ks_stats_with_wells <- summary_statistics_with_wells %>% gather(stat, val) %>%
   separate(stat, into = c("var", "stat"), sep = "ooo") %>%
   spread(stat, val) %>%
   select(var, o_min, o_q25, o_median, o_q75, o_max, o_mean, o_sd)
-View(ks_stats_with_wells)
+# View(ks_stats_with_wells)
 
 write.csv(ks_stats_with_wells, file = "ks_stats_with_wells.csv")
 
@@ -7677,21 +7687,33 @@ univariable_logistic_model_function <-
 
 # run it
 univariable_logistic_model_summaries <-   # get summary
-  lapply(univariable_logistic_model_function, summary)
+  sapply(univariable_logistic_model_function, summary)
 univariable_logistic_Wald_intervals <-   # get confidence intervals
-  lapply(univariable_logistic_model_function, confint.default)
+  sapply(univariable_logistic_model_function, confint.default)
 univariable_logistic_model_p_values <-   # get p values
-  lapply(univariable_logistic_model_function, summary)$p.value 
-univariable_logistic_model_coefficients <- 
-  lapply(univariable_logistic_model_function, summary)$coefficients
-  
-# predict confidence intervals
+  sapply(univariable_logistic_model_function, 
+         function(f) summary(f)$coefficients[,4])
+univariable_logistic_model_coefficients <-   # get coefficients
+  sapply(univariable_logistic_model_function, 
+         function(f) summary(f)$coefficients[,1])
+univariable_logistic_model_errors <-   # get standard errors
+  sapply(univariable_logistic_model_function, 
+         function(f) summary(f)$coefficients[,2])
+
+univariable_logistic_model_summaries
+univariable_logistic_Wald_intervals
 
 
-  
+univariable_logistic_odds_ratios <- 
+  sapply(univariable_logistic_model_function, 
+         function(f) exp(summary(f)$coefficients[,1]))
 
-# list to catch regressions
-little_log_list <- list()
+univariable_logistic_Wald_CIs <- 
+  sapply(univariable_logistic_model_function, 
+         function(f) exp(confint.default(f)))
+univariable_logistic_Wald_CIs
+
+
 
 # individual regressions
 logistic_pop_tot <- 
@@ -7699,199 +7721,134 @@ logistic_pop_tot <-
         pop_tot_B01001_001, 
       data = ks_analyze, 
       family = binomial)
-little_log_list <-                # add to the list
-  append(little_log_list, 
-         logistic_pop_tot)
 
 logistic_pop_dense <- 
   glm(extant_swd_binary ~ 
       pop_dense_B01001_001_ALAND, 
       data = ks_analyze, 
       family = binomial)
-little_log_list <- 
-  append(little_log_list, 
-         logistic_pop_dense)
 
 logistic_female <- 
   glm(extant_swd_binary ~ 
         female_percent_B01001_026_001, 
       data = ks_analyze, 
       family = binomial)
-little_log_list <- 
-  append(little_log_list, 
-         logistic_female)
 
 logistic_age_0_17 <- 
   glm(extant_swd_binary ~ 
         age_0_to_17_percent_B01001, 
       data = ks_analyze, 
       family = binomial)
-little_log_list <- 
-  append(little_log_list, 
-         logistic_age_0_17)
 
 logistic_age_65_plus <- 
   glm(extant_swd_binary ~ 
         age_65_plus_percent_B01001, 
       data = ks_analyze, 
       family = binomial)
-little_log_list <- 
-  append(little_log_list, 
-         logistic_age_65_plus)
 
 logistic_aian <- 
   glm(extant_swd_binary ~ 
         aian_percent_any_race_B02010_001, 
       data = ks_analyze, 
       family = binomial)
-little_log_list <- 
-  append(little_log_list, 
-         logistic_aian)
 
 logistic_hisp_lat <- 
   glm(extant_swd_binary ~ 
         hisp_lat_percent_B03002_012_001, 
       data = ks_analyze, 
       family = binomial)
-little_log_list <- 
-  append(little_log_list, 
-         logistic_hisp_lat)
 
 logistic_white <- 
   glm(extant_swd_binary ~ 
         white_non_hisp_lat_percent_B03002_003_001, 
       data = ks_analyze, 
       family = binomial)
-little_log_list <- 
-  append(little_log_list, 
-         logistic_white)
 
 logistic_education <- 
   glm(extant_swd_binary ~ 
         education_high_school_plus_percent_B15003_017_to_025, 
       data = ks_analyze, 
       family = binomial)
-little_log_list <- 
-  append(little_log_list, 
-         logistic_pop_dense)
 
 logistic_english <- 
   glm(extant_swd_binary ~ 
         limited_english_percent_C16002_004_007_010_013_001,
       data = ks_analyze, 
       family = binomial)
-little_log_list <- 
-  append(little_log_list, 
-         logistic_pop_dense)
 
 logistic_insurance <- 
   glm(extant_swd_binary ~ 
         no_health_insurance_percent_B27010_017_033_050_066, 
       data = ks_analyze, 
       family = binomial)
-little_log_list <- 
-  append(little_log_list, 
-         logistic_pop_dense)
 
 logistic_renter_occupy <- 
   glm(extant_swd_binary ~ 
         renter_occupy_percent_B25003_003_001, 
       data = ks_analyze, 
       family = binomial)
-little_log_list <- 
-  append(little_log_list, 
-         logistic_pop_dense)
 
 logistic_unemploy <- 
   glm(extant_swd_binary ~ 
         unemployed_percent_B23025_005_003, 
       data = ks_analyze, 
       family = binomial)
-little_log_list <- 
-  append(little_log_list, 
-         logistic_pop_dense)
 
 logistic_poverty <- 
   glm(extant_swd_binary ~ 
         poverty_below_100_percent_C17002_002_003_001, 
       data = ks_analyze, 
       family = binomial)
-little_log_list <- 
-  append(little_log_list, 
-         logistic_pop_dense)
 
 logistic_earn <- 
   glm(extant_swd_binary ~ 
         earnings_median_B20002_001, 
       data = ks_analyze, 
       family = binomial)
-little_log_list <- 
-  append(little_log_list, 
-         logistic_pop_dense)
+
+logistic_earn
 
 logistic_income <- 
   glm(extant_swd_binary ~ 
         income_house_median_B19013_001, 
       data = ks_analyze, 
       family = binomial)
-little_log_list <- 
-  append(little_log_list, 
-         logistic_pop_dense)
 
 logistic_home <- 
   glm(extant_swd_binary ~ 
         house_value_median_B25077_001, 
       data = ks_analyze, 
       family = binomial)
-little_log_list <- 
-  append(little_log_list, 
-         logistic_pop_dense)
 
 logistic_ice <- 
   glm(extant_swd_binary ~ 
         ice_B19001, 
       data = ks_analyze, 
       family = binomial)
-little_log_list <- 
-  append(little_log_list, 
-         logistic_pop_dense)
 
 logistic_land <- 
   glm(extant_swd_binary ~ 
         ALAND_KM, 
       data = ks_analyze, 
       family = binomial)
-little_log_list <- 
-  append(little_log_list, 
-         logistic_pop_dense)
 
 logistic_water <- 
   glm(extant_swd_binary ~ 
         AWATER_KM, 
       data = ks_analyze, 
       family = binomial)
-little_log_list <- 
-  append(little_log_list, 
-         logistic_pop_dense)
 
 logistic_horiz <- 
   glm(extant_swd_binary ~ 
         horizontal_binary, 
       data = ks_analyze, 
       family = binomial)
-little_log_list <- 
-  append(little_log_list, 
-         logistic_pop_dense)
 
 logistic_shale <- 
   glm(extant_swd_binary ~ 
         shale_presence, 
       data = ks_analyze, 
       family = binomial)
-little_log_list <- 
-  append(little_log_list, 
-         logistic_pop_dense)
-
 
 
 
@@ -7951,10 +7908,10 @@ output_variable <- ks_analyze$extant_swd_binary
 test_for_automatic_selection <- 
   as.data.frame(cbind(logistic_matrix,output_variable))
 
-View(test_for_automatic_selection)
+# View(test_for_automatic_selection)
 
-bestAIC <- bestglm(test_for_automatic_selection, IC = "AIC", family = binomial)
-bestBIC <- bestglm(test_for_automatic_selection, IC = "BIC", family = binomial)
+# bestAIC <- bestglm(test_for_automatic_selection, IC = "AIC", family = binomial)
+# bestBIC <- bestglm(test_for_automatic_selection, IC = "BIC", family = binomial)
 
 write.csv(bestAIC$BestModels, 
           file = "bestmodelsAIC.csv")
@@ -8092,7 +8049,7 @@ abline(h = 0, lty = 2)
 # Predict the probability (p) of swd well presence
 probabilities <- 
   predict(logistic_model_no_tinies, type = "response")
-View(probabilities)
+# View(probabilities)
 predicted.classes <- 
   ifelse(probabilities > 0.5, "yes", "no")
 head(predicted.classes)
@@ -8103,7 +8060,7 @@ head(predicted.classes)
 
 # Predict the probability (p) of swd well presence
 probabilities <- predict(logistic_model, type = "response")
-View(probabilities)
+# View(probabilities)
 predicted.classes <- ifelse(probabilities > 0.5, "yes", "no")
 head(predicted.classes)
 
