@@ -329,46 +329,46 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 # #### RUCA rural/urban data import ####
 # 
 # # read in data
-# rucacodes <- 
+# ruca_codes <-
 #   readxl::read_xlsx("ruca2010.xlsx")
 # # View(rucacodes)
 # 
 # # pull only tract_ID and ruca codes and name columns
-# only_ruca <- rucacodes %>% 
+# only_ruca <- ruca_codes %>%
 #   select(c(2, 4, 5, 6))
 # 
 # View(only_ruca)
-# colnames(only_ruca) <- 
-#   c("state", 
-#     "tract_geoid", 
-#     "ruca_prime", 
+# colnames(only_ruca) <-
+#   c("state",
+#     "tract_geoid",
+#     "ruca_prime",
 #     "ruca_second")
 # 
 # # coerce tract_ID to character
-# only_ruca$tract_ID <- 
+# only_ruca$tract_ID <-
 #   as.character(only_ruca$tract_ID)
 # 
 # # set to urban or not urban based on RUCA codes
-# only_ruca$urban <- 
-#   'noturban'
-# only_ruca <- 
-#   within(only_ruca, 
-#          urban[ruca_second == 1.0 | 
-#                  ruca_second == 1.1 | 
-#                  ruca_second == 2.0 | 
-#                  ruca_second == 2.1 | 
-#                  ruca_second == 3.0 | 
-#                  ruca_second == 3.1 | 
-#                  ruca_second == 4.1 | 
-#                  ruca_second == 5.1 | 
-#                  ruca_second == 6.1 | 
-#                  ruca_second == 7.1 | 
-#                  ruca_second == 8.1 | 
-#                  ruca_second == 9.1 | 
+# only_ruca$urban <-
+#   'not_urban'
+# only_ruca <-
+#   within(only_ruca,
+#          urban[ruca_second == 1.0 |
+#                  ruca_second == 1.1 |
+#                  ruca_second == 2.0 |
+#                  ruca_second == 2.1 |
+#                  ruca_second == 3.0 |
+#                  ruca_second == 3.1 |
+#                  ruca_second == 4.1 |
+#                  ruca_second == 5.1 |
+#                  ruca_second == 6.1 |
+#                  ruca_second == 7.1 |
+#                  ruca_second == 8.1 |
+#                  ruca_second == 9.1 |
 #                  ruca_second == 10.1] <- 'urban')
 # 
 # # pull kansas ones
-# kansas_ruca <- only_ruca %>% 
+# kansas_ruca <- only_ruca %>%
 #   filter(state == "KS")
 # # View(kansas_ruca)
 # 
@@ -3229,6 +3229,7 @@ lime_fluid_swd_horiz_ruca_acs$all_swd_binary <- NA
 lime_fluid_swd_horiz_ruca_acs$extant_swd_binary <- NA
 lime_fluid_swd_horiz_ruca_acs$all_swd_from_2010_binary <- NA
 lime_fluid_swd_horiz_ruca_acs$extant_swd_from_2010_binary <- NA
+lime_fluid_swd_horiz_ruca_acs$urban_binary <- NA
 
 # total fluid binary
 lime_fluid_swd_horiz_ruca_acs <-
@@ -3286,6 +3287,14 @@ lime_fluid_swd_horiz_ruca_acs <-
   within(lime_fluid_swd_horiz_ruca_acs,
          extant_swd_from_2010_binary[extant_swd_from_2010_count > 0] <- 1)
 
+# urban or ruca binary
+lime_fluid_swd_horiz_ruca_acs <-
+  within(lime_fluid_swd_horiz_ruca_acs,
+         urban_binary[urban == "not_urban"] <- 0)
+lime_fluid_swd_horiz_ruca_acs <-
+  within(lime_fluid_swd_horiz_ruca_acs,
+         urban_binary[urban == "urban"] <- 1)
+
 # View(head(lime_fluid_swd_horiz_ruca_acs))
 
 
@@ -3301,9 +3310,7 @@ save(ks_swd_working,
      file = "ks_swd_working.rdata")
 write.csv(ks_swd_working, 
           file = "ks_swd_working.csv")
-
-View(lime_fluid_swd_horiz_ruca_acs)
-
+# View(lime_fluid_swd_horiz_ruca_acs)
 
 # simplifying to only the variables that I really, really need
 lime_fluid_swd_horiz_ruca_acs_analysis <-
@@ -3344,7 +3351,12 @@ lime_fluid_swd_horiz_ruca_acs_analysis <-
     "no_health_insurance_percent_B27010_017_033_050_066",
     "poverty_below_100_percent_C17002_002_003_001",
     "unemployed_percent_B23025_005_003", 
-    "ice_B19001"
+    "ice_B19001", 
+    "tract_geoid", 
+    "ruca_prime", 
+    "ruca_second", 
+    "urban", 
+    "urban_binary"
     )]
 # View(lime_fluid_swd_horiz_ruca_acs_analysis)
 
@@ -3356,9 +3368,8 @@ write.csv(lime_fluid_swd_horiz_ruca_acs_analysis,
 load(file = "lime_fluid_swd_horiz_ruca_acs_analysis.rdata")
 
 
+
 #### BEGIN ANALYSES!!! ####
-
-
 
 # make working dataset
 ks_analysis_dataset <-   
@@ -3377,7 +3388,9 @@ load(file = "ks_swd_working.rdata")
 # View(ks_swd_working)
 
 
-sum(ks_analysis_dataset$horizontal_count)
+
+#### horizontal count for all census tracts ####
+# sum(ks_analysis_dataset$horizontal_count)
 
 
 # #### Moran's I ####
@@ -3403,7 +3416,6 @@ sum(ks_analysis_dataset$horizontal_count)
 # weights <- 1/as.matrix(dist(coordinates(ks_extant_swd_for_moran)))
 # diag(weights) <- 0
 # moran.test(ks_extant_swd_for_moran$lead,mat2listw(w))
-  
 
 
 
@@ -3437,6 +3449,8 @@ save(missing_value_totals,
 write.csv(missing_value_totals, 
           file = "missing_value_totals.csv")
 
+
+
 #### CORRELATION TABLE ####
 
 # make dataframe for the correlation dataset
@@ -3465,7 +3479,8 @@ correlation_matrix_data  <-
     "ALAND_KM", 
     "AWATER_KM",
     "shale_presence", 
-    "horizontal_count")]
+    "horizontal_count", 
+    "urban_binary")]
 
 
 # fix names to make them prettier on the heatmap
@@ -3492,7 +3507,8 @@ colnames(correlation_matrix_data) <- c("GEOID",
                                        "Land area", 
                                        "Water area", 
                                        "Mississippian Lime Play", 
-                                       "Horizontal well count")
+                                       "Horizontal well count", 
+                                       "Urbanicity")
 
 # reorder the columns
 correlation_matrix_data <- 
@@ -3517,7 +3533,8 @@ correlation_matrix_data <-
                             "Native American",
                             "Age > 64", 
                             "Age < 18", 
-                            "Female",
+                            "Female", 
+                            "Urbanicity", 
                             "Population density",
                             "Total population")]
 
