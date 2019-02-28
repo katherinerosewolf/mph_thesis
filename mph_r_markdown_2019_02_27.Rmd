@@ -1,3 +1,16 @@
+---
+title: "MPH Thesis R Markdown Document"
+author: "Katherine Rose Wolf"
+date: "February 27, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
 # Oil and Gas Disposal Well Analysis for Kansas
 # Katherine Wolf
 # December 2018
@@ -336,36 +349,17 @@ rucacodes <-
 
 # pull only tract_ID and ruca codes and name columns
 onlyruca <- rucacodes %>% 
-  select(c(2, 4, 5, 6))
+  select(c(4,5,6))
 
 colnames(onlyruca) <- 
   c("tract_ID","ruca_prime","ruca_second")
 
 # coerce tract_ID to character
-onlyruca$tract_ID <- 
-  as.character(onlyruca$tract_ID)
+onlyruca$tract_ID<-as.character(onlyruca$tract_ID)
 
 # set to urban or not urban based on RUCA codes
-onlyruca$urban <- 
-  'noturban'
-onlyruca <- 
-  within(onlyruca, 
-         urban[ruca_second == 1.0 | 
-                 ruca_second == 1.1 | 
-                 ruca_second == 2.0 | 
-                 ruca_second == 2.1 | 
-                 ruca_second == 3.0 | 
-                 ruca_second == 3.1 | 
-                 ruca_second == 4.1 | 
-                 ruca_second == 5.1 | 
-                 ruca_second == 6.1 | 
-                 ruca_second == 7.1 | 
-                 ruca_second == 8.1 | 
-                 ruca_second == 9.1 | 
-                 ruca_second == 10.1] <- 'urban')
-
-# pull Kansas ones
-
+onlyruca$urban<-'noturban'
+onlyruca <- within(onlyruca, urban[ruca_second == 1.0 | ruca_second == 1.1 | ruca_second == 2.0 | ruca_second == 2.1 | ruca_second == 3.0 | ruca_second == 3.1 | ruca_second == 4.1 | ruca_second == 5.1 | ruca_second == 6.1 | ruca_second == 7.1 | ruca_second == 8.1 | ruca_second == 9.1 | ruca_second == 10.1] <- 'urban')
 
 # add rurality to allairdatacorrected (note: ones in non-US don't have RUCA codes)
 allairdataandruca<-merge(allairdatacorrected,onlyruca,by="tract_ID", all.x = TRUE)
@@ -9770,3 +9764,5 @@ ggplot(mydata, aes(logit, predictor.value))+
 #                                       "OTHER(CLASS ONE (OLD))"))
 # 
 # # View(class_1_wells)
+
+```
