@@ -327,54 +327,80 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 
 
 # #### RUCA rural/urban data import ####
+# 
+# # read in data
+# rucacodes <- 
+#   readxl::read_xlsx("ruca2010.xlsx")
+# # View(rucacodes)
+# 
+# # pull only tract_ID and ruca codes and name columns
+# only_ruca <- rucacodes %>% 
+#   select(c(2, 4, 5, 6))
+# 
+# View(only_ruca)
+# colnames(only_ruca) <- 
+#   c("state", 
+#     "tract_geoid", 
+#     "ruca_prime", 
+#     "ruca_second")
+# 
+# # coerce tract_ID to character
+# only_ruca$tract_ID <- 
+#   as.character(only_ruca$tract_ID)
+# 
+# # set to urban or not urban based on RUCA codes
+# only_ruca$urban <- 
+#   'noturban'
+# only_ruca <- 
+#   within(only_ruca, 
+#          urban[ruca_second == 1.0 | 
+#                  ruca_second == 1.1 | 
+#                  ruca_second == 2.0 | 
+#                  ruca_second == 2.1 | 
+#                  ruca_second == 3.0 | 
+#                  ruca_second == 3.1 | 
+#                  ruca_second == 4.1 | 
+#                  ruca_second == 5.1 | 
+#                  ruca_second == 6.1 | 
+#                  ruca_second == 7.1 | 
+#                  ruca_second == 8.1 | 
+#                  ruca_second == 9.1 | 
+#                  ruca_second == 10.1] <- 'urban')
+# 
+# # pull kansas ones
+# kansas_ruca <- only_ruca %>% 
+#   filter(state == "KS")
+# # View(kansas_ruca)
+# 
+# # export kansas ruca data as csv and rdata
+# write_excel_csv(kansas_ruca, "kansas_ruca.csv")
+# save(kansas_ruca, file = "kansas_ruca.rdata")
 
-# read in data
-rucacodes <- 
-  readxl::read_xlsx("ruca2010.xlsx")
-
-# View(rucacodes)
-
-# pull only tract_ID and ruca codes and name columns
-onlyruca <- rucacodes %>% 
-  select(c(2, 4, 5, 6))
-
-colnames(onlyruca) <- 
-  c("tract_ID","ruca_prime","ruca_second")
-
-# coerce tract_ID to character
-onlyruca$tract_ID <- 
-  as.character(onlyruca$tract_ID)
-
-# set to urban or not urban based on RUCA codes
-onlyruca$urban <- 
-  'noturban'
-onlyruca <- 
-  within(onlyruca, 
-         urban[ruca_second == 1.0 | 
-                 ruca_second == 1.1 | 
-                 ruca_second == 2.0 | 
-                 ruca_second == 2.1 | 
-                 ruca_second == 3.0 | 
-                 ruca_second == 3.1 | 
-                 ruca_second == 4.1 | 
-                 ruca_second == 5.1 | 
-                 ruca_second == 6.1 | 
-                 ruca_second == 7.1 | 
-                 ruca_second == 8.1 | 
-                 ruca_second == 9.1 | 
-                 ruca_second == 10.1] <- 'urban')
-
-# pull Kansas ones
 
 
-# add rurality to allairdatacorrected (note: ones in non-US don't have RUCA codes)
-allairdataandruca<-merge(allairdatacorrected,onlyruca,by="tract_ID", all.x = TRUE)
-levels(allairdataandruca$urban)
-whataretheseNAs<-allairdataandruca[is.na(allairdataandruca$urban)]
-unique(whataretheseNAs$State.Code)
-onlyurbanruca<-onlyruca[which(onlyruca$urban == 'urban'),]
-save(onlyruca,file="onlyruca.rdata")
-save(onlyurbanruca,file="onlyurbanruca.rdata")
+# #### census tract and block group concordance ####
+# # import attribute table linking census tracts to census block groups
+# block_groups_to_tracts <- 
+#   read_csv(
+#     "from_arcgis_for_r/ks_block_groups_with_tracts_joined.txt", 
+#     col_types = cols(.default = col_character()))
+# View(block_groups_to_tracts)
+# 
+# # make table assigning block groups to tracts
+# ks_block_group_tract_concordance <- 
+#   block_groups_to_tracts %>% 
+#   rename(block_group_geoid = GEOID, # fix column names
+#          tract_geoid = GEOID_1) %>%
+#   select(block_group_geoid, tract_geoid) # select the columns
+# View(ks_block_group_tract_concordance)  
+# 
+# # write .csv and .rdata files
+# write_excel_csv(
+#   ks_block_group_tract_concordance, 
+#   "ks_block_group_tract_concordance.csv")
+# save(
+#   ks_block_group_tract_concordance, 
+#   file = "ks_block_group_tract_concordance.rdata")
 
 
 
@@ -397,6 +423,19 @@ load(file = "horizontal_wells_raw.rdata")
 
 # load lime data
 load(file = "lime_data_import.rdata")
+
+# load ruca data
+load(file = "kansas_ruca.rdata")
+
+# load block group and tract concordances
+load(file = "ks_block_group_tract_concordance.rdata")
+
+
+
+#### join ruca by tract to block groups ####
+ruca_block_group <- ks_block_group_tract_concordance %>% 
+  left_join(kansas_ruca, by = "tract_geoid")
+View(ruca_block_group)
 
 
 
@@ -3076,18 +3115,33 @@ horizontal_counts <-
 
 
 
-#### merge well counts, fluid counts, horizontal counts, and shale presence
+#### merge well counts, fluid counts, horizontal counts, shale presence, and ruca code data ####
 lime_and_fluid <-   # merge lime and fluid counts
-  full_join(working_lime_data, fluid_totals_block_group, by = "GEOID")
+  full_join(working_lime_data, 
+            fluid_totals_block_group, 
+            by = "GEOID")
 # View(lime_and_fluid)
 
-lime_fluid_swd <-
-  full_join(lime_and_fluid, ks_well_counts, by = "GEOID")
+lime_fluid_swd <-   # merge with swd counts
+  full_join(lime_and_fluid, 
+            ks_well_counts, 
+            by = "GEOID")
 # View(lime_fluid_swd)
 
-lime_fluid_swd_horiz <-
-  full_join(lime_fluid_swd, horizontal_counts, by = "GEOID")
-# View(lime_fluid_swd_horiz)
+lime_fluid_swd_horiz <-   # merge with horizontal well counts
+  full_join(lime_fluid_swd, 
+            horizontal_counts, 
+            by = "GEOID")
+View(lime_fluid_swd_horiz)
+
+# merge with ruca data
+lime_fluid_swd_horiz_ruca <-   # merge with horizontal well counts
+  full_join(lime_fluid_swd_horiz, 
+            ruca_block_group, 
+            by = c("GEOID" = "block_group_geoid"))
+View(lime_fluid_swd_horiz_ruca)
+
+
 
 
 # load ACS variables
@@ -3105,153 +3159,155 @@ acs_geo_cats$GEOID <-  # fix the new one
 
 #### make the full dataset ####
 # merge everything with acs!  hey-o!
-lime_fluid_swd_horiz_acs <- merge(lime_fluid_swd_horiz,
+lime_fluid_swd_horiz_ruca_acs <- merge(lime_fluid_swd_horiz_ruca,
                                   acs_geo_cats,
                                   by = "GEOID",
                                   all = TRUE)
-# View(lime_fluid_swd_horiz_acs)
+# View(lime_fluid_swd_horiz_ruca_acs)
 
 
 
 #### replace NAs with 0s ####
 # shale presence
-lime_fluid_swd_horiz_acs <-
-  within(lime_fluid_swd_horiz_acs,
+lime_fluid_swd_horiz_ruca_acs <-
+  within(lime_fluid_swd_horiz_ruca_acs,
          shale_presence[is.na(
-           lime_fluid_swd_horiz_acs$shale_presence)] <- 0)
+           lime_fluid_swd_horiz_ruca_acs$shale_presence)] <- 0)
 
 # total lifetime fluid injected
-lime_fluid_swd_horiz_acs <-
-  within(lime_fluid_swd_horiz_acs,
+lime_fluid_swd_horiz_ruca_acs <-
+  within(lime_fluid_swd_horiz_ruca_acs,
          total_fluid[is.na(
-           lime_fluid_swd_horiz_acs$total_fluid)] <- 0)
+           lime_fluid_swd_horiz_ruca_acs$total_fluid)] <- 0)
 
 # from 2010 fluid injected
-lime_fluid_swd_horiz_acs <-
-  within(lime_fluid_swd_horiz_acs,
+lime_fluid_swd_horiz_ruca_acs <-
+  within(lime_fluid_swd_horiz_ruca_acs,
          from_2010_fluid[is.na(
-           lime_fluid_swd_horiz_acs$from_2010_fluid)] <- 0)
+           lime_fluid_swd_horiz_ruca_acs$from_2010_fluid)] <- 0)
 
 # all swd well count
-lime_fluid_swd_horiz_acs <-
-  within(lime_fluid_swd_horiz_acs,
+lime_fluid_swd_horiz_ruca_acs <-
+  within(lime_fluid_swd_horiz_ruca_acs,
          all_swd_count[is.na(
-           lime_fluid_swd_horiz_acs$all_swd_count)] <- 0)
+           lime_fluid_swd_horiz_ruca_acs$all_swd_count)] <- 0)
 
 # extant swd well count
-lime_fluid_swd_horiz_acs <-
-  within(lime_fluid_swd_horiz_acs,
+lime_fluid_swd_horiz_ruca_acs <-
+  within(lime_fluid_swd_horiz_ruca_acs,
          extant_swd_count[is.na(
-           lime_fluid_swd_horiz_acs$extant_swd_count)] <- 0)
+           lime_fluid_swd_horiz_ruca_acs$extant_swd_count)] <- 0)
 
 # all swd wells from 2010 count
-lime_fluid_swd_horiz_acs <-
-  within(lime_fluid_swd_horiz_acs,
+lime_fluid_swd_horiz_ruca_acs <-
+  within(lime_fluid_swd_horiz_ruca_acs,
          all_swd_from_2010_count[is.na(
-           lime_fluid_swd_horiz_acs$all_swd_from_2010_count)] <- 0)
+           lime_fluid_swd_horiz_ruca_acs$all_swd_from_2010_count)] <- 0)
 
 # extant swd wells from 2010 count
-lime_fluid_swd_horiz_acs <-
-  within(lime_fluid_swd_horiz_acs,
+lime_fluid_swd_horiz_ruca_acs <-
+  within(lime_fluid_swd_horiz_ruca_acs,
          extant_swd_from_2010_count[is.na(
-           lime_fluid_swd_horiz_acs$extant_swd_from_2010_count)] <- 0)
+           lime_fluid_swd_horiz_ruca_acs$extant_swd_from_2010_count)] <- 0)
 
 # horizontal well count
-lime_fluid_swd_horiz_acs <-
-  within(lime_fluid_swd_horiz_acs,
+lime_fluid_swd_horiz_ruca_acs <-
+  within(lime_fluid_swd_horiz_ruca_acs,
          horizontal_count[is.na(
-           lime_fluid_swd_horiz_acs$horizontal_count)] <- 0)
-# View(lime_fluid_swd_horiz_acs)
+           lime_fluid_swd_horiz_ruca_acs$horizontal_count)] <- 0)
+# View(lime_fluid_swd_horiz_ruca_acs)
 
 
 
 #### construct the binaries! ####
 
 # make the variables
-lime_fluid_swd_horiz_acs$total_fluid_binary <- NA
-lime_fluid_swd_horiz_acs$from_2010_fluid_binary <- NA
-lime_fluid_swd_horiz_acs$horizontal_binary <- NA
-lime_fluid_swd_horiz_acs$all_swd_binary <- NA
-lime_fluid_swd_horiz_acs$extant_swd_binary <- NA
-lime_fluid_swd_horiz_acs$all_swd_from_2010_binary <- NA
-lime_fluid_swd_horiz_acs$extant_swd_from_2010_binary <- NA
+lime_fluid_swd_horiz_ruca_acs$total_fluid_binary <- NA
+lime_fluid_swd_horiz_ruca_acs$from_2010_fluid_binary <- NA
+lime_fluid_swd_horiz_ruca_acs$horizontal_binary <- NA
+lime_fluid_swd_horiz_ruca_acs$all_swd_binary <- NA
+lime_fluid_swd_horiz_ruca_acs$extant_swd_binary <- NA
+lime_fluid_swd_horiz_ruca_acs$all_swd_from_2010_binary <- NA
+lime_fluid_swd_horiz_ruca_acs$extant_swd_from_2010_binary <- NA
 
 # total fluid binary
-lime_fluid_swd_horiz_acs <-
-  within(lime_fluid_swd_horiz_acs,
+lime_fluid_swd_horiz_ruca_acs <-
+  within(lime_fluid_swd_horiz_ruca_acs,
          total_fluid_binary[total_fluid == 0] <- 0)
-lime_fluid_swd_horiz_acs <-
-  within(lime_fluid_swd_horiz_acs,
+lime_fluid_swd_horiz_ruca_acs <-
+  within(lime_fluid_swd_horiz_ruca_acs,
          total_fluid_binary[total_fluid > 0] <- 1)
 
 # from 2010 fluid binary
-lime_fluid_swd_horiz_acs <-
-  within(lime_fluid_swd_horiz_acs,
+lime_fluid_swd_horiz_ruca_acs <-
+  within(lime_fluid_swd_horiz_ruca_acs,
          from_2010_fluid_binary[from_2010_fluid == 0] <- 0)
-lime_fluid_swd_horiz_acs <-
-  within(lime_fluid_swd_horiz_acs,
+lime_fluid_swd_horiz_ruca_acs <-
+  within(lime_fluid_swd_horiz_ruca_acs,
          from_2010_fluid_binary[from_2010_fluid > 0] <- 1)
 
 # horizontal binary
-lime_fluid_swd_horiz_acs <-
-  within(lime_fluid_swd_horiz_acs,
+lime_fluid_swd_horiz_ruca_acs <-
+  within(lime_fluid_swd_horiz_ruca_acs,
          horizontal_binary[horizontal_count == 0] <- 0)
-lime_fluid_swd_horiz_acs <-
-  within(lime_fluid_swd_horiz_acs,
+lime_fluid_swd_horiz_ruca_acs <-
+  within(lime_fluid_swd_horiz_ruca_acs,
          horizontal_binary[horizontal_count > 0] <- 1)
 
 # all swd binary
-lime_fluid_swd_horiz_acs <-
-  within(lime_fluid_swd_horiz_acs,
+lime_fluid_swd_horiz_ruca_acs <-
+  within(lime_fluid_swd_horiz_ruca_acs,
          all_swd_binary[all_swd_count == 0] <- 0)
-lime_fluid_swd_horiz_acs <-
-  within(lime_fluid_swd_horiz_acs,
+lime_fluid_swd_horiz_ruca_acs <-
+  within(lime_fluid_swd_horiz_ruca_acs,
          all_swd_binary[all_swd_count > 0] <- 1)
 
 # all swd from 2010 binary
-lime_fluid_swd_horiz_acs <-
-  within(lime_fluid_swd_horiz_acs,
+lime_fluid_swd_horiz_ruca_acs <-
+  within(lime_fluid_swd_horiz_ruca_acs,
          all_swd_from_2010_binary[all_swd_from_2010_count == 0] <- 0)
-lime_fluid_swd_horiz_acs <-
-  within(lime_fluid_swd_horiz_acs,
+lime_fluid_swd_horiz_ruca_acs <-
+  within(lime_fluid_swd_horiz_ruca_acs,
          all_swd_from_2010_binary[all_swd_from_2010_count > 0] <- 1)
 
 # extant swd binary
-lime_fluid_swd_horiz_acs <-
-  within(lime_fluid_swd_horiz_acs,
+lime_fluid_swd_horiz_ruca_acs <-
+  within(lime_fluid_swd_horiz_ruca_acs,
          extant_swd_binary[extant_swd_count == 0] <- 0)
-lime_fluid_swd_horiz_acs <-
-  within(lime_fluid_swd_horiz_acs,
+lime_fluid_swd_horiz_ruca_acs <-
+  within(lime_fluid_swd_horiz_ruca_acs,
          extant_swd_binary[extant_swd_count > 0] <- 1)
 
 # extant swd from 2010 binary
-lime_fluid_swd_horiz_acs <-
-  within(lime_fluid_swd_horiz_acs,
+lime_fluid_swd_horiz_ruca_acs <-
+  within(lime_fluid_swd_horiz_ruca_acs,
          extant_swd_from_2010_binary[extant_swd_from_2010_count == 0] <- 0)
-lime_fluid_swd_horiz_acs <-
-  within(lime_fluid_swd_horiz_acs,
+lime_fluid_swd_horiz_ruca_acs <-
+  within(lime_fluid_swd_horiz_ruca_acs,
          extant_swd_from_2010_binary[extant_swd_from_2010_count > 0] <- 1)
 
-# View(head(lime_fluid_swd_horiz_acs))
+# View(head(lime_fluid_swd_horiz_ruca_acs))
 
 
 
 # save/write/load chunk
-save(lime_fluid_swd_horiz_acs,
-     file = "lime_fluid_swd_horiz_acs.rdata")
-write.csv(lime_fluid_swd_horiz_acs,
-          file = "lime_fluid_swd_horiz_acs.csv")
-load(file = "lime_fluid_swd_horiz_acs.rdata")
+save(lime_fluid_swd_horiz_ruca_acs,
+     file = "lime_fluid_swd_horiz_ruca_acs.rdata")
+write.csv(lime_fluid_swd_horiz_ruca_acs,
+          file = "lime_fluid_swd_horiz_ruca_acs.csv")
+load(file = "lime_fluid_swd_horiz_ruca_acs.rdata")
 
 save(ks_swd_working, 
      file = "ks_swd_working.rdata")
 write.csv(ks_swd_working, 
           file = "ks_swd_working.csv")
 
+View(lime_fluid_swd_horiz_ruca_acs)
+
 
 # simplifying to only the variables that I really, really need
-lime_fluid_swd_horiz_acs_analysis <-
-  lime_fluid_swd_horiz_acs[,c(
+lime_fluid_swd_horiz_ruca_acs_analysis <-
+  lime_fluid_swd_horiz_ruca_acs[,c(
     "GEOID",
     "all_swd_count",
     "extant_swd_count",
@@ -3290,14 +3346,14 @@ lime_fluid_swd_horiz_acs_analysis <-
     "unemployed_percent_B23025_005_003", 
     "ice_B19001"
     )]
-# View(lime_fluid_swd_horiz_acs_analysis)
+# View(lime_fluid_swd_horiz_ruca_acs_analysis)
 
 # save/write/load chunk
-save(lime_fluid_swd_horiz_acs_analysis,
-     file = "lime_fluid_swd_horiz_acs_analysis.rdata")
-write.csv(lime_fluid_swd_horiz_acs_analysis,
-          file = "lime_fluid_swd_horiz_acs_analysis.csv")
-load(file = "lime_fluid_swd_horiz_acs_analysis.rdata")
+save(lime_fluid_swd_horiz_ruca_acs_analysis,
+     file = "lime_fluid_swd_horiz_ruca_acs_analysis.rdata")
+write.csv(lime_fluid_swd_horiz_ruca_acs_analysis,
+          file = "lime_fluid_swd_horiz_ruca_acs_analysis.csv")
+load(file = "lime_fluid_swd_horiz_ruca_acs_analysis.rdata")
 
 
 #### BEGIN ANALYSES!!! ####
@@ -3306,7 +3362,7 @@ load(file = "lime_fluid_swd_horiz_acs_analysis.rdata")
 
 # make working dataset
 ks_analysis_dataset <-   
-  lime_fluid_swd_horiz_acs_analysis
+  lime_fluid_swd_horiz_ruca_acs_analysis
 # View(ks_analysis_dataset)
 
 # save write load block
