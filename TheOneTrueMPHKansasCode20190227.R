@@ -376,7 +376,7 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 # write_excel_csv(kansas_ruca, "kansas_ruca.csv")
 # save(kansas_ruca, file = "kansas_ruca.rdata")
 
-
+table(kansas_ruca$ruca_second)
 
 # #### census tract and block group concordance ####
 # # import attribute table linking census tracts to census block groups
@@ -3564,7 +3564,7 @@ correlation_matrix_data_complete <-
 # create the correlation matrix with all observations
 # rounds to 2 decimal places
 correlation_matrix  <-  
-  round(cor(correlation_matrix_data[,2:24], 
+  round(cor(correlation_matrix_data[,2:25], 
             method = "spearman", 
             use = "pairwise.complete.obs"), 
         2) 
@@ -3577,7 +3577,7 @@ write.csv(correlation_matrix, file = "correlation_matrix.csv")
 
 # count observations going into the correlation matrix
 counts_pairwise_correlations  <-  
-  count.pairwise(correlation_matrix_data_complete[,2:24], 
+  pairwiseCount(correlation_matrix_data_complete[,2:25], 
                  y = NULL, 
                  diagonal=TRUE)
 
@@ -3750,10 +3750,6 @@ length(ks_analyze$horizontal_count[  # n = 1807
   which(ks_analyze$extant_swd_binary == 0)])
 length(ks_analyze$horizontal_count[   # n = 486
   which(ks_analyze$extant_swd_binary == 1)])
-
-
-
-
 
 
 
@@ -6988,6 +6984,79 @@ horizontal_levene <-
 
 
 #### chi-square tests
+# chi-square test for urbanicity (broadly defined)
+# NOTE: THIS USES ALL POPULATED CENSUS TRACTS
+swd_broad_urban <- 
+  sum(ks_analysis_populated$extant_swd_binary[which(
+      ks_analysis_populated$urban_binary == 1)])
+swd_broad_not_urban <- 
+  sum(
+  ks_analysis_populated$extant_swd_binary[which(
+    ks_analysis_populated$urban_binary == 0)])
+no_swd_broad_urban <- 
+  sum(
+    ks_analysis_populated$urban_binary[which(
+      ks_analysis_populated$extant_swd_binary == 0)])
+no_swd_broad_not_urban <- 
+  2293 - (swd_broad_urban + swd_broad_not_urban + no_swd_broad_urban)
+
+broad_urban_matrix <- 
+  matrix(c(
+    swd_broad_urban, 
+    swd_broad_not_urban, 
+    no_swd_broad_urban, 
+    no_swd_broad_not_urban), 
+    ncol = 2)
+
+broad_urban_matrix
+
+broad_urban_chisquare <- 
+  chisq.test(broad_urban_matrix)
+
+broad_urban_chisquare$statistic
+broad_urban_chisquare$p.value
+broad_urban_chisquare$method
+
+
+
+# chi-square test for urbanicity (narrowly defined)
+swd_narrow_urban <- 
+  sum(
+    ks_analysis_populated$extant_swd_binary[which(
+      ks_analysis_populated$ruca_prime == 1)])
+swd_narrow_not_urban <- 
+  sum(
+    ks_analysis_populated$extant_swd_binary[which(
+      ks_analysis_populated$ruca_prime > 1)])
+no_swd_narrow_urban_tibble <- ks_analysis_populated %>%
+  filter(extant_swd_binary == 0 & ruca_prime == 1)
+no_swd_narrow_urban <- 
+  nrow(no_swd_narrow_urban_tibble)
+no_swd_narrow_not_urban <- 
+  2293 - (swd_narrow_urban + swd_narrow_not_urban + no_swd_narrow_urban)
+
+swd_narrow_urban
+swd_narrow_not_urban
+no_swd_narrow_urban
+no_swd_narrow_not_urban
+
+narrow_urban_matrix <- 
+  matrix(c(
+    swd_narrow_urban, 
+    swd_narrow_not_urban, 
+    no_swd_narrow_urban, 
+    no_swd_narrow_not_urban), 
+    ncol = 2)
+
+narrow_urban_matrix
+
+narrow_urban_chisquare <- 
+  chisq.test(urban_matrix)
+
+narrow_urban_chisquare$statistic
+narrow_urban_chisquare$p.value
+narrow_urban_chisquare$method
+
 # chi-square test for shale presence
 swd_shale <- sum(ks_analyze$extant_swd_binary[which(
   ks_analyze$shale_presence == 1)])
