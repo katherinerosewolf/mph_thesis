@@ -20,13 +20,11 @@ getwd() # this directory should be the one with your data files in it!
 
 
 #### load libraries ####
-
 library(data.table)
 library(extrafont)
 library(ggplot2)
 library(plyr)
 library(psych)
-library(tcltk2)
 library(reshape2)
 library(totalcensus)
 library(tidyverse)
@@ -42,6 +40,8 @@ library(safeBinaryRegression)
 library(scales)
 library(ResourceSelection)
 
+
+
 #### load fonts ####
 # font_import()
 # loadfonts(device = "win")
@@ -56,19 +56,6 @@ options(scipen = 999)
 
 # notin function
 `%notin%`  <-  function(x,y) !(x %in% y) # define "not-in" function
-
-my_wait <- function() {
-  tt <- tktoplevel()
-  tkpack(tkbutton(
-    tt, 
-    text = 'continue', 
-    command = 
-      function()tkdestroy(tt)),
-    side='bottom')
-  tkbind(tt, '<Key>', 
-         function()tkdestroy(tt))
-  tkwait.window(tt)
-}
 
 # function to plot the logit of the estimated probabilities of y from x
 logitloess <- function(x, y, t, nm, dat, s) {
@@ -2116,22 +2103,6 @@ load(file = "ks_working_with_block_groups.rdata")
 #           file = "rows_requiring_comment_investigation.csv")
 # write.csv(rows_requiring_comment_investigation_simple,
 #           file = "rows_requiring_comment_investigation_simple.csv")
-
-
-
-# #### manual well assignment space ####
-# cat("Please assign the ambiguous wells manually in an Excel file.
-# Afterward, find the window that just opened and click on the 'continue'
-# button to continue the program.  The next prompt asks you to choose the file
-# with the well assignments.")
-# my_wait() # runs function to force the program to wait for input
-#
-# # import manual assignments
-# manual_well_assignment_csv_file <- # asks user to choose the correct .csv file
-#   file.choose()
-#
-# raw_manual_well_assignments_dataframe <- # converts above .csv to a dataframe
-#   read.csv(manual_well_assignment_csv_file)
 #
 # raw_manual_well_assignments_dataframe <- # converts above .csv to a dataframe
 #   read.csv(
@@ -6202,10 +6173,6 @@ length(ks_analyze$horizontal_count[   # n = 486
 # qqline(ks_analyze$AWATER_KM[
 #   which(ks_analyze$extant_swd_binary == 1)],
 #   lwd=2)
-
-
-
-
 
 
 
