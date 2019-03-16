@@ -5,12 +5,9 @@ date: "March 14, 2019"
 output: html_document
 ---
 
+# SETUP
+
 ```{r run every time}
-
-# Oil and Gas Disposal Well Analysis for Kansas
-# Katherine Wolf
-# December 2018
-
 
 
 #### file requirements ####
@@ -26,6 +23,7 @@ output: html_document
 
 getwd() # this directory should be the one with your data files in it!
 # if not, use "setwd()" to set the working directory
+
 
 
 #### load libraries ####
@@ -59,6 +57,7 @@ library(ResourceSelection)
 
 #### options ####
 options(scipen = 999)
+
 
 
 #### create necessary functions ####
@@ -102,7 +101,6 @@ logitloess <- function(x, y, t, nm, dat, s) {
     scale_y_continuous(labels = comma) + 
     scale_x_continuous(labels = comma)
 }
-
 
 
 
@@ -154,6 +152,7 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 
 ```
 
+# IMPORT THE RAW DATA
 
 ```{r raw data import}
 # #### raw acs data import ####
@@ -236,7 +235,6 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 #     with_margin = TRUE
 # )
 #
-# # View(acs_data_2013_2017_via_totalcensus)
 #
 # save(
 #   acs_data_2013_2017_via_totalcensus,
@@ -288,7 +286,6 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 #       )
 #     )
 #
-# View(ks_tiger_table)
 #
 # # fix GEOID to match ACS data
 # ks_tiger_table$GEOID <-
@@ -318,7 +315,6 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 # lime_data_import <-
 #   fread(file = "shale_to_block_groups.txt",
 #         colClasses = list(character = 'GEOID'))
-# View(lime_data_import)
 # save(lime_data_import,
 #      file = "lime_data_import.rdata")
 
@@ -329,7 +325,6 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 # read in data
 ruca_codes <-
   readxl::read_xlsx("ruca2010.xlsx")
-# View(rucacodes)
 
 # pull only tract_ID and ruca codes and name columns
 only_ruca <- ruca_codes %>%
@@ -368,7 +363,6 @@ ks_block_group_tract_concordance <-
   rename(block_group_geoid = GEOID, # fix column names
          tract_geoid = GEOID_1) %>%
   select(block_group_geoid, tract_geoid) # select the columns
-View(ks_block_group_tract_concordance)
 
 # write .csv and .rdata files
 write_excel_csv(
@@ -380,9 +374,9 @@ save(
 
 ```
 
+# DATASET PREPARATION
 
-```{r not quite raw}
-#### load necessary files to start here ####
+```{r load not quite raw data files}
 
 # load well data
 load(file = "ks_wells_2018_11_01.rdata")
@@ -407,21 +401,24 @@ load(file = "kansas_ruca.rdata")
 
 # load block group and tract concordances
 load(file = "ks_block_group_tract_concordance.rdata")
+```
 
 
 
-#### join ruca by tract to block groups ####
+```{r join ruca to block groups} 
+
+# join ruca by tract to block groups
 ruca_block_group <- ks_block_group_tract_concordance %>% 
   left_join(kansas_ruca, by = "tract_geoid")
-View(ruca_block_group)
+```
 
 
 
-#### lime data work ####
+```{r lime data work}
+
 # make working dataset
 working_lime_data <-
   lime_data_import
-# View(working_lime_data)
 
 # change shale presence to be meaningful
 colnames(working_lime_data)[which(
@@ -439,19 +436,14 @@ working_lime_data$SHAPE_Area <- NULL
 working_lime_data <-
   within(working_lime_data,
          shale_presence[is.na(shale_presence)] <- 0)
-# View(working_lime_data)
-
-# # number of block groups with shale
-# sum(working_lime_data$shale_presence)
-#
-# # table of with versus without shale
-# table(working_lime_data$shale_presence)
+```
 
 
 
-#### horizontal well data work ####
+```{r horizontal well data work}
 
-horizontal_wells <-   # make working dataset
+# make working dataset
+horizontal_wells <-   
   horizontal_wells_raw
 
 # convert dates to dates
@@ -495,12 +487,8 @@ horizontal_wells <-
                        spud_2010_plus == 'yes' |
                         completion_2010_plus == 'yes'] <- 'yes')
 
-# View(horizontal_wells)
-
 horizontal_wells_from_2010 <-   # make dataframe with only 2010 and later wells
   horizontal_wells[which(horizontal_wells$in_2010_plus == 'yes'),]
-
-# View(horizontal_wells_from_2010)
 
 # exclude horizontal disposal wells (?!) (probably failed fracking wells)
 horizontal_wells_from_2010_exclusions <-
@@ -515,8 +503,6 @@ horizontal_wells_from_2010_exclusions <-
     which(
       horizontal_wells_from_2010_exclusions$KID !=
         1046919471),]
-# View(horizontal_wells_from_2010_exclusions)
-# table(horizontal_wells_from_2010$STATUS)
 
 # make simple dataset for fast spatial joining
 horizontal_wells_for_map <-
@@ -525,20 +511,17 @@ horizontal_wells_for_map <-
                                           "LONGITUDE",
                                           "STATUS")]
 
-# View(horizontal_wells_for_map)
-
 write.csv(horizontal_wells_for_map,
           file = "horizontal_wells_for_map.csv")
 write.csv(horizontal_wells_from_2010_exclusions,
           file = "horizontal_wells_from_2010_exclusions.csv")
 
 # HERE WE PORT THE HORIZONTAL WELL DATA TO ARCGIS FOR MAPPING FUN.  THE END.
+```
 
 
 
-#### UIC data work ####
-
-# View(ks_uic_2018_09_04)
+```{r uic data work}
 
 uic_small <-
   ks_uic_2018_09_04[,c("KGS_ID",
@@ -557,8 +540,6 @@ uic_small <-
 check_weird_rows <-
   uic_small[which(FLUID_INJECTED > 0 & TOTAL_FLUID_YEAR == 0),]
 
-# View(check_weird_rows)
-
 # sum by KID
 fix_fluid_year <- aggregate(FLUID_INJECTED ~ KGS_ID,
                         check_weird_rows,
@@ -566,15 +547,11 @@ fix_fluid_year <- aggregate(FLUID_INJECTED ~ KGS_ID,
 
 names(fix_fluid_year)[2] <- "FIX_TOTAL_FLUID_YEAR"
 
-# View(fix_fluid_year)
-
 fixed_weird_rows <-
   merge(x = check_weird_rows,
         y = fix_fluid_year,
         by = "KGS_ID",
         all = TRUE)
-
-# View(fixed_weird_rows)
 
 # fix the five manually
 uic_small <-
@@ -600,9 +577,6 @@ uic_small <-
 
 recheck_weird_rows <-
   uic_small[which(FLUID_INJECTED > 0 & TOTAL_FLUID_YEAR == 0),]
-# View(recheck_weird_rows)
-
-# View(uic_small)
 
 uic_year_only <-   # remove months
   uic_small[,c("KGS_ID",
@@ -627,8 +601,6 @@ uic_2010_onward_only <-
                           2015,
                           2016,
                           2017)),]
-
-# View(uic_2010_onward_only)
 
 # sum lifetime fluid per KID
 total_lifetime_fluid_injected_by_well <-
@@ -655,8 +627,6 @@ fluid_totals_by_well <-
         by = "KID",
         all = TRUE)
 
-# View(fluid_totals_by_well)
-
 well_data_from_master_set <-
   ks_wells_2018_11_01[,c("KID",
                          "STATUS",
@@ -672,8 +642,6 @@ fluid_totals_by_well <-   #
         all.x = TRUE,
         all.y = FALSE)
 
-# View(fluid_totals_by_well)
-
 table(fluid_totals_by_well$STATUS)
 
 swd_fluid_totals_by_well <-
@@ -682,15 +650,13 @@ swd_fluid_totals_by_well <-
                                        "SWD-P&A")
   ),]
 
-# View(swd_fluid_totals_by_well)
-
 # make dataset for ArcGIS
 write.csv(swd_fluid_totals_by_well,
           file = "swd_fluid_totals_by_well.csv")
+```
 
 
-
-#### ACS DATA ####
+```{r select acs data}
 
 # make working acs
 working_acs <-
@@ -1422,7 +1388,6 @@ acs_select_geo <-
   full_join(ks_tiger_table,
             acs_select,
             by = "GEOID")
-# View(acs_select_geo)
 
 # save acs_select_geo
 save(acs_select_geo,
@@ -1435,9 +1400,17 @@ write.csv(acs_select_geo, file = "acs_select_geo.csv")
 acs_geo_cats <-
   acs_select_geo
 
+# convert acs_geo_cats GEOID to the one in ks_well_counts
+# preserve the original GEOID
+acs_geo_cats$GEOID_alphanum <-
+  acs_geo_cats$GEOID
+acs_geo_cats$GEOID <-  # fix the new one
+  gsub("15000US", "", acs_geo_cats$GEOID)
+
+
   
 
-#### CONSTRUCT NECESSARY VARIABLES ####
+#### construct ACS variables ####
 
 # total population
 acs_geo_cats$pop_tot_B01001_001 <-
@@ -1883,21 +1856,16 @@ save(acs_geo_cats,
 # make constructed variables into .csv
 write.csv(acs_geo_cats,
           file = "acs_geo_cats.csv")
-
-# # load constructed variables to avoid the above
-# load(file = "acs_geo_cats.rdata")
+```
 
 
 
-# #### WELL DATA ####
-#
+```{r well data work}
+
 # # make well data file for cleaning
 # ks_clean <-
 #   ks_wells_2018_11_01
 #
-#
-#
-# #### formatting changes in main well data ####
 #
 # # convert dates to dates
 # ks_clean$permit_as_date  <-
@@ -2004,7 +1972,6 @@ write.csv(acs_geo_cats,
 #
 # # load the working file
 # load(file = "ks_working.rdata")
-# # View(ks_working[1:200,])
 #
 # # make set for spatial joining in ArcGIS
 # ks_all_wells_for_map <-
@@ -2034,19 +2001,19 @@ write.csv(acs_geo_cats,
 #        by = "KID",
 #        type = "full")
 #
-# # View(ks_working_with_block_groups)
 #
 # save(ks_working_with_block_groups,
 #      file = "ks_working_with_block_groups.rdata")
 # write.csv(ks_working_with_block_groups,
 #      file = "ks_working_with_block_groups.csv")
 
-# load file to start from here
-load(file = "ks_working_with_block_groups.rdata")
+
 
 
 
 # #### investigating rows based on comments ####
+# load file to start from here
+# load(file = "ks_working_with_block_groups.rdata")
 # ks_potential_disposal_comments <-   # make vector of just comments
 #   ks_working_with_block_groups$COMMENTS
 #
@@ -2100,16 +2067,16 @@ load(file = "ks_working_with_block_groups.rdata")
 #     file =
 #       "rows_requiring_comment_investigation_simple_2019_01_04_back_to_r.csv")
 #
-# # View(raw_manual_well_assignments_dataframe) # view the import
 # save(raw_manual_well_assignments_dataframe,   # save the dataframe
 #      file = 'raw_manual_well_assignments_dataframe.rdata')
 
-# load the dataframe to start from here
-load(file = "raw_manual_well_assignments_dataframe.rdata")
+
 
 
 
 #### creating the semi-final well list ####
+# load the dataframe to start from here
+load(file = "raw_manual_well_assignments_dataframe.rdata")
 
 # make vector of status1s that mean swd well
 swd_status1s <-
@@ -2129,7 +2096,6 @@ ks_swd_statii_one <-
         swd_status1s
     ),
     ]
-# View(ks_swd_statii_one)
 
 # make dataframe of wells selected due to status2
 ks_swd_statii_two <-
@@ -2139,11 +2105,9 @@ ks_swd_statii_two <-
       & ks_working_with_block_groups$STATUS %notin% swd_status1s),
     ]
 
-# View(ks_swd_statii_two)
 # table(ks_swd_statii_two$STATUS)
 
 # pull the manual assignments
-# View(raw_manual_well_assignments_dataframe)
 raw_assignments_exclude_swd <-
   raw_manual_well_assignments_dataframe[
     which(raw_manual_well_assignments_dataframe$STATUS %notin%
@@ -2152,7 +2116,6 @@ raw_assignments_exclude_swd <-
             "Converted to SWD Well"),
     ]
 
-# View(raw_assignments_exclude_swd)
 
 
 
@@ -2168,16 +2131,11 @@ kids_of_everything <-
 # nrow(raw_assignments_exclude_swd)
 # length(kids_of_everything)
 
-# View(ks_swd_statii_one$KID)
-# View(ks_swd_statii_two$KID)
-# View(raw_assignments_exclude_swd$KID)
-
 # pull the wells
 top_of_the_flowchart <-
   ks_working_with_block_groups[which(
     ks_working_with_block_groups$KID %in%
       kids_of_everything),]
-# View(top_of_the_flowchart)
 
 # pull those manually assigned as swd
 raw_assignments_man_swd <-
@@ -2188,7 +2146,6 @@ raw_assignments_man_swd <-
 raw_assignments_man_not_swd <-
   raw_assignments_exclude_swd[
     which(raw_assignments_exclude_swd$man_well_type_swd != "yes"),]
-# View(raw_assignments_man_swd)
 
 # separate well api into event codes
 raw_assignments_man_swd <-
@@ -2202,7 +2159,7 @@ raw_assignments_man_swd <-
 # remove extraneous dashes from event codes
 raw_assignments_man_swd$EVENT <-
   substring(raw_assignments_man_swd$EVENT, 2)
-# View(raw_assignments_man_swd)
+
 
 
 
@@ -2213,11 +2170,6 @@ status1_apis <-
 
 status2_apis <-
   as.character(unique(ks_swd_statii_two$API_NUMBER_SIMPLE))
-
-# View(status1_apis)
-
-# View(status2_apis)
-
 
 # make true/false vector to match status2 apis to status1 apis
 s2s_in_s1s_T_F <- status2_apis %in% status1_apis
@@ -2234,12 +2186,6 @@ ks_swd_statii_two_not_in_statii_one <-
 kids_of_removed_s2_well_apis_overlap_with_s1 <-
   setdiff(ks_swd_statii_two$KID,
           ks_swd_statii_two_not_in_statii_one$KID)
-
-
-
-# View(ks_swd_statii_two_not_in_statii_one)
-
-
 
 #### find APIs of manual assignments in status Is and delete those
 # pull manual assignment apis
@@ -2265,9 +2211,6 @@ kids_of_removed_man_well_apis_overlap_with_s1 <-
           ks_swd_manual_not_in_statii_one$KID)
 
 
-# View(ks_swd_manual_not_in_statii_one)
-
-
 
 #### find APIs of manual assignments in status2s and delete those
 # pull manual assignment apis
@@ -2281,17 +2224,15 @@ raws_in_s2s_T_F <-
 # list of manual assignment apis in status2 apis
 raw_apis_in_s2_apis <-
   ks_swd_manual_not_in_statii_one_apis[raws_in_s2s_T_F]
-# View(raw_apis_in_s1_apis)
 
+# DON'T USE THIS KEEP MANUAL WELL!
 ks_swd_manual_not_in_statii_two <-
   ks_swd_manual_not_in_statii_one[which(
     ks_swd_manual_not_in_statii_one$API_NUMBER_SIMPLE %notin%
       raw_apis_in_s2_apis),]
 
-# View(ks_swd_manual_not_in_statii_two)   # DON'T USE THIS KEEP MANUAL WELL!
-
 # manually examine sole well in common
-# View(ks_working[which(ks_working$KID %in% c(1030278155, 1002886382)),])
+# manual_examine <- ks_working[which(ks_working$KID %in% c(1030278155, 1002886382)),]
 # want manual well, 1030278155
 
 # delete unwanted well 1002886382
@@ -2300,7 +2241,6 @@ ks_swd_statii_two_not_in_statii_one_or_man <-
     ks_swd_statii_two_not_in_statii_one$KID !=
       "1002886382"
   ),]
-# View(ks_swd_statii_two_not_in_statii_one_or_man)
 
 # ks_swd_s1_kids_for_master
 ks_swd_s1_kids_for_master_review <-
@@ -2323,8 +2263,6 @@ kids_for_master_list_review <-
     ks_swd_s2_kids_for_master_review,
     ks_swd_man_kids_for_master_review)
 
-# View(kids_for_master_list_review)
-
 # pull rows corresponding to above apis
 ks_swd_master_dataframe_for_review <-
   ks_working_with_block_groups[
@@ -2333,8 +2271,6 @@ ks_swd_master_dataframe_for_review <-
         kids_for_master_list_review
     ),
     ]
-
-# View(ks_swd_master_dataframe_for_review)
 
 # label rows by origin
 ks_swd_master_dataframe_for_review$origin <- NA
@@ -2354,8 +2290,6 @@ ks_swd_master_dataframe_for_review <-   # label manuals
          origin[KID %in%
                   ks_swd_man_kids_for_master_review] <- "man")
 
-# View(ks_swd_master_dataframe_for_review)
-
 
 
 #### find duplicates by latitude and longitude ####
@@ -2366,8 +2300,6 @@ ks_swd_master_lat_long_dup_index <-
 
 ks_swd_master_lat_long_dup <-   # make dataframe of the duplicates
   ks_swd_master_dataframe_for_review[ks_swd_master_lat_long_dup_index, ]
-
-# View(ks_swd_master_lat_long_dup)
 
 # pull lat/long dup rows with s2 or manual origins
 ks_swd_lat_long_dup_s2_man <-
@@ -2401,7 +2333,6 @@ lat_long_duplicates_of_weirdos_only <-
 kids_of_rows_to_pull_for_duplicate_evaluation <-
   c(lat_long_duplicates_of_weirdos_only$KID_S2_MAN,
     lat_long_duplicates_of_weirdos_only$KID_S1)
-# View(kids_of_rows_to_pull_for_duplicate_evaluation)
 
 # make dataframe of duplicates of s1 wells by s2/manual wells by lat/long
 weirdo_duplicate_rows <-
@@ -2410,14 +2341,13 @@ weirdo_duplicate_rows <-
       kids_of_rows_to_pull_for_duplicate_evaluation
   ),]
 
-# View(weirdo_duplicate_rows)
 # kid 1030570876 is swd but no api,
 # where dup has api and more dates, API 15-009-07176
 #
 # manual check of sole weird well
-# View(ks_working_with_block_groups[which(
+# thing <- ks_working_with_block_groups[which(
 #   ks_working_with_block_groups$API_NUMBER_SIMPLE == "15-009-07176"
-# ),])
+# ),]
 
 # kids of wells to keep (drop 6 of them)
 kids_keep_lat_long <-
@@ -2438,7 +2368,6 @@ ks_swd_master_no_weirdo_dups <-
       kids_drop_lat_long
   ),]
 
-# View(ks_swd_master_no_weirdo_dups)
 str(ks_swd_master_no_weirdo_dups$API_NUMBER_SIMPLE)
 
 # fix that one api missing from its well
@@ -2455,13 +2384,11 @@ ks_swd_master_no_weirdo_dups <-   # fix simple one
 
 
 #### remove wells without APIs ####
-ks_swd_master_with_api <-
+ks_swd_master_with_api <-   # count 14,865
   filter(ks_swd_master_no_weirdo_dups,
          !is.na(API_NUMBER))
 
 nrow(ks_swd_master_no_weirdo_dups)
-
-# View(ks_swd_master_with_api)  # count 14,865
 
 
 
@@ -2476,8 +2403,8 @@ ks_swd_api_full_dups <-   # pull the duplicated rows
   ks_swd_master_with_api[ks_swd_master_api_dup_index,]
 save(ks_swd_api_full_dups,
      file = "ks_swd_api_full_dups.rdata")
+# count of 274, all s1s
 
-# View(ks_swd_api_full_dups) # count of 274, all s1s
 
 
 
@@ -2486,7 +2413,6 @@ save(ks_swd_api_full_dups,
 # keep last modified
 ks_swd_api_full_dups <-   # order by modification date
   ks_swd_api_full_dups[order(ks_swd_api_full_dups$modified_as_date),]
-# View(ks_swd_api_full_dups)
 
 # marks all but latest api for each well as TRUE
 ks_swd_full_api_drop_index <-
@@ -2515,7 +2441,7 @@ ks_swd_master_with_api <-
   within(ks_swd_master_with_api,
          drop_dup[KID %in% kids_full_api_drops] <-
            'drop_dup_full_api')
-# View(ks_swd_master_with_api[which(!is.na(ks_swd_master_with_api$drop_dup)),])
+# look <- ks_swd_master_with_api[which(!is.na(ks_swd_master_with_api$drop_dup)),]
 
 # make dataframe without full api duplicates
 ks_swd_master_for_small_api <-
@@ -2525,8 +2451,6 @@ ks_swd_master_for_small_api <-
 # nrow(ks_swd_master_with_api)
 # nrow(ks_swd_master_for_small_api)
 
-# View(ks_swd_master_with_api)
-# View(ks_swd_master_with_api %>% filter(drop_dup == "drop_dup_full_api"))
 table(ks_swd_master_with_api$drop_dup, ks_swd_master_with_api$STATUS)
 
 #### DROP PARTIAL API DUPLICATES HERE ####
@@ -2537,16 +2461,14 @@ ks_swd_master_small_dup_index <-   # make the index to get the rows
              fromLast = TRUE)
 
 # make dataframe of duplicated rows
-ks_swd_api_small_dups <-
+ks_swd_api_small_dups <-   # count of 2,218, 2 s2, 2,216 s1s
   ks_swd_master_for_small_api[ks_swd_master_small_dup_index,]
 save(ks_swd_api_small_dups,
      file = "ks_swd_api_small_dups.rdata")
-# View(ks_swd_api_small_dups) # count of 2,218, 2 s2, 2,216 s1s
 
 # order dataframe by full api number (latest last)
 ks_swd_api_small_dups <-
   ks_swd_api_small_dups[order(ks_swd_api_small_dups$API_NUMBER),]
-# View(ks_swd_master_for_small_api)
 
 # marks all but last api for each well as TRUE
 ks_swd_api_small_drop_index <-
@@ -2574,7 +2496,8 @@ ks_swd_master_with_api <-
          drop_dup[KID %in% kids_api_small_drops] <-
            'drop_dup_small_api')
 length(kids_api_small_drops) # 1152
-# View(ks_swd_master_with_api[which(!is.na(ks_swd_master_with_api$drop_dup)),])
+# thing_length_check <- 
+#   ks_swd_master_with_api[which(!is.na(ks_swd_master_with_api$drop_dup)),]
 
 # drop full and small duplicates
 ks_swd_master_dropped_all_apis <-
@@ -2598,12 +2521,9 @@ ks_swd_last_lat_long_dup_index <-
 ks_swd_last_lat_long_dups <-
   ks_swd_master_dropped_all_apis[ks_swd_last_lat_long_dup_index, ]
 
-# View(ks_swd_last_lat_long_dups)
-
 # order by modification date
 ks_swd_last_lat_long_dups <-
   ks_swd_last_lat_long_dups[order(ks_swd_last_lat_long_dups$modified_as_date),]
-# View(ks_swd_last_lat_long_dups)
 # table(ks_swd_last_lat_long_dups$origin)
 
 # marks all but latest lat/long for each well as TRUE
@@ -2632,11 +2552,8 @@ ks_swd_master_with_api <-
          drop_dup[KID %in% kids_last_lat_long_drops] <-
            'drop_dup_lat_long')
 
-# View(ks_swd_master_with_api[which(
-# !is.na(ks_swd_master_with_api$drop_dup))
-# ,])
-
-# View(ks_swd_master_with_api[which(!is.na(ks_swd_master_with_api$drop_dup)),])
+lat_long_drops_to_view <- 
+  ks_swd_master_with_api[which(!is.na(ks_swd_master_with_api$drop_dup)),]
 
 # make final dataset of wells
 ks_swd_without_any_dups <-
@@ -2645,23 +2562,16 @@ ks_swd_without_any_dups <-
            drop_dup %in% c("keep_dup_full_api",
                            "keep_dup_small_api",
                            "keep_dup_lat_long"))
-# View(ks_swd_without_any_dups)
-# View(ks_swd_without_any_dups)
 
 # save and load chunk
 save(ks_swd_without_any_dups,
      file = "ks_swd_without_any_dups.rdata")
 write.csv(ks_swd_without_any_dups,
           file = "ks_swd_without_any_dups.csv")
-load(file = "ks_swd_without_any_dups.rdata")
-
 
 ks_swd_working <-   # make working file
   ks_swd_without_any_dups
-# View(ks_swd_working)
-# table(ks_swd_working$STATUS2)
-# table(ks_swd_working$STATUS)
-# nrow(ks_swd_working)
+
 
 
 #### CATEGORY ASSIGNMENTS ####
@@ -2786,7 +2696,6 @@ ks_swd_working$uic <-
   ifelse(ks_swd_working$KID %in% uic_kids,
          'in_uic',
          'not_in_uic')
-# View(ks_swd_working)
 
 
 #### deal with comments ####
@@ -2808,12 +2717,10 @@ ks_manual_wells_useful_columns <-
        )
   ]
 
-# View(ks_swd_working)
 ks_swd_working <- # merge manual assignments with large dataset
   left_join(ks_swd_working,
             ks_manual_wells_useful_columns,
             by = "KID")
-# View(ks_swd_working)
 
 
 
@@ -2875,7 +2782,6 @@ ks_swd_working$activity <-   # make plugged unknowns inactive
        ifelse(activity == 'unknown' &
                 plug_overall == 'plugged', 'inactive', activity))
 
-# View(ks_swd_working)
 table(ks_swd_working$activity)
 
 
@@ -2888,7 +2794,7 @@ ks_swd_working$spud_from_2010 <- NA
 ks_swd_working$completed_from_2010 <- NA
 ks_swd_working$active_from_2010 <- NA
 ks_swd_working$any_from_2010 <- NA
-# View(ks_swd_working)
+
 
 # 2010 permit
 ks_swd_working <-
@@ -2952,23 +2858,9 @@ ks_swd_working <-
          extant_from_2010[any_from_2010 == 'yes' &
                             extant_swd == 1] <- 1)
 
-# View(ks_swd_working)
-
-sum(ks_swd_working$all_swd)
-sum(ks_swd_working$extant_swd)
-sum(ks_swd_working$all_from_2010)
-sum(ks_swd_working$extant_from_2010)
-
-
-View(ks_swd_working)
-
 ks_excludeds_abandoned <-
   ks_swd_working %>% 
   filter(ks_swd_working$activity %in% c('midway', 'ab_loc'))
-
-View(ks_excludeds_abandoned)
-
-table(ks_excludeds_abandoned$STATUS2)
 
 # make mapping well data
 simple_ks_swd_working <- 
@@ -2987,19 +2879,17 @@ write.csv(just_swd, file = "just_swd.csv")
 # pull KIDs and GEOIDs from master list of wells
 kids_and_geoids <-
   ks_working_with_block_groups[,c("KID", "GEOID")]
-# View(kids_and_geoids)
+
 
 
 
 #### counting fluid by block group ####
 ks_working_with_block_groups$GEOID <-
   as.character(ks_working_with_block_groups$GEOID)
-# View(kids_and_geoids)
 
 # join them with the fluid data
 swd_fluid_totals_well_block_group <-
   full_join(kids_and_geoids, swd_fluid_totals_by_well, by = "KID")
-# View(swd_fluid_totals_well_block_group)
 
 # aggregate by block group
 fluid_totals_block_group <-
@@ -3014,7 +2904,7 @@ fluid_totals_block_group$GEOID <-   # convert GEOID to character
 colnames(fluid_totals_block_group) <- c("GEOID",
                                         "total_fluid",
                                         "from_2010_fluid")
-# View(fluid_totals_block_group)
+
 
 
 #### counting wells by block group ####
@@ -3029,7 +2919,6 @@ ks_well_counts <-
       extant_from_2010) ~ GEOID,
   data = ks_swd_working,
   sum)
-# View(ks_well_counts)
 
 # rename well count variables
 colnames(ks_well_counts) <- c("GEOID",
@@ -3037,7 +2926,6 @@ colnames(ks_well_counts) <- c("GEOID",
                               "extant_swd_count",
                               "all_swd_from_2010_count",
                               "extant_swd_from_2010_count")
-# View(ks_well_counts)
 
 
 
@@ -3055,14 +2943,12 @@ horizontal_block_groups_no_swd$horizontal_count <- 1
 horizontal_block_groups_no_swd <-
   within(horizontal_block_groups_no_swd,
          horizontal_count[is.na(API_NUMBER)] <- 0)
-# View(horizontal_block_groups_no_swd)
 
 # make the counts
 horizontal_counts <-
   aggregate(horizontal_count ~ GEOID,
     data = horizontal_block_groups_no_swd,
     sum)
-# View(horizontal_counts)
 
 # remove blank row
 horizontal_counts <-
@@ -3082,40 +2968,22 @@ lime_and_fluid <-   # merge lime and fluid counts
   full_join(working_lime_data, 
             fluid_totals_block_group, 
             by = "GEOID")
-# View(lime_and_fluid)
 
 lime_fluid_swd <-   # merge with swd counts
   full_join(lime_and_fluid, 
             ks_well_counts, 
             by = "GEOID")
-# View(lime_fluid_swd)
 
 lime_fluid_swd_horiz <-   # merge with horizontal well counts
   full_join(lime_fluid_swd, 
             horizontal_counts, 
             by = "GEOID")
-View(lime_fluid_swd_horiz)
 
 # merge with ruca data
 lime_fluid_swd_horiz_ruca <-   # merge with horizontal well counts
   full_join(lime_fluid_swd_horiz, 
             ruca_block_group, 
             by = c("GEOID" = "block_group_geoid"))
-View(lime_fluid_swd_horiz_ruca)
-
-
-
-
-# load ACS variables
-# load(file = "acs_geo_cats.rdata")
-# View(acs_geo_cats)
-
-# convert acs_geo_cats GEOID to the one in ks_well_counts
-# preserve the original GEOID
-acs_geo_cats$GEOID_alphanum <-
-  acs_geo_cats$GEOID
-acs_geo_cats$GEOID <-  # fix the new one
-  gsub("15000US", "", acs_geo_cats$GEOID)
 
 
 
@@ -3125,9 +2993,6 @@ lime_fluid_swd_horiz_ruca_acs <- merge(lime_fluid_swd_horiz_ruca,
                                   acs_geo_cats,
                                   by = "GEOID",
                                   all = TRUE)
-# View(lime_fluid_swd_horiz_ruca_acs)
-
-
 
 #### replace NAs with 0s ####
 # shale presence
@@ -3177,7 +3042,6 @@ lime_fluid_swd_horiz_ruca_acs <-
   within(lime_fluid_swd_horiz_ruca_acs,
          horizontal_count[is.na(
            lime_fluid_swd_horiz_ruca_acs$horizontal_count)] <- 0)
-# View(lime_fluid_swd_horiz_ruca_acs)
 
 
 
@@ -3248,22 +3112,17 @@ lime_fluid_swd_horiz_ruca_acs <-
   within(lime_fluid_swd_horiz_ruca_acs,
          extant_swd_from_2010_binary[extant_swd_from_2010_count > 0] <- 1)
 
-# View(head(lime_fluid_swd_horiz_ruca_acs))
 
-
-
-# save/write/load chunk
+# save/write chunk
 save(lime_fluid_swd_horiz_ruca_acs,
      file = "lime_fluid_swd_horiz_ruca_acs.rdata")
 write.csv(lime_fluid_swd_horiz_ruca_acs,
           file = "lime_fluid_swd_horiz_ruca_acs.csv")
-load(file = "lime_fluid_swd_horiz_ruca_acs.rdata")
 
 save(ks_swd_working, 
      file = "ks_swd_working.rdata")
 write.csv(ks_swd_working, 
           file = "ks_swd_working.csv")
-# View(lime_fluid_swd_horiz_ruca_acs)
 
 # simplifying to only the variables that I really, really need
 lime_fluid_swd_horiz_ruca_acs_analysis <-
@@ -3309,34 +3168,25 @@ lime_fluid_swd_horiz_ruca_acs_analysis <-
     "ruca_prime", 
     "ruca_second"
     )]
-# View(lime_fluid_swd_horiz_ruca_acs_analysis)
 
 # save/write/load chunk
 save(lime_fluid_swd_horiz_ruca_acs_analysis,
      file = "lime_fluid_swd_horiz_ruca_acs_analysis.rdata")
 write.csv(lime_fluid_swd_horiz_ruca_acs_analysis,
           file = "lime_fluid_swd_horiz_ruca_acs_analysis.csv")
-load(file = "lime_fluid_swd_horiz_ruca_acs_analysis.rdata")
-
-
-
-
 
 # make working dataset
 ks_analysis_dataset <-   
   lime_fluid_swd_horiz_ruca_acs_analysis
-# View(ks_analysis_dataset)
 
 # save write load block
 save(ks_analysis_dataset, 
      file = "ks_analysis_dataset.rdata")
 write.csv(ks_analysis_dataset, 
           file = "ks_analysis_dataset.csv")
-load(file = "ks_analysis_dataset.rdata")
 
 # load well data
 load(file = "ks_swd_working.rdata")
-# View(ks_swd_working)
 
 
 
@@ -3344,39 +3194,13 @@ load(file = "ks_swd_working.rdata")
 #### horizontal count for all census tracts ####
 # sum(ks_analysis_dataset$horizontal_count)
 
-
-# #### Moran's I ####
-# # isolate extant swd wells
-# ks_extant_swd_working <- 
-#   ks_swd_working[which(ks_swd_working$extant_swd == 1),]
-# View(ks_extant_swd_working)
-# 
-# ks_extant_swd_working$KID <- 
-#   as.character(ks_extant_swd_working$KID)
-# 
-# ks_extant_swd_for_moran <- 
-#   ks_extant_swd_working[,c("KID", "LATITUDE", "LONGITUDE")]
-# View(ks_extant_swd_for_moran)
-# 
-# coordinates(ks_extant_swd_for_moran) <-   # tell R that they're lat/longs
-#   c("LONGITUDE", "LATITUDE")
-# 
-# proj4string(ks_extant_swd_for_moran) <-   # set projection to NAD 1927
-#   CRS("+init=epsg:4267")
-# 
-# # make weight matrix
-# weights <- 1/as.matrix(dist(coordinates(ks_extant_swd_for_moran)))
-# diag(weights) <- 0
-# moran.test(ks_extant_swd_for_moran$lead,mat2listw(w))
-
-
+ks_analysis_all <- ks_analysis_dataset
 
 # remove block groups with no population 
 # (n = 12, none with any wells or data)
-ks_analysis_populated <- 
+ks_analysis_populated <-   # 2339 rows
   ks_analysis_dataset[which(
     ks_analysis_dataset$pop_tot_B01001_001 != 0),]
-View(ks_analysis_populated)   # 2339 rows
 
 # save ks analysis populated
 save(ks_analysis_populated, 
@@ -3384,11 +3208,12 @@ save(ks_analysis_populated,
 write.csv(ks_analysis_populated, 
           file = "ks_analysis_populated.csv")
 
-
+# save ks analysis all
+save(ks_analysis_all, 
+     file = "ks_analysis_all.rdata")
+write.csv(ks_analysis_all, 
+          file = "ks_analysis_all.csv")
 ```
-
-
-
 
 
 ## ANALYSES BEGIN HERE
@@ -3396,7 +3221,7 @@ write.csv(ks_analysis_populated,
 
 ```{r load necessary datasets}
 load(file = "ks_analysis_populated.rdata")
-
+load(file = "ks_analysis_all.rdata")
 ```
 
 
@@ -3405,13 +3230,11 @@ load(file = "ks_analysis_populated.rdata")
 # count NAs in ks_analysis_populated to total the missing values
 missing_value_totals <- 
   colSums(is.na(ks_analysis_populated))
-View(missing_value_totals)
 
 # make dataframe of rows with NAs in them
 na_rows_ks_analysis_populated <- 
   ks_analysis_populated[
     !complete.cases(ks_analysis_populated), ]
-# View(na_rows_ks_analysis_populated)
 
 # save and write chunk
 save(missing_value_totals, 
@@ -3507,8 +3330,6 @@ correlation_matrix_data <-
 
 
 
-# View(correlation_matrix_data)
-
 # make dataframe of rows with NAs in them
 na_rows_correlation_matrix_data <- 
   correlation_matrix_data[
@@ -3519,14 +3340,10 @@ correlation_matrix_data_populated <-
   correlation_matrix_data[which(
     correlation_matrix_data$pop_tot_B01001_001 != 0),]
 
-# View(na_rows_correlation_matrix_data)
-
 # make dataframe with only complete observations
 correlation_matrix_data_complete <- 
   correlation_matrix_data[
     complete.cases(correlation_matrix_data), ]
-
-# View(correlation_matrix_data_complete)
 
 # create the correlation matrix with all observations
 # rounds to 2 decimal places
@@ -3536,10 +3353,8 @@ correlation_matrix  <-
             use = "pairwise.complete.obs"), 
         2) 
 
-# View(correlation_matrix)
 
-# view and write to file
-# View(correlation_matrix)
+# write to file
 write.csv(correlation_matrix, file = "correlation_matrix.csv")
 
 # count observations going into the correlation matrix
@@ -3548,8 +3363,7 @@ counts_pairwise_correlations  <-
                  y = NULL, 
                  diagonal=TRUE)
 
-# view and write to file
-# View(counts_pairwise_correlations)
+# write to file
 write.csv(counts_pairwise_correlations, 
           file = "counts_pairwise_correlations.csv")
 
@@ -3672,25 +3486,20 @@ ks_analysis_pop_indep <-
            house_value_median_B25077_001, 
            poverty_below_100_percent_C17002_002_003_001))
 
-# View(ks_analysis_pop_indep)
-
 # check for NAs
 # count NAs in ks_analysis_populated to total the missing values
 missing_value_totals_indep <- 
   colSums(is.na(ks_analysis_pop_indep))
-# View(missing_value_totals_indep)
 
 # make dataframe of rows with NAs in them (n = 46, all due to missing income)
 na_rows_ks_analysis_pop_indep <- 
   ks_analysis_pop_indep[
     !complete.cases(ks_analysis_pop_indep), ]
-# View(na_rows_ks_analysis_pop_indep)
 
 # only complete cases for regression
 ks_analysis_only_complete <- 
   ks_analysis_pop_indep[
     complete.cases(ks_analysis_pop_indep),]
-# View(ks_analysis_only_complete)
 
 # make dataframe even with excluded variables but with non-complete rows deleted
 ks_analysis_populated_complete <- 
@@ -3698,8 +3507,6 @@ ks_analysis_populated_complete <-
     ks_analysis_populated$GEOID %in% 
       ks_analysis_only_complete$GEOID
   ),]
-
-# View(ks_analysis_populated_complete)
 
 # save load chunk
 write.csv(ks_analysis_populated_complete, 
@@ -3709,8 +3516,7 @@ save(ks_analysis_populated_complete,
 nrow(ks_analysis_dataset)
 ks_analyze <- 
   ks_analysis_populated_complete
-# View(ks_analyze)
-  
+
 # number of rows with and without disposal wells
 length(ks_analyze$horizontal_count[  # n = 1807
   which(ks_analyze$extant_swd_binary == 0)])
@@ -6703,9 +6509,6 @@ land_boxplot <-
         legend.position = "none")
 land_boxplot
 
-View(ks_analyze[,c("ALAND_KM","AWATER_KM")])
-
-
 # blank plot for layout
 blank_plot <-
   ggplot(total_pop,
@@ -7428,9 +7231,6 @@ summary_statistics_no_urban <- ks_analysis_populated_no_urban %>%
                      oooo_max = max,
                      oooo_mean = mean, 
                      oooo_sd = sd), na.rm = TRUE)
-View(summary_statistics_no_urban)
-
-
 
 ks_stats_tidy_no_urban <- summary_statistics_no_urban %>% gather(stat, val) %>%
   separate(stat, into = c("var", "stat"), sep = "ooo") %>%
@@ -7440,10 +7240,9 @@ ks_stats_tidy_no_urban <- summary_statistics_no_urban %>% gather(stat, val) %>%
 write.csv(ks_stats_tidy_no_urban, 
           file = "ks_stats_tidy_no_urban.csv")
 
-# View(ks_stats_tidy)
+
 
 # summary statistics for individual groups
-
 summary_statistics_no_wells_no_urban <- 
   ks_analysis_populated_no_urban %>% 
   select("ALAND_KM",
@@ -7478,13 +7277,11 @@ summary_statistics_no_wells_no_urban <-
                      oooo_max = max,
                      oooo_mean = mean, 
                      oooo_sd = sd), na.rm = TRUE)
-# View(summary_statistics_no_wells_no_urban)
 
 ks_stats_no_wells_no_urban <- summary_statistics_no_wells_no_urban %>% gather(stat, val) %>%
   separate(stat, into = c("var", "stat"), sep = "ooo") %>%
   spread(stat, val) %>%
   select(var, o_min, o_q25, o_median, o_q75, o_max, o_mean, o_sd)
-View(ks_stats_no_wells_no_urban)
 
 write.csv(ks_stats_no_wells_no_urban, file = "ks_stats_no_wells.csv")
 
@@ -7527,14 +7324,12 @@ summary_statistics_with_wells_no_urban <-
                      oooo_max = max,
                      oooo_mean = mean, 
                      oooo_sd = sd), na.rm = TRUE)
-# View(summary_statistics_with_wells_no_urban)
 
 ks_stats_with_wells_no_urban <- 
   summary_statistics_with_wells_no_urban %>% gather(stat, val) %>%
   separate(stat, into = c("var", "stat"), sep = "ooo") %>%
   spread(stat, val) %>%
   select(var, o_min, o_q25, o_median, o_q75, o_max, o_mean, o_sd)
-View(ks_stats_with_wells_no_urban)
 
 write.csv(ks_stats_with_wells_no_urban, file = "ks_stats_with_wells.csv")
 
@@ -7600,7 +7395,6 @@ p_values_corrections_t_tests_no_urban$holm <-
   p.adjust(p_values_t_tests_no_urban, 
            method = "holm")
 
-View(p_values_corrections_t_tests_no_urban)
 write.csv(p_values_corrections_t_tests_no_urban, 
           file = "p_values_t_tests_no_urban.csv")
 
@@ -7720,7 +7514,6 @@ p_values_corrections_t_tests$holm <-
   p.adjust(p_values_t_tests, 
            method = "holm")
 
-# View(p_values_corrections_t_tests)
 write.csv(p_values_corrections_t_tests, 
           file = "p_values_t_tests.csv")
 
@@ -8054,7 +7847,6 @@ p_values_wilcox$original <-
 p_values_wilcox$holm <- 
   p.adjust(p_values_thing, method = "holm")
 
-# View(p_values_wilcox)
 write.csv(p_values_wilcox, 
           file = "p_values_wilcox.csv")
 
@@ -8095,8 +7887,6 @@ summary_statistics <- ks_analyze %>%
                      oooo_max = max,
                      oooo_mean = mean, 
                      oooo_sd = sd), na.rm = TRUE)
-View(summary_statistics)
-
 
 
 ks_stats_tidy <- summary_statistics %>% gather(stat, val) %>%
@@ -8106,8 +7896,6 @@ ks_stats_tidy <- summary_statistics %>% gather(stat, val) %>%
 
 write.csv(ks_stats_tidy, 
           file = "ks_stats_tidy.csv")
-
-# View(ks_stats_tidy)
 
 # summary statistics for individual groups
 
@@ -8145,13 +7933,11 @@ summary_statistics_no_wells <-
                      oooo_max = max,
                      oooo_mean = mean, 
                      oooo_sd = sd), na.rm = TRUE)
-# View(summary_statistics_no_wells)
 
 ks_stats_no_wells <- summary_statistics_no_wells %>% gather(stat, val) %>%
   separate(stat, into = c("var", "stat"), sep = "ooo") %>%
   spread(stat, val) %>%
   select(var, o_min, o_q25, o_median, o_q75, o_max, o_mean, o_sd)
-# View(ks_stats_no_wells)
 
 write.csv(ks_stats_no_wells, file = "ks_stats_no_wells.csv")
 
@@ -8194,13 +7980,11 @@ summary_statistics_with_wells <-
                      oooo_max = max,
                      oooo_mean = mean, 
                      oooo_sd = sd), na.rm = TRUE)
-# View(summary_statistics_with_wells)
 
 ks_stats_with_wells <- summary_statistics_with_wells %>% gather(stat, val) %>%
   separate(stat, into = c("var", "stat"), sep = "ooo") %>%
   spread(stat, val) %>%
   select(var, o_min, o_q25, o_median, o_q75, o_max, o_mean, o_sd)
-# View(ks_stats_with_wells)
 
 write.csv(ks_stats_with_wells, file = "ks_stats_with_wells.csv")
 
@@ -8363,9 +8147,7 @@ blank_loess
 
 # earnings_predict <- 
 #   predict(loess(ks_analyze$extant_swd_binary ~ ks_analyze$earnings_median_B20002_001))
-# 
-# View(earnings_predict)
-  
+
 # plot all the loess plots
 par(mfrow = c(1,1))
 multiplot(pop_loess,
@@ -8716,8 +8498,6 @@ output_variable <- ks_analyze$extant_swd_binary
 test_for_automatic_selection <- 
   as.data.frame(cbind(logistic_matrix,output_variable))
 
-# View(test_for_automatic_selection)
-
 # bestAIC <- bestglm(test_for_automatic_selection, IC = "AIC", family = binomial)
 # bestBIC <- bestglm(test_for_automatic_selection, IC = "BIC", family = binomial)
 
@@ -8857,18 +8637,38 @@ abline(h = 0, lty = 2)
 # Predict the probability (p) of swd well presence
 probabilities <- 
   predict(logistic_model_no_tinies, type = "response")
-# View(probabilities)
+
 predicted.classes <- 
   ifelse(probabilities > 0.5, "yes", "no")
 head(predicted.classes)
 
 
-
+# #### Moran's I ####
+# # isolate extant swd wells
+# ks_extant_swd_working <- 
+#   ks_swd_working[which(ks_swd_working$extant_swd == 1),]
+# 
+# ks_extant_swd_working$KID <- 
+#   as.character(ks_extant_swd_working$KID)
+# 
+# ks_extant_swd_for_moran <- 
+#   ks_extant_swd_working[,c("KID", "LATITUDE", "LONGITUDE")]
+# 
+# coordinates(ks_extant_swd_for_moran) <-   # tell R that they're lat/longs
+#   c("LONGITUDE", "LATITUDE")
+# 
+# proj4string(ks_extant_swd_for_moran) <-   # set projection to NAD 1927
+#   CRS("+init=epsg:4267")
+# 
+# # make weight matrix
+# weights <- 1/as.matrix(dist(coordinates(ks_extant_swd_for_moran)))
+# diag(weights) <- 0
+# moran.test(ks_extant_swd_for_moran$lead,mat2listw(w))
 
 
 # Predict the probability (p) of swd well presence
 probabilities <- predict(logistic_model, type = "response")
-# View(probabilities)
+
 predicted.classes <- ifelse(probabilities > 0.5, "yes", "no")
 head(predicted.classes)
 
@@ -9170,9 +8970,7 @@ ggplot(mydata, aes(logit, predictor.value))+
 # 
 # ks_analysis_dataset <- within(ks_analysis_dataset, any_swd_binary[ks_analysis_dataset$any_swd_binary == "yes"]  <-  1)
 # ks_analysis_dataset <- within(ks_analysis_dataset, any_swd_binary[ks_analysis_dataset$any_swd_binary == "no"]  <-  0)
-# View(ks_analysis_dataset$any_swd_binary)
 # ks_analysis_dataset$any_swd_binary <- as.numeric(ks_analysis_dataset$any_swd_binary)
-# View(ks_analysis_dataset$any_swd_binary)
 # 
 # #### logistic model r
 # logistic_model <- glm(formula = any_swd_binary ~ median_household_income_B19013 + median_household_value_B25077 + percent_white_B03002 + population_density_B01001_ALAND + percent_high_school_plus_B15003 + median_age_B01002, family = "binomial", data = ks_analysis_dataset)
@@ -9505,17 +9303,13 @@ ggplot(mydata, aes(logit, predictor.value))+
 #   ks_wells_2018_11_01[ks_wells_2018_11_01$PRODUCE_FORM 
 #                       %like% "Mississippian",]
 # 
-# View(mississippian_wells)
 
 #### whatnot about UIC
-# View(ks_uic)
 # kids<-unique(ks_uic$KGS_ID)
 # kids
 #
 # ks_wells_in_uic_data_only <- subset(ks_swd_working, KID %in% kids)
-# View(ks_wells_in_uic_data_only)
 # uic_statuses<-table(ks_wells_in_uic_data_only$STATUS)
-# View(uic_statuses)
 # write.csv(uic_statuses,file="uic_statuses.csv")
 
 
@@ -9526,7 +9320,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # # assign it
 # ks_swd_working$has_api <-
 #   ifelse(ks_swd_working$API_NUMBER == "", "no", "yes")
-# # View(ks_swd_working)
 #
 # #### update master dataframe to make later analysis easier
 # ks_swd_top_of_the_flowchart <-   # start the dataframe
@@ -9548,9 +9341,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # 
 # 
 # 
-# # View(ks_swd_statii_one$KID)
-# # View(ks_swd_statii_two$KID)
-# # View(raw_assignments_exclude_swd$KID)
 # 
 # # fix that one api
 # ks_swd_top_of_the_flowchart <-   # fix big one
@@ -9562,23 +9352,19 @@ ggplot(mydata, aes(logit, predictor.value))+
 # 
 # # kids of manual wells with no api (n = 2 after manual review)
 # 
-# # View(raw_assignments_exclude_swd)   # exclude those not swd, leaves 354
+# # exclude those not swd, leaves 354
 # 
 # raw_assignments_api_only <-   # exclude those without API, leaves 173
 #   raw_assignments_exclude_swd[which(raw_assignments_exclude_swd$API_NUMBER != ""),]
 # 
 # raw_assignments_api_and_swd <-   # those classed as swd with apis, leaves 106
 #   raw_assignments_api_only[which(raw_assignments_api_only$man_well_type_swd == 'yes'),]
-# View(raw_assignments_api_and_swd) 
 # 
 # # kids of non-swd wells dropped per manual review
-# View(raw_assignments_man_not_swd$KID)
 # 
 # # kids of s2 apis that overlapped with s1 apis
-# View(kids_of_removed_s2_well_apis_overlap_with_s1)
 # 
 # # kids of man apis that overlapped with s1 apis
-# View(kids_of_removed_man_well_apis_overlap_with_s1)
 # 
 # # kids of s2 apis that overlapped with man apis
 # kids_of_s2_apis_that_overlapped_with_s1_apis <- c("1002886382")
@@ -9624,7 +9410,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 #   ks_working_with_block_groups[which(ks_working_with_block_groups$KID %in% 
 #                    kids_semi_final_list),]
 # 
-# # View(ks_semi_final_wells)
 # 
 # # save data to disk
 # save(ks_semi_final_wells, file = "ks_semi_final_wells.rdata")
@@ -9642,10 +9427,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # ks_semi_final_status1s <-   # make vector of status1s in semi-final dataset
 #   sort(unique(ks_semi_final_wells$STATUS))
 # 
-# # View(ks_semi_final_status1s)   # view vector of status1s
-# 
-# # View(table(ks_semi_final_wells_working$STATUS))   # view table of status1s
-# 
 # write.csv(ks_semi_final_status1s,   # write .csv of status1s
 #           file = "ks_semi_final_status1s.csv")
 # 
@@ -9653,10 +9434,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # 
 # ks_semi_final_status2s <-   # make vector of status2s in semi-final dataset
 #   sort(unique(ks_semi_final_wells$STATUS2))
-# 
-# # View(ks_semi_final_status2s)   # view vector of status2s
-# 
-# # View(table(ks_semi_final_wells_working$STATUS2))   # view table of status2s
 # 
 # write.csv(ks_semi_final_status2s,   # write .csv of status2s
 #           file = "ks_semi_final_status2s.csv")
@@ -9667,7 +9444,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # ks_class1_only <- 
 #   subset(ks_semi_final_wells_working, 
 #          is_class1 == 'class1')
-# # View(ks_class1_only)
 # 
 # # fix duplicated latitudes and longitudes #
 # ks_class1_dup_index <- 
@@ -9676,7 +9452,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 #              fromLast = TRUE)
 # ks_class1_dup <- 
 #   ks_class1_only[ks_class1_dup_index, ]
-# # View(ks_class1_dup)
 # 
 # # KIDs of all class1 duplicates
 # kids_all_class1_duplicates <- 
@@ -9689,7 +9464,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 #                         ks_class1_dup$uic, 
 #                         ks_class1_dup$modified_propogate),]
 # 
-# # View(ks_class1_dup)
 # 
 # # propogate dates
 # ks_class1_dup <-
@@ -9704,7 +9478,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 #   ) %>%
 #   ungroup()
 # 
-# # View(ks_class1_dup)
 # 
 # # vector marking all but last well with same lat/long as TRUE
 # ks_class1_drop_index <-   
@@ -9762,7 +9535,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 #         ks_class1_only$KID)] <- 
 #   ks_class1_dup$modified_propogate
 # 
-# View(ks_class1_only)
 # 
 # write.csv(ks_class1_only, 
 #           file = "ks_class1_only.csv")
@@ -9772,7 +9544,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # # HERE BE MORE CODE FROM THE OLD ASSIGNMENT METHODS #
 # # assign well_type 
 #
-# # View(table(ks_semi_final_wells_working$STATUS)) view possible status1s
 #
 # ks_definitely_include_status1s <- # reminder of status1s chosen to keep
 #   sort(c("OTHER(1O&1SWD)",
@@ -9842,7 +9613,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # # make dataframe of duplicates
 # ks_api_dups <-   
 #   ks_only_apis[ks_final_index, ]
-# # View(ks_api_dups)
 # 
 # # pull kids of dups
 # kids_ks_api_dups <- 
@@ -9859,7 +9629,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # ks_api_dups_assigned <-   # import manual assignments
 #   fread("ks_api_dups_2018_12_28_back_to_r.csv")
 # 
-# # View(ks_api_dups_assigned)
 # 
 # ks_api_dups_rows_to_drop <-   # make dataframe of rows to drop
 #   filter(ks_api_dups_assigned, 
@@ -9868,7 +9637,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # kids_of_dup_api_rows_to_drop <-  # make list of kids of rows to drop
 #   ks_api_dups_rows_to_drop$KID
 # 
-# # View(ks_api_dups_rows_to_drop)
 # 
 # # make column for drop for api
 # ks_only_apis$drop_dup <- NA
@@ -9889,7 +9657,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # ks_only_apis <- 
 #   ks_only_apis[order(ks_only_apis$drop_dup),]
 # 
-# # View(ks_only_apis)
 # 
 # # # propogate dates (BEWARE, THIS STEP TAKE ABOUT 20 MINUTES!)
 # # ks_only_apis <-
@@ -9904,7 +9671,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # #   ) %>%
 # #   ungroup()
 # 
-# # View(ks_only_apis)
 # 
 # # remove duplicate APIs, keeping those last modified
 # ks_bye_dup_api <- 
@@ -9933,7 +9699,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # write.csv(ks_simple_api_dups, 
 #           file = "ks_simple_api_dups.csv")
 # 
-# # View(ks_simple_api_dups)
 # 
 # # put duplicates of core API code in order
 # ks_simple_api_dups_order <-   
@@ -9941,7 +9706,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 #     order(ks_simple_api_dups$API_NUMBER),
 #     ]
 # 
-# # View(ks_simple_api_dups_order)
 # 
 # # marks all but last api for each well as TRUE
 # simple_api_drop_index <-    
@@ -9965,14 +9729,12 @@ ggplot(mydata, aes(logit, predictor.value))+
 #   within(ks_only_apis, 
 #          drop_dup[KID %in% kids_of_simple_wells_to_drop] <- 
 #            'drop_dup_simple_api')
-# # View(ks_only_apis)
 # 
 # ks_api_dups_gone <-   # remove rows marked as duplicates!
 #   subset(ks_only_apis, 
 #          ks_only_apis$drop_dup %notin% 
 #            c('drop_dup_simple_api', 
 #              'drop_dup_api'))
-# # View(ks_api_dups_gone)
 # 
 # 
 # 
@@ -9983,7 +9745,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 #              fromLast = TRUE)
 # ks_lat_long_dup <- 
 #   ks_api_dups_gone[ks_lat_long_dup_index, ]
-# # View(ks_lat_long_dup)
 # 
 # write.csv(ks_lat_long_dup, 
 #           file = "ks_lat_long_dup.csv")
@@ -10012,7 +9773,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # 
 # 
 # 
-# # View(ks_lat_long_dup)
 # 
 # # vector marking all but last well with same lat/long as TRUE
 # ks_lat_long_drop_index <-   
@@ -10024,7 +9784,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 #   ks_lat_long_dup[ks_lat_long_drop_index, ]
 # 
 # table(wells_to_drop_due_to_lat_long$uic)
-# # View(wells_to_drop_due_to_lat_long)
 # 
 # # makes list of just the kids
 # kids_of_wells_to_drop_due_to_lat_long <-   
@@ -10063,7 +9822,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 #         ks_only_apis$KID)] <- 
 #   ks_lat_long_dup$modified_propogate
 # 
-# # View(ks_only_apis)
 # 
 # # remove all rows marked as duplicates
 # ks_dups_gone <-   
@@ -10080,7 +9838,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # # save dataset for mapping
 # save(ks_swd_full_for_map, 
 #      file = "ks_swd_full_for_map.rdata")
-# # View(ks_swd_full_for_map)
 # 
 # # table(ks_swd_full_for_map$activity)
 # # table(ks_swd_full_for_map$STATUS)
@@ -10089,7 +9846,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # 
 # ks_wells_and_block_groups <- 
 #   ks_swd_full_for_map
-# # View(ks_wells_and_block_groups)
 #
 #
 # 
@@ -10106,9 +9862,7 @@ ggplot(mydata, aes(logit, predictor.value))+
 # # ks_semi_final_wells_working$manual[is.na(ks_semi_final_wells_working$man_well_type)] <- "no"
 # # ks_semi_final_wells_working$manual[is.na(ks_semi_final_wells_working$manual)] <- "yes"
 # # 
-# # View(ks_semi_final_wells_working)
 # # 
-# # View(table(ks_semi_final_wells_working$well_type,ks_semi_final_wells_working$has_api))
 # # 
 # # save(ks_semi_final_wells_working, file = "ks_semi_final_wells_working.rdata")
 # 
@@ -10116,7 +9870,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # 
 # # # drop never-completeds
 # # no_never_complete <- subset(true_no_dup_API, !(activity == "never_completed"))
-# # View(no_never_complete)
 # 
 # 
 # 
@@ -10166,11 +9919,9 @@ ggplot(mydata, aes(logit, predictor.value))+
 # table(ks_swd_final_better_dups$STATUS)
 # table(ks_working_with_block_groups$STATUS)
 #
-# View(ks_swd_final_better_dups)
 # 
 # nrow(ks_swd_final_better_dups)
 # 
-# View(ks_swd_full_for_map)
 # 
 # little_new_dataframe <- 
 #   ks_swd_final_better_dups[,c("KID","API_NUMBER_SIMPLE")]
@@ -10192,8 +9943,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 #   filter(ks_working_with_block_groups, 
 #          KID %in% differences)
 # 
-# View(dataframe_of_difference)
-# 
 # dataframe_of_difference$old_or_new <- NA
 # 
 # dataframe_of_difference <- 
@@ -10203,7 +9952,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 #   within(dataframe_of_difference, 
 #          old_or_new[KID %in% kids_of_differences_2] <- "old")
 # 
-# View(dataframe_of_difference)
 # 
 # write.csv(dataframe_of_difference, 
 #           file = "dataframe_of_difference.csv")
@@ -10215,13 +9963,11 @@ ggplot(mydata, aes(logit, predictor.value))+
 #   ks_working_with_block_groups[which(
 #     ks_working_with_block_groups$API_NUMBER_SIMPLE == "15-073-20645"),]
 # 
-# View(ks_working_with_block_groups)
 # 
 # figure_out_lat <- 
 #   ks_working_with_block_groups[which(
 #     ks_working_with_block_groups$LATITUDE == 38.03855),]
 # 
-# View(figure_out_lat)
 # 
 # # pair of weird one is 1036244004, typo in API between them but same lat/long
 # 
@@ -10243,7 +9989,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # ks_all_api_duplicates <- 
 #   ks_only_apis[ks_all_api_index, ]
 # 
-# View(ks_all_api_duplicates)
 # 
 # # put all duplicates in API number order
 # ks_all_api_duplicates_order <- 
@@ -10272,12 +10017,10 @@ ggplot(mydata, aes(logit, predictor.value))+
 #            STATUS2 != "Converted to SWD Well")
 # 
 # nrow(manual_assignments_minus_swd_swdpa_convertedswd)
-# # View(manual_assignments_minus_swd_swdpa_convertedswd)
 # 
 # man_well_type_table <- 
 #   table(manual_assignments_minus_swd_swdpa_convertedswd$man_well_type)
 # 
-# # View(man_well_type_table)
 # 
 # three_type_table <- 
 #   table(manual_assignments_minus_swd_swdpa_convertedswd$man_well_type, 
@@ -10289,21 +10032,17 @@ ggplot(mydata, aes(logit, predictor.value))+
 # three_type_table <- 
 #   filter(three_type_table, Freq > 0)
 # 
-# # View(three_type_table)
-# 
 # reasons_for_decision <- 
 #   three_type_table %>% 
 #   group_by(Var2, Var3) %>% 
 #   summarise(sum_thing = sum(Freq))
 # 
-# # View(reasons_for_decision)
 # 
 # decisions <- 
 #   three_type_table %>% 
 #   group_by(Var3) %>% 
 #   summarise(sum_thing = sum(Freq))
 # 
-# # View(decisions)
 # 
 # write.csv(reasons_for_decision, 
 #           file = "reasons_for_decision.csv")
@@ -10312,7 +10051,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # nrow(rows_requiring_comment_investigation)
 # 
 # 
-# # View(ks_swd_working)
 # 
 # table(ks_swd_working$STATUS)
 # 
@@ -10333,7 +10071,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # analysis_without_dup_apis <- 
 #   subset(ks_bye_dup_api, is_swd == "swd")
 # 
-# # View(ks_bye_dup_api)
 # 
 # 
 # class_1_wells <- 
@@ -10341,7 +10078,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 #          ks_swd_working$STATUS %in% c("OTHER(CLASS1)", 
 #                                       "OTHER(CLASS ONE (OLD))"))
 # 
-# # View(class_1_wells)
 
 
 

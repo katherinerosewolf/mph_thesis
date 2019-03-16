@@ -225,8 +225,6 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 #     with_margin = TRUE
 # )
 #
-# # View(acs_data_2013_2017_via_totalcensus)
-#
 # save(
 #   acs_data_2013_2017_via_totalcensus,
 #   file = "acs_data_2013_2017_via_totalcensus.rdata"
@@ -277,7 +275,6 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 #       )
 #     )
 #
-# View(ks_tiger_table)
 #
 # # fix GEOID to match ACS data
 # ks_tiger_table$GEOID <-
@@ -307,7 +304,7 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 # lime_data_import <-
 #   fread(file = "shale_to_block_groups.txt",
 #         colClasses = list(character = 'GEOID'))
-# View(lime_data_import)
+#
 # save(lime_data_import,
 #      file = "lime_data_import.rdata")
 
@@ -318,13 +315,12 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 # read in data
 ruca_codes <-
   readxl::read_xlsx("ruca2010.xlsx")
-# View(rucacodes)
+
 
 # pull only tract_ID and ruca codes and name columns
 only_ruca <- ruca_codes %>%
   select(c(2, 4, 5, 6))
 
-View(only_ruca)
 colnames(only_ruca) <-
   c("state",
     "tract_geoid",
@@ -358,7 +354,6 @@ only_ruca <-
 # pull kansas ones
 kansas_ruca <- only_ruca %>%
   filter(state == "KS")
-# View(kansas_ruca)
 
 # export kansas ruca data as csv and rdata
 write_excel_csv(kansas_ruca, "kansas_ruca.csv")
@@ -372,7 +367,6 @@ block_groups_to_tracts <-
   read_csv(
     "from_arcgis_for_r/ks_block_groups_with_tracts_joined.txt",
     col_types = cols(.default = col_character()))
-View(block_groups_to_tracts)
 
 # make table assigning block groups to tracts
 ks_block_group_tract_concordance <-
@@ -380,7 +374,6 @@ ks_block_group_tract_concordance <-
   rename(block_group_geoid = GEOID, # fix column names
          tract_geoid = GEOID_1) %>%
   select(block_group_geoid, tract_geoid) # select the columns
-View(ks_block_group_tract_concordance)
 
 # write .csv and .rdata files
 write_excel_csv(
@@ -423,7 +416,7 @@ load(file = "ks_block_group_tract_concordance.rdata")
 #### join ruca by tract to block groups ####
 ruca_block_group <- ks_block_group_tract_concordance %>% 
   left_join(kansas_ruca, by = "tract_geoid")
-View(ruca_block_group)
+
 
 
 
@@ -431,7 +424,6 @@ View(ruca_block_group)
 # make working dataset
 working_lime_data <-
   lime_data_import
-# View(working_lime_data)
 
 # change shale presence to be meaningful
 colnames(working_lime_data)[which(
@@ -7471,7 +7463,6 @@ summary_statistics_no_urban <- ks_analysis_populated_no_urban %>%
                      oooo_max = max,
                      oooo_mean = mean, 
                      oooo_sd = sd), na.rm = TRUE)
-View(summary_statistics_no_urban)
 
 
 
@@ -7483,7 +7474,6 @@ ks_stats_tidy_no_urban <- summary_statistics_no_urban %>% gather(stat, val) %>%
 write.csv(ks_stats_tidy_no_urban, 
           file = "ks_stats_tidy_no_urban.csv")
 
-# View(ks_stats_tidy)
 
 # summary statistics for individual groups
 
@@ -7527,7 +7517,6 @@ ks_stats_no_wells_no_urban <- summary_statistics_no_wells_no_urban %>% gather(st
   separate(stat, into = c("var", "stat"), sep = "ooo") %>%
   spread(stat, val) %>%
   select(var, o_min, o_q25, o_median, o_q75, o_max, o_mean, o_sd)
-View(ks_stats_no_wells_no_urban)
 
 write.csv(ks_stats_no_wells_no_urban, file = "ks_stats_no_wells.csv")
 
@@ -7570,14 +7559,12 @@ summary_statistics_with_wells_no_urban <-
                      oooo_max = max,
                      oooo_mean = mean, 
                      oooo_sd = sd), na.rm = TRUE)
-# View(summary_statistics_with_wells_no_urban)
 
 ks_stats_with_wells_no_urban <- 
   summary_statistics_with_wells_no_urban %>% gather(stat, val) %>%
   separate(stat, into = c("var", "stat"), sep = "ooo") %>%
   spread(stat, val) %>%
   select(var, o_min, o_q25, o_median, o_q75, o_max, o_mean, o_sd)
-View(ks_stats_with_wells_no_urban)
 
 write.csv(ks_stats_with_wells_no_urban, file = "ks_stats_with_wells.csv")
 
@@ -7646,7 +7633,6 @@ p_values_corrections_t_tests_no_urban$holm <-
   p.adjust(p_values_t_tests_no_urban, 
            method = "holm")
 
-View(p_values_corrections_t_tests_no_urban)
 write.csv(p_values_corrections_t_tests_no_urban, 
           file = "p_values_t_tests_no_urban.csv")
 
@@ -7766,7 +7752,6 @@ p_values_corrections_t_tests$holm <-
   p.adjust(p_values_t_tests, 
            method = "holm")
 
-# View(p_values_corrections_t_tests)
 write.csv(p_values_corrections_t_tests, 
           file = "p_values_t_tests.csv")
 
@@ -8100,7 +8085,6 @@ p_values_wilcox$original <-
 p_values_wilcox$holm <- 
   p.adjust(p_values_thing, method = "holm")
 
-# View(p_values_wilcox)
 write.csv(p_values_wilcox, 
           file = "p_values_wilcox.csv")
 
@@ -8141,7 +8125,6 @@ summary_statistics <- ks_analyze %>%
                      oooo_max = max,
                      oooo_mean = mean, 
                      oooo_sd = sd), na.rm = TRUE)
-View(summary_statistics)
 
 
 
@@ -8153,7 +8136,6 @@ ks_stats_tidy <- summary_statistics %>% gather(stat, val) %>%
 write.csv(ks_stats_tidy, 
           file = "ks_stats_tidy.csv")
 
-# View(ks_stats_tidy)
 
 # summary statistics for individual groups
 
@@ -8191,13 +8173,13 @@ summary_statistics_no_wells <-
                      oooo_max = max,
                      oooo_mean = mean, 
                      oooo_sd = sd), na.rm = TRUE)
-# View(summary_statistics_no_wells)
+
 
 ks_stats_no_wells <- summary_statistics_no_wells %>% gather(stat, val) %>%
   separate(stat, into = c("var", "stat"), sep = "ooo") %>%
   spread(stat, val) %>%
   select(var, o_min, o_q25, o_median, o_q75, o_max, o_mean, o_sd)
-# View(ks_stats_no_wells)
+
 
 write.csv(ks_stats_no_wells, file = "ks_stats_no_wells.csv")
 
@@ -8240,13 +8222,13 @@ summary_statistics_with_wells <-
                      oooo_max = max,
                      oooo_mean = mean, 
                      oooo_sd = sd), na.rm = TRUE)
-# View(summary_statistics_with_wells)
+
 
 ks_stats_with_wells <- summary_statistics_with_wells %>% gather(stat, val) %>%
   separate(stat, into = c("var", "stat"), sep = "ooo") %>%
   spread(stat, val) %>%
   select(var, o_min, o_q25, o_median, o_q75, o_max, o_mean, o_sd)
-# View(ks_stats_with_wells)
+
 
 write.csv(ks_stats_with_wells, file = "ks_stats_with_wells.csv")
 
@@ -8410,8 +8392,8 @@ blank_loess
 # earnings_predict <- 
 #   predict(loess(ks_analyze$extant_swd_binary ~ ks_analyze$earnings_median_B20002_001))
 # 
-# View(earnings_predict)
-  
+
+
 # plot all the loess plots
 par(mfrow = c(1,1))
 multiplot(pop_loess,
@@ -8762,7 +8744,7 @@ output_variable <- ks_analyze$extant_swd_binary
 test_for_automatic_selection <- 
   as.data.frame(cbind(logistic_matrix,output_variable))
 
-# View(test_for_automatic_selection)
+
 
 # bestAIC <- bestglm(test_for_automatic_selection, IC = "AIC", family = binomial)
 # bestBIC <- bestglm(test_for_automatic_selection, IC = "BIC", family = binomial)
@@ -8903,7 +8885,7 @@ abline(h = 0, lty = 2)
 # Predict the probability (p) of swd well presence
 probabilities <- 
   predict(logistic_model_no_tinies, type = "response")
-# View(probabilities)
+
 predicted.classes <- 
   ifelse(probabilities > 0.5, "yes", "no")
 head(predicted.classes)
@@ -8914,7 +8896,7 @@ head(predicted.classes)
 
 # Predict the probability (p) of swd well presence
 probabilities <- predict(logistic_model, type = "response")
-# View(probabilities)
+
 predicted.classes <- ifelse(probabilities > 0.5, "yes", "no")
 head(predicted.classes)
 
@@ -9216,9 +9198,8 @@ ggplot(mydata, aes(logit, predictor.value))+
 # 
 # ks_analysis_dataset <- within(ks_analysis_dataset, any_swd_binary[ks_analysis_dataset$any_swd_binary == "yes"]  <-  1)
 # ks_analysis_dataset <- within(ks_analysis_dataset, any_swd_binary[ks_analysis_dataset$any_swd_binary == "no"]  <-  0)
-# View(ks_analysis_dataset$any_swd_binary)
+#
 # ks_analysis_dataset$any_swd_binary <- as.numeric(ks_analysis_dataset$any_swd_binary)
-# View(ks_analysis_dataset$any_swd_binary)
 # 
 # #### logistic model r
 # logistic_model <- glm(formula = any_swd_binary ~ median_household_income_B19013 + median_household_value_B25077 + percent_white_B03002 + population_density_B01001_ALAND + percent_high_school_plus_B15003 + median_age_B01002, family = "binomial", data = ks_analysis_dataset)
@@ -9550,18 +9531,16 @@ ggplot(mydata, aes(logit, predictor.value))+
 # mississippian_wells <- 
 #   ks_wells_2018_11_01[ks_wells_2018_11_01$PRODUCE_FORM 
 #                       %like% "Mississippian",]
-# 
-# View(mississippian_wells)
+
 
 #### whatnot about UIC
-# View(ks_uic)
 # kids<-unique(ks_uic$KGS_ID)
 # kids
 #
 # ks_wells_in_uic_data_only <- subset(ks_swd_working, KID %in% kids)
-# View(ks_wells_in_uic_data_only)
+#
 # uic_statuses<-table(ks_wells_in_uic_data_only$STATUS)
-# View(uic_statuses)
+#
 # write.csv(uic_statuses,file="uic_statuses.csv")
 
 
@@ -9572,7 +9551,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # # assign it
 # ks_swd_working$has_api <-
 #   ifelse(ks_swd_working$API_NUMBER == "", "no", "yes")
-# # View(ks_swd_working)
 #
 # #### update master dataframe to make later analysis easier
 # ks_swd_top_of_the_flowchart <-   # start the dataframe
@@ -9592,12 +9570,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 #   within(ks_swd_top_of_the_flowchart, 
 #          origin[KID %in% raw_assignments_exclude_swd$KID] <- 'man')
 # 
-# 
-# 
-# # View(ks_swd_statii_one$KID)
-# # View(ks_swd_statii_two$KID)
-# # View(raw_assignments_exclude_swd$KID)
-# 
 # # fix that one api
 # ks_swd_top_of_the_flowchart <-   # fix big one
 #   within(ks_swd_top_of_the_flowchart, 
@@ -9608,23 +9580,14 @@ ggplot(mydata, aes(logit, predictor.value))+
 # 
 # # kids of manual wells with no api (n = 2 after manual review)
 # 
-# # View(raw_assignments_exclude_swd)   # exclude those not swd, leaves 354
+# exclude those not swd, leaves 354
 # 
 # raw_assignments_api_only <-   # exclude those without API, leaves 173
 #   raw_assignments_exclude_swd[which(raw_assignments_exclude_swd$API_NUMBER != ""),]
 # 
 # raw_assignments_api_and_swd <-   # those classed as swd with apis, leaves 106
 #   raw_assignments_api_only[which(raw_assignments_api_only$man_well_type_swd == 'yes'),]
-# View(raw_assignments_api_and_swd) 
 # 
-# # kids of non-swd wells dropped per manual review
-# View(raw_assignments_man_not_swd$KID)
-# 
-# # kids of s2 apis that overlapped with s1 apis
-# View(kids_of_removed_s2_well_apis_overlap_with_s1)
-# 
-# # kids of man apis that overlapped with s1 apis
-# View(kids_of_removed_man_well_apis_overlap_with_s1)
 # 
 # # kids of s2 apis that overlapped with man apis
 # kids_of_s2_apis_that_overlapped_with_s1_apis <- c("1002886382")
@@ -9670,7 +9633,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 #   ks_working_with_block_groups[which(ks_working_with_block_groups$KID %in% 
 #                    kids_semi_final_list),]
 # 
-# # View(ks_semi_final_wells)
 # 
 # # save data to disk
 # save(ks_semi_final_wells, file = "ks_semi_final_wells.rdata")
@@ -9688,9 +9650,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # ks_semi_final_status1s <-   # make vector of status1s in semi-final dataset
 #   sort(unique(ks_semi_final_wells$STATUS))
 # 
-# # View(ks_semi_final_status1s)   # view vector of status1s
-# 
-# # View(table(ks_semi_final_wells_working$STATUS))   # view table of status1s
 # 
 # write.csv(ks_semi_final_status1s,   # write .csv of status1s
 #           file = "ks_semi_final_status1s.csv")
@@ -9700,9 +9659,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # ks_semi_final_status2s <-   # make vector of status2s in semi-final dataset
 #   sort(unique(ks_semi_final_wells$STATUS2))
 # 
-# # View(ks_semi_final_status2s)   # view vector of status2s
-# 
-# # View(table(ks_semi_final_wells_working$STATUS2))   # view table of status2s
 # 
 # write.csv(ks_semi_final_status2s,   # write .csv of status2s
 #           file = "ks_semi_final_status2s.csv")
@@ -9713,7 +9669,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # ks_class1_only <- 
 #   subset(ks_semi_final_wells_working, 
 #          is_class1 == 'class1')
-# # View(ks_class1_only)
 # 
 # # fix duplicated latitudes and longitudes #
 # ks_class1_dup_index <- 
@@ -9722,7 +9677,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 #              fromLast = TRUE)
 # ks_class1_dup <- 
 #   ks_class1_only[ks_class1_dup_index, ]
-# # View(ks_class1_dup)
 # 
 # # KIDs of all class1 duplicates
 # kids_all_class1_duplicates <- 
@@ -9735,7 +9689,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 #                         ks_class1_dup$uic, 
 #                         ks_class1_dup$modified_propogate),]
 # 
-# # View(ks_class1_dup)
 # 
 # # propogate dates
 # ks_class1_dup <-
@@ -9750,7 +9703,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 #   ) %>%
 #   ungroup()
 # 
-# # View(ks_class1_dup)
 # 
 # # vector marking all but last well with same lat/long as TRUE
 # ks_class1_drop_index <-   
@@ -9808,8 +9760,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 #         ks_class1_only$KID)] <- 
 #   ks_class1_dup$modified_propogate
 # 
-# View(ks_class1_only)
-# 
 # write.csv(ks_class1_only, 
 #           file = "ks_class1_only.csv")
 #
@@ -9818,7 +9768,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # # HERE BE MORE CODE FROM THE OLD ASSIGNMENT METHODS #
 # # assign well_type 
 #
-# # View(table(ks_semi_final_wells_working$STATUS)) view possible status1s
 #
 # ks_definitely_include_status1s <- # reminder of status1s chosen to keep
 #   sort(c("OTHER(1O&1SWD)",
@@ -9888,7 +9837,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # # make dataframe of duplicates
 # ks_api_dups <-   
 #   ks_only_apis[ks_final_index, ]
-# # View(ks_api_dups)
 # 
 # # pull kids of dups
 # kids_ks_api_dups <- 
@@ -9905,7 +9853,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # ks_api_dups_assigned <-   # import manual assignments
 #   fread("ks_api_dups_2018_12_28_back_to_r.csv")
 # 
-# # View(ks_api_dups_assigned)
 # 
 # ks_api_dups_rows_to_drop <-   # make dataframe of rows to drop
 #   filter(ks_api_dups_assigned, 
@@ -9913,8 +9860,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # 
 # kids_of_dup_api_rows_to_drop <-  # make list of kids of rows to drop
 #   ks_api_dups_rows_to_drop$KID
-# 
-# # View(ks_api_dups_rows_to_drop)
 # 
 # # make column for drop for api
 # ks_only_apis$drop_dup <- NA
@@ -9935,8 +9880,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # ks_only_apis <- 
 #   ks_only_apis[order(ks_only_apis$drop_dup),]
 # 
-# # View(ks_only_apis)
-# 
 # # # propogate dates (BEWARE, THIS STEP TAKE ABOUT 20 MINUTES!)
 # # ks_only_apis <-
 # #   ks_only_apis %>%
@@ -9949,8 +9892,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # #     modified_propogate
 # #   ) %>%
 # #   ungroup()
-# 
-# # View(ks_only_apis)
 # 
 # # remove duplicate APIs, keeping those last modified
 # ks_bye_dup_api <- 
@@ -9979,15 +9920,11 @@ ggplot(mydata, aes(logit, predictor.value))+
 # write.csv(ks_simple_api_dups, 
 #           file = "ks_simple_api_dups.csv")
 # 
-# # View(ks_simple_api_dups)
-# 
 # # put duplicates of core API code in order
 # ks_simple_api_dups_order <-   
 #   ks_simple_api_dups[
 #     order(ks_simple_api_dups$API_NUMBER),
 #     ]
-# 
-# # View(ks_simple_api_dups_order)
 # 
 # # marks all but last api for each well as TRUE
 # simple_api_drop_index <-    
@@ -10018,7 +9955,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 #          ks_only_apis$drop_dup %notin% 
 #            c('drop_dup_simple_api', 
 #              'drop_dup_api'))
-# # View(ks_api_dups_gone)
 # 
 # 
 # 
@@ -10029,7 +9965,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 #              fromLast = TRUE)
 # ks_lat_long_dup <- 
 #   ks_api_dups_gone[ks_lat_long_dup_index, ]
-# # View(ks_lat_long_dup)
 # 
 # write.csv(ks_lat_long_dup, 
 #           file = "ks_lat_long_dup.csv")
@@ -10058,8 +9993,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # 
 # 
 # 
-# # View(ks_lat_long_dup)
-# 
 # # vector marking all but last well with same lat/long as TRUE
 # ks_lat_long_drop_index <-   
 #   duplicated(ks_lat_long_dup[c("LATITUDE","LONGITUDE")], 
@@ -10070,7 +10003,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 #   ks_lat_long_dup[ks_lat_long_drop_index, ]
 # 
 # table(wells_to_drop_due_to_lat_long$uic)
-# # View(wells_to_drop_due_to_lat_long)
 # 
 # # makes list of just the kids
 # kids_of_wells_to_drop_due_to_lat_long <-   
@@ -10109,8 +10041,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 #         ks_only_apis$KID)] <- 
 #   ks_lat_long_dup$modified_propogate
 # 
-# # View(ks_only_apis)
-# 
 # # remove all rows marked as duplicates
 # ks_dups_gone <-   
 #   ks_only_apis[which(ks_only_apis$drop_dup %notin% 
@@ -10126,7 +10056,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # # save dataset for mapping
 # save(ks_swd_full_for_map, 
 #      file = "ks_swd_full_for_map.rdata")
-# # View(ks_swd_full_for_map)
 # 
 # # table(ks_swd_full_for_map$activity)
 # # table(ks_swd_full_for_map$STATUS)
@@ -10135,8 +10064,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # 
 # ks_wells_and_block_groups <- 
 #   ks_swd_full_for_map
-# # View(ks_wells_and_block_groups)
-#
 #
 # 
 # # more old code
@@ -10152,9 +10079,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # # ks_semi_final_wells_working$manual[is.na(ks_semi_final_wells_working$man_well_type)] <- "no"
 # # ks_semi_final_wells_working$manual[is.na(ks_semi_final_wells_working$manual)] <- "yes"
 # # 
-# # View(ks_semi_final_wells_working)
-# # 
-# # View(table(ks_semi_final_wells_working$well_type,ks_semi_final_wells_working$has_api))
 # # 
 # # save(ks_semi_final_wells_working, file = "ks_semi_final_wells_working.rdata")
 # 
@@ -10162,7 +10086,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # 
 # # # drop never-completeds
 # # no_never_complete <- subset(true_no_dup_API, !(activity == "never_completed"))
-# # View(no_never_complete)
 # 
 # 
 # 
@@ -10181,14 +10104,14 @@ ggplot(mydata, aes(logit, predictor.value))+
 # ks_by_API_count <- table(ks_working_with_block_groups$API_NUMBER)
 # save(ks_by_API_count, file = "ks_by_API_count.rdata")
 # 
-# # view rows with duplicated APIs
+# rows with duplicated APIs
 # index <- 
 #   duplicated(ks_working_with_block_groups$API_NUMBER) | duplicated(ks_working_with_block_groups$API_NUMBER, 
 #                                                  fromLast = TRUE)
 # ks_api_dups_all_wells <- ks_working_with_block_groups[index,]
 # save(ks_api_dups_all_wells, file = "ks_api_dups_all_wells.rdata")
 # 
-# # view counts of duplicates per API
+# counts of duplicates per API
 # ks_api_dup_counts <- table(ks_api_dups_all_wells$API_NUMBER)
 # save(ks_api_dup_counts, file = "ks_dup_API_count.rdata")
 # 
@@ -10212,11 +10135,7 @@ ggplot(mydata, aes(logit, predictor.value))+
 # table(ks_swd_final_better_dups$STATUS)
 # table(ks_working_with_block_groups$STATUS)
 #
-# View(ks_swd_final_better_dups)
-# 
 # nrow(ks_swd_final_better_dups)
-# 
-# View(ks_swd_full_for_map)
 # 
 # little_new_dataframe <- 
 #   ks_swd_final_better_dups[,c("KID","API_NUMBER_SIMPLE")]
@@ -10238,8 +10157,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 #   filter(ks_working_with_block_groups, 
 #          KID %in% differences)
 # 
-# View(dataframe_of_difference)
-# 
 # dataframe_of_difference$old_or_new <- NA
 # 
 # dataframe_of_difference <- 
@@ -10249,7 +10166,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 #   within(dataframe_of_difference, 
 #          old_or_new[KID %in% kids_of_differences_2] <- "old")
 # 
-# View(dataframe_of_difference)
 # 
 # write.csv(dataframe_of_difference, 
 #           file = "dataframe_of_difference.csv")
@@ -10261,13 +10177,11 @@ ggplot(mydata, aes(logit, predictor.value))+
 #   ks_working_with_block_groups[which(
 #     ks_working_with_block_groups$API_NUMBER_SIMPLE == "15-073-20645"),]
 # 
-# View(ks_working_with_block_groups)
 # 
 # figure_out_lat <- 
 #   ks_working_with_block_groups[which(
 #     ks_working_with_block_groups$LATITUDE == 38.03855),]
 # 
-# View(figure_out_lat)
 # 
 # # pair of weird one is 1036244004, typo in API between them but same lat/long
 # 
@@ -10281,7 +10195,7 @@ ggplot(mydata, aes(logit, predictor.value))+
 #
 #
 #
-# # view duplicates for api
+# # duplicates for api
 # ks_all_api_index <- 
 #   duplicated(ks_only_apis$API_NUMBER_SIMPLE) | 
 #   duplicated(ks_only_apis$API_NUMBER_SIMPLE, 
@@ -10289,7 +10203,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # ks_all_api_duplicates <- 
 #   ks_only_apis[ks_all_api_index, ]
 # 
-# View(ks_all_api_duplicates)
 # 
 # # put all duplicates in API number order
 # ks_all_api_duplicates_order <- 
@@ -10318,12 +10231,11 @@ ggplot(mydata, aes(logit, predictor.value))+
 #            STATUS2 != "Converted to SWD Well")
 # 
 # nrow(manual_assignments_minus_swd_swdpa_convertedswd)
-# # View(manual_assignments_minus_swd_swdpa_convertedswd)
+# 
 # 
 # man_well_type_table <- 
 #   table(manual_assignments_minus_swd_swdpa_convertedswd$man_well_type)
 # 
-# # View(man_well_type_table)
 # 
 # three_type_table <- 
 #   table(manual_assignments_minus_swd_swdpa_convertedswd$man_well_type, 
@@ -10335,21 +10247,18 @@ ggplot(mydata, aes(logit, predictor.value))+
 # three_type_table <- 
 #   filter(three_type_table, Freq > 0)
 # 
-# # View(three_type_table)
 # 
 # reasons_for_decision <- 
 #   three_type_table %>% 
 #   group_by(Var2, Var3) %>% 
 #   summarise(sum_thing = sum(Freq))
 # 
-# # View(reasons_for_decision)
 # 
 # decisions <- 
 #   three_type_table %>% 
 #   group_by(Var3) %>% 
 #   summarise(sum_thing = sum(Freq))
 # 
-# # View(decisions)
 # 
 # write.csv(reasons_for_decision, 
 #           file = "reasons_for_decision.csv")
@@ -10358,7 +10267,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # nrow(rows_requiring_comment_investigation)
 # 
 # 
-# # View(ks_swd_working)
 # 
 # table(ks_swd_working$STATUS)
 # 
@@ -10379,7 +10287,6 @@ ggplot(mydata, aes(logit, predictor.value))+
 # analysis_without_dup_apis <- 
 #   subset(ks_bye_dup_api, is_swd == "swd")
 # 
-# # View(ks_bye_dup_api)
 # 
 # 
 # class_1_wells <- 
@@ -10387,7 +10294,8 @@ ggplot(mydata, aes(logit, predictor.value))+
 #          ks_swd_working$STATUS %in% c("OTHER(CLASS1)", 
 #                                       "OTHER(CLASS ONE (OLD))"))
 # 
-# # View(class_1_wells)
+
+
 
 
 
