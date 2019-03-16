@@ -3423,6 +3423,12 @@ write.csv(missing_value_totals,
 
 
 
+
+
+#### BEGIN ANALYSES HERE ####
+
+
+
 #### CORRELATION TABLE ####
 
 # make dataframe for the correlation dataset
@@ -3449,8 +3455,7 @@ correlation_matrix_data  <-
     "house_value_median_B25077_001", 
     "ice_B19001",
     "ALAND_KM", 
-    "AWATER_KM",
-    "shale_presence", 
+    "AWATER_KM", 
     "horizontal_count", 
     "urban_binary")]
 
@@ -3478,7 +3483,6 @@ colnames(correlation_matrix_data) <- c("GEOID",
                                        "Income concentration at the extremes",
                                        "Land area", 
                                        "Water area", 
-                                       "Mississippian Lime Play", 
                                        "Horizontal well count", 
                                        "Urbanicity")
 
@@ -3486,7 +3490,6 @@ colnames(correlation_matrix_data) <- c("GEOID",
 correlation_matrix_data <- 
   correlation_matrix_data[c("GEOID", 
                             "Horizontal well count",
-                            "Mississippian Lime Play", 
                             "Water area",
                             "Land area", 
                             "Income concentration at the extremes",
@@ -3536,7 +3539,7 @@ correlation_matrix_data_complete <-
 # create the correlation matrix with all observations
 # rounds to 2 decimal places
 correlation_matrix  <-  
-  round(cor(correlation_matrix_data[,2:25], 
+  round(cor(correlation_matrix_data[,2:24], 
             method = "spearman", 
             use = "pairwise.complete.obs"), 
         2) 
@@ -3549,7 +3552,7 @@ write.csv(correlation_matrix, file = "correlation_matrix.csv")
 
 # count observations going into the correlation matrix
 counts_pairwise_correlations  <-  
-  pairwiseCount(correlation_matrix_data_complete[,2:25], 
+  pairwiseCount(correlation_matrix_data_complete[,2:24], 
                  y = NULL, 
                  diagonal=TRUE)
 
@@ -3722,6 +3725,9 @@ length(ks_analyze$horizontal_count[  # n = 1807
   which(ks_analyze$extant_swd_binary == 0)])
 length(ks_analyze$horizontal_count[   # n = 486
   which(ks_analyze$extant_swd_binary == 1)])
+
+
+
 
 
 
@@ -6735,8 +6741,6 @@ theme(axis.line=element_blank(),
 
 blank_plot
 
-
-
 list_of_boxplots <-
   c(pop_boxplot,
     pop_dense_boxplot,
@@ -6761,27 +6765,27 @@ list_of_boxplots <-
     horizontal_boxplot)
 
 
-pop_boxplot
-pop_dense_boxplot
-female_boxplot
-age_18_boxplot
-age_65_boxplot
-aian_boxplot
-hisp_lat_boxplot
-white_boxplot
-education_boxplot
-lim_eng_boxplot
-health_insurance_boxplot
-renter_boxplot
-unemploy_boxplot
-poverty_boxplot
-earnings_boxplot
-income_boxplot
-home_value_boxplot
-ice_boxplot
-land_boxplot
-water_boxplot
-horizontal_boxplot
+# pop_boxplot
+# pop_dense_boxplot
+# female_boxplot
+# age_18_boxplot
+# age_65_boxplot
+# aian_boxplot
+# hisp_lat_boxplot
+# white_boxplot
+# education_boxplot
+# lim_eng_boxplot
+# health_insurance_boxplot
+# renter_boxplot
+# unemploy_boxplot
+# poverty_boxplot
+# earnings_boxplot
+# income_boxplot
+# home_value_boxplot
+# ice_boxplot
+# land_boxplot
+# water_boxplot
+# horizontal_boxplot
 
 
 # # plot all the boxplots
@@ -7042,31 +7046,7 @@ counts_by_urban <-
 
 
 
-# chi-square test for shale presence
-swd_shale <- sum(ks_analyze$extant_swd_binary[which(
-  ks_analyze$shale_presence == 1)])
-swd_no_shale <- sum(ks_analyze$extant_swd_binary[which(
-  ks_analyze$shale_presence == 0)])
-no_swd_shale <- sum(ks_analyze$shale_presence[which(
-  ks_analyze$extant_swd_binary == 0)])
-no_swd_no_shale <- 2293 - (swd_shale + 
-                             swd_no_shale + 
-                             no_swd_shale)
 
-shale_matrix <- 
-  matrix(c(
-    swd_shale, 
-    swd_no_shale, 
-    no_swd_shale, 
-    no_swd_no_shale), 
-    ncol = 2)
-
-shale_chisquare <- 
-  chisq.test(shale_matrix)
-
-shale_chisquare$statistic
-shale_chisquare$p.value
-shale_chisquare$method
 
 
 # chi-square test for horiztonal well presence
@@ -10408,3 +10388,31 @@ ggplot(mydata, aes(logit, predictor.value))+
 #                                       "OTHER(CLASS ONE (OLD))"))
 # 
 # # View(class_1_wells)
+
+
+
+# # chi-square test for shale presence
+# swd_shale <- sum(ks_analyze$extant_swd_binary[which(
+#   ks_analyze$shale_presence == 1)])
+# swd_no_shale <- sum(ks_analyze$extant_swd_binary[which(
+#   ks_analyze$shale_presence == 0)])
+# no_swd_shale <- sum(ks_analyze$shale_presence[which(
+#   ks_analyze$extant_swd_binary == 0)])
+# no_swd_no_shale <- 2293 - (swd_shale + 
+#                              swd_no_shale + 
+#                              no_swd_shale)
+# 
+# shale_matrix <- 
+#   matrix(c(
+#     swd_shale, 
+#     swd_no_shale, 
+#     no_swd_shale, 
+#     no_swd_no_shale), 
+#     ncol = 2)
+# 
+# shale_chisquare <- 
+#   chisq.test(shale_matrix)
+# 
+# shale_chisquare$statistic
+# shale_chisquare$p.value
+# shale_chisquare$method
