@@ -656,6 +656,7 @@ write.csv(swd_fluid_totals_by_well,
 ```
 
 
+
 ```{r select acs data}
 
 # make working acs
@@ -1389,12 +1390,19 @@ acs_select_geo <-
             acs_select,
             by = "GEOID")
 
-# save acs_select_geo
+# save/write acs_select_geo
 save(acs_select_geo,
      file = "acs_select_geo.rdata")
-
 write.csv(acs_select_geo, file = "acs_select_geo.csv")
 
+```
+  
+
+  
+```{r construct ACS variables}
+
+# load data if necessary
+load(file = "acs_select_geo.rdata")
 
 # make data for sorting into categories
 acs_geo_cats <-
@@ -1406,11 +1414,6 @@ acs_geo_cats$GEOID_alphanum <-
   acs_geo_cats$GEOID
 acs_geo_cats$GEOID <-  # fix the new one
   gsub("15000US", "", acs_geo_cats$GEOID)
-
-
-  
-
-#### construct ACS variables ####
 
 # total population
 acs_geo_cats$pop_tot_B01001_001 <-
@@ -3186,7 +3189,6 @@ write.csv(ks_analysis_dataset,
 ```
 
 
-
 ```{r make the little datasets from the big one}
 
 # make working datset from the full one
@@ -3225,7 +3227,7 @@ write.csv(urban_tract_map, file = "urban_tract_map.csv")
 ```
 
 
-## ANALYSES BEGIN HERE
+# ANALYSES BEGIN HERE
 
 
 ```{r load necessary datasets}
@@ -6753,6 +6755,7 @@ horizontal_levene <-
 ```
 
 
+
 ```{r urban chi-square tests populated block groups, eval=FALSE, include=FALSE}
 #### chi-square tests
 # chi-square test for urbanicity (broadly defined)
@@ -7465,10 +7468,10 @@ write.csv(p_values_corrections_t_tests_no_urban,
 ```
 
 
-## BIVARIATE ANALYSES
+## bivariate analyses
 
 
-```{r bivariate analyses}
+```{r bivariate analyses data setup}
 
 # make dataset with just analysis variables
 ks_analysis_all_income_for_loops <- 
@@ -7494,9 +7497,7 @@ ks_analysis_all_income_for_loops <-
     "house_value_median_B25077_001", 
     "ice_B19001",
     "ALAND_KM", 
-    "AWATER_KM",
-    "shale_presence", 
-    "horizontal_count")]
+    "AWATER_KM")]
 ```
 
 
@@ -8161,6 +8162,47 @@ univariable_logistic_Wald_CIs
 
 
 
+# pop tot model evaluation
+logistic_pop_tot
+
+summary(logistic_pop_tot)
+
+pop_tot_residuals <- 
+  residuals(logistic_pop_tot, type = "deviance") 
+plot.new()
+plot_pop_tot_residuals <- 
+  ggplot(aes())
+  
+  plot(predict(logistic_pop_tot), 
+       pop_tot_residuals, 
+       col = "slateblue1",
+       xlab="Fitted values", 
+       ylab = "Deviance residuals",
+       ylim = max(abs(pop_tot_residuals)) * c(-1,1), 
+       family = "Times New Roman", 
+       main = "Total Population")
+abline(h = 0, lty = 2)
+dev.off()
+
+
+plot_pop_tot_residuals
+
+# population 
+pop_tot_residuals <- 
+  residuals(logistic_pop_tot, type = "deviance") 
+plot.new()
+plot_pop_tot_residuals <- 
+  plot(predict(logistic_pop_tot), 
+       pop_tot_residuals, 
+       col = "slateblue1",
+       xlab="Fitted values", 
+       ylab = "Deviance residuals",
+       ylim = max(abs(pop_tot_residuals)) * c(-1,1), 
+       family = "Times New Roman", 
+       main = "Total Population")
+abline(h = 0, lty = 2)
+
+
 # # individual regressions
 # logistic_pop_tot <- 
 #   glm(extant_swd_binary ~ 
@@ -8410,6 +8452,8 @@ logistic_model_big <-
                horizontal_binary, 
              data = ks_analysis_all_income, 
              family = binomial)
+summary(logistic_model_big)
+
 
 
 # automated choice of best fit
@@ -8422,25 +8466,24 @@ output_variable <-
 test_for_automatic_selection <- 
   as.data.frame(cbind(logistic_matrix,output_variable))
 
-# bestAIC <- bestglm(test_for_automatic_selection, IC = "AIC", family = binomial)
-# bestBIC <- bestglm(test_for_automatic_selection, IC = "BIC", family = binomial)
+bestAIC <- 
+  bestglm(test_for_automatic_selection, IC = "AIC", family = binomial)
+bestBIC <- 
+  bestglm(test_for_automatic_selection, IC = "BIC", family = binomial)
 
 write.csv(bestAIC$BestModels, 
           file = "bestmodelsAIC.csv")
 
+bestAIC
 bestAIC$BestModels
-
 bestAIC$BestModel$residuals
 
 write.csv(bestBIC$BestModels, 
           file = "bestmodelsBIC.csv")
 
+bestBIC
 bestBIC$BestModel
-bestAIC$BestModel
-
-bestAIC
-
-summary(logistic_model_big)
+bestBIC$BestModel$residuals
 
 best_glm_run <- 
   stats::glm(extant_swd_binary ~ 
@@ -8456,12 +8499,10 @@ best_glm_run <-
         horizontal_binary, 
       data = ks_analysis_all_income, 
       family = binomial)
+best_glm_run
 
-
-
-
-
-thing <- safeBinaryRegression::glm(extant_swd_binary ~ 
+thing <- 
+  safeBinaryRegression::glm(extant_swd_binary ~ 
                             pop_tot_B01001_001 + 
                             pop_dense_B01001_001_ALAND + 
                             aian_percent_any_race_B02010_001 +  
@@ -8489,64 +8530,11 @@ second_best_glm_run <-
         horizontal_binary, 
       data = ks_analysis_all_income, 
       family = binomial)
-
 second_best_glm_run
-
-best_glm_run
-
-# pop tot model evaluation
-logistic_pop_tot
-
-summary(logistic_pop_tot)
-
-pop_tot_residuals <- 
-  residuals(logistic_pop_tot, type = "deviance") 
-plot.new()
-plot_pop_tot_residuals <- 
-  ggplot(aes())
-  
-  plot(predict(logistic_pop_tot), 
-       pop_tot_residuals, 
-       col = "slateblue1",
-       xlab="Fitted values", 
-       ylab = "Deviance residuals",
-       ylim = max(abs(pop_tot_residuals)) * c(-1,1), 
-       family = "Times New Roman", 
-       main = "Total Population")
-abline(h = 0, lty = 2)
-dev.off()
-
-
-plot_pop_tot_residuals
-
-
-
-# population 
-pop_tot_residuals <- 
-  residuals(logistic_pop_tot, type = "deviance") 
-plot.new()
-plot_pop_tot_residuals <- 
-  plot(predict(logistic_pop_tot), 
-       pop_tot_residuals, 
-       col = "slateblue1",
-       xlab="Fitted values", 
-       ylab = "Deviance residuals",
-       ylim = max(abs(pop_tot_residuals)) * c(-1,1), 
-       family = "Times New Roman", 
-       main = "Total Population")
-abline(h = 0, lty = 2)
-
-
-
-# Predict the probability (p) of swd well presence
-probabilities <- 
-  predict(logistic_model_no_tinies, type = "response")
-
-predicted.classes <- 
-  ifelse(probabilities > 0.5, "yes", "no")
-head(predicted.classes)
 ```
 
+
+## Moran's I
 
 
 ```{r moran's i}
@@ -8572,10 +8560,19 @@ head(predicted.classes)
 # moran.test(ks_extant_swd_for_moran$lead,mat2listw(w))
 ```
 
+
 # ABANDON HOPE ALL YE WHO ENTER HERE, WHERE OLD CODE GOES TO DIE
 
-```{r dead code, eval=FALSE, include=FALSE}
 
+```{r dead code, eval=FALSE, include=FALSE}
+# # Predict the probability (p) of swd well presence
+# probabilities <- 
+#   predict(logistic_model_no_tinies, type = "response")
+# 
+# predicted.classes <- 
+#   ifelse(probabilities > 0.5, "yes", "no")
+# head(predicted.classes)
+#
 # # Predict the probability (p) of swd well presence
 # probabilities <- predict(logistic_model, type = "response")
 # 
