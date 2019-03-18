@@ -2407,7 +2407,6 @@ save(ks_swd_api_full_dups,
 
 
 
-
 #### check simple API duplicates, now not deleting SWD wells ####
 
 # keep last modified
@@ -3514,7 +3513,7 @@ ks_analysis_populated_complete <-
       ks_analysis_only_complete$GEOID
   ),]
 
-# save load chunk
+# save write chunk
 write.csv(ks_analysis_populated_complete, 
           file = "ks_analysis_populated_complete.csv")
 save(ks_analysis_populated_complete, 
@@ -7190,6 +7189,73 @@ water_t_test_no_urban <-
   t.test(AWATER_KM ~ extant_swd_binary,
          data = ks_analysis_populated_no_urban)
 water_t_test_no_urban
+
+
+
+# collect p-values for correction
+label_categories <- c("Total population", 
+            "Population density", 
+            "% female", 
+            "% age < 18", 
+            "% age > 64", 
+            "% Native American", 
+            "% Hispanic or Latinx", 
+            "% Black or African American",
+            "% non-Hispanic white", 
+            "% high school education", 
+            "% limited-English households",
+            "% with no health insurance", 
+            "% renter-occupied households",
+            "% unemployed", 
+            "% in poverty",
+            "Median earnings",
+            "Median household income", 
+            "Median home value",
+            "Income concentration at the extremes", 
+            "Land area", 
+            "Water area", 
+            "Horizontal well count", 
+            "Mississippian Lime Play")
+
+p_values_t_tests <- 
+  as.numeric(c(pop_t_test_no_urban$p.value, 
+               pop_dense_t_test_no_urban$p.value, 
+               female_t_test_no_urban$p.value,
+               age_18_t_test_no_urban$p.value, 
+               age_65_t_test_no_urban$p.value, 
+               aian_t_test_no_urban$p.value, 
+               hisp_lat_t_test_no_urban$p.value, 
+               black_t_test_no_urban$p.value,
+               white_t_test_no_urban$p.value, 
+               education_t_test_no_urban$p.value, 
+               lim_eng_t_test_no_urban$p.value, 
+               health_ins_t_test_no_urban$p.value, 
+               renter_t_test_no_urban$p.value, 
+               unemploy_t_test_no_urban$p.value, 
+               poverty_t_test_no_urban$p.value, 
+               earnings_t_test_no_urban$p.value, 
+               income_t_test_no_urban$p.value, 
+               home_value_t_test_no_urban$p.value, 
+               ice_t_test_no_urban$p.value, 
+               land_t_test_no_urban$p.value, 
+               water_t_test_no_urban$p.value,
+               horizontal_t_test_no_urban$p.value, 
+               shale_chisquare$p.value))
+
+p_values_corrections_t_test_no_urbans <- 
+  as.data.frame(cbind(label_categories))
+colnames(p_values_corrections_t_test_no_urbans) <- 
+  c("labels")
+
+p_values_corrections_t_test_no_urbans$original_p <- 
+  p_values_t_test_no_urbans
+
+p_values_corrections_t_test_no_urbans$holm <- 
+  p.adjust(p_values_t_test_no_urbans, 
+           method = "holm")
+
+write.csv(p_values_corrections_t_test_no_urbans, 
+          file = "p_values_t_tests.csv")
 ```
 
 
@@ -7399,80 +7465,10 @@ write.csv(p_values_corrections_t_tests_no_urban,
 ```
 
 
-
-```{r things}
-
-# collect p-values for correction
-label_categories <- c("Total population", 
-            "Population density", 
-            "% female", 
-            "% age < 18", 
-            "% age > 64", 
-            "% Native American", 
-            "% Hispanic or Latinx", 
-            "% Black or African American",
-            "% non-Hispanic white", 
-            "% high school education", 
-            "% limited-English households",
-            "% with no health insurance", 
-            "% renter-occupied households",
-            "% unemployed", 
-            "% in poverty",
-            "Median earnings",
-            "Median household income", 
-            "Median home value",
-            "Income concentration at the extremes", 
-            "Land area", 
-            "Water area", 
-            "Horizontal well count", 
-            "Mississippian Lime Play")
-
-p_values_t_tests <- 
-  as.numeric(c(pop_t_test$p.value, 
-               pop_dense_t_test$p.value, 
-               female_t_test$p.value,
-               age_18_t_test$p.value, 
-               age_65_t_test$p.value, 
-               aian_t_test$p.value, 
-               hisp_lat_t_test$p.value, 
-               black_t_test$p.value,
-               white_t_test$p.value, 
-               education_t_test$p.value, 
-               lim_eng_t_test$p.value, 
-               health_ins_t_test$p.value, 
-               renter_t_test$p.value, 
-               unemploy_t_test$p.value, 
-               poverty_t_test$p.value, 
-               earnings_t_test$p.value, 
-               income_t_test$p.value, 
-               home_value_t_test$p.value, 
-               ice_t_test$p.value, 
-               land_t_test$p.value, 
-               water_t_test$p.value,
-               horizontal_t_test$p.value, 
-               shale_chisquare$p.value))
-
-p_values_corrections_t_tests <- 
-  as.data.frame(cbind(label_categories))
-colnames(p_values_corrections_t_tests) <- 
-  c("labels")
-
-p_values_corrections_t_tests$original_p <- 
-  p_values_t_tests
-
-p_values_corrections_t_tests$holm <- 
-  p.adjust(p_values_t_tests, 
-           method = "holm")
-
-write.csv(p_values_corrections_t_tests, 
-          file = "p_values_t_tests.csv")
+## BIVARIATE ANALYSES
 
 
-
-
-
-
-#### BIVARIATE ANALYSES ####
+```{r bivariate analyses}
 
 # make dataset with just analysis variables
 ks_analysis_all_income_for_loops <- 
@@ -7502,6 +7498,8 @@ ks_analysis_all_income_for_loops <-
     "shale_presence", 
     "horizontal_count")]
 ```
+
+
 
 ```{r mann-whitney u tests block groups with all income only}
 
@@ -7928,7 +7926,9 @@ write.csv(ks_stats_with_wells_income_only,
           file = "ks_stats_with_wells_income_only.csv")
 ```
 
+
 ## logistic regression and summary statistics
+
 
 ```{r loess plots for all income}
 
@@ -8099,6 +8099,252 @@ multiplot(pop_loess,
 
 
 
+```{r univariate logistic regressions}
+
+# list the dependent variable names
+dependent_variable_names <- 
+  c("pop_tot_B01001_001", 
+    "pop_dense_B01001_001_ALAND", 
+    "female_percent_B01001_026_001", 
+    "age_0_to_17_percent_B01001", 
+    "age_65_plus_percent_B01001",   
+    "aian_percent_any_race_B02010_001",   
+    "hisp_lat_percent_B03002_012_001", 
+    "white_non_hisp_lat_percent_B03002_003_001",   
+    "education_high_school_plus_percent_B15003_017_to_025",   
+    "limited_english_percent_C16002_004_007_010_013_001",   
+    "no_health_insurance_percent_B27010_017_033_050_066",   
+    "renter_occupy_percent_B25003_003_001",   
+    "unemployed_percent_B23025_005_003",   
+    "poverty_below_100_percent_C17002_002_003_001",  
+    "earnings_median_B20002_001", 
+    "income_house_median_B19013_001",   
+    "house_value_median_B25077_001",  
+    "ice_B19001",  
+    "ALAND_KM",  
+    "AWATER_KM")
+
+# make model to run all the univariable logistic regressions AT ONCE (MWAHAHA)
+univariable_logistic_model_function <- 
+  sapply(dependent_variable_names, function(x) {
+    glm(substitute(extant_swd_binary ~ indy, 
+        list(indy = as.name(x))), 
+        data = ks_analysis_all_income, 
+        family = binomial)})
+
+# run it
+univariable_logistic_model_summaries <-   # get summary
+  sapply(univariable_logistic_model_function, summary)
+univariable_logistic_Wald_intervals <-   # get confidence intervals
+  sapply(univariable_logistic_model_function, confint.default)
+univariable_logistic_model_p_values <-   # get p values
+  sapply(univariable_logistic_model_function, 
+         function(f) summary(f)$coefficients[,4])
+univariable_logistic_model_coefficients <-   # get coefficients
+  sapply(univariable_logistic_model_function, 
+         function(f) summary(f)$coefficients[,1])
+univariable_logistic_model_errors <-   # get standard errors
+  sapply(univariable_logistic_model_function, 
+         function(f) summary(f)$coefficients[,2])
+
+univariable_logistic_model_summaries
+univariable_logistic_Wald_intervals
+
+univariable_logistic_odds_ratios <- 
+  sapply(univariable_logistic_model_function, 
+         function(f) exp(summary(f)$coefficients[,1]))
+
+univariable_logistic_Wald_CIs <- 
+  sapply(univariable_logistic_model_function, 
+         function(f) exp(confint.default(f)))
+univariable_logistic_Wald_CIs
+
+
+
+# # individual regressions
+# logistic_pop_tot <- 
+#   glm(extant_swd_binary ~ 
+#         pop_tot_B01001_001, 
+#       data = ks_analysis_all_income, 
+#       family = binomial)
+# 
+# logistic_pop_dense <- 
+#   glm(extant_swd_binary ~ 
+#       pop_dense_B01001_001_ALAND, 
+#       data = ks_analysis_all_income, 
+#       family = binomial)
+# 
+# logistic_female <- 
+#   glm(extant_swd_binary ~ 
+#         female_percent_B01001_026_001, 
+#       data = ks_analysis_all_income, 
+#       family = binomial)
+# 
+# logistic_age_0_17 <- 
+#   glm(extant_swd_binary ~ 
+#         age_0_to_17_percent_B01001, 
+#       data = ks_analysis_all_income, 
+#       family = binomial)
+# 
+# logistic_age_65_plus <- 
+#   glm(extant_swd_binary ~ 
+#         age_65_plus_percent_B01001, 
+#       data = ks_analysis_all_income, 
+#       family = binomial)
+# 
+# logistic_aian <- 
+#   glm(extant_swd_binary ~ 
+#         aian_percent_any_race_B02010_001, 
+#       data = ks_analysis_all_income, 
+#       family = binomial)
+# 
+# logistic_hisp_lat <- 
+#   glm(extant_swd_binary ~ 
+#         hisp_lat_percent_B03002_012_001, 
+#       data = ks_analysis_all_income, 
+#       family = binomial)
+# 
+# logistic_white <- 
+#   glm(extant_swd_binary ~ 
+#         white_non_hisp_lat_percent_B03002_003_001, 
+#       data = ks_analysis_all_income, 
+#       family = binomial)
+# 
+# logistic_education <- 
+#   glm(extant_swd_binary ~ 
+#         education_high_school_plus_percent_B15003_017_to_025, 
+#       data = ks_analysis_all_income, 
+#       family = binomial)
+# 
+# logistic_english <- 
+#   glm(extant_swd_binary ~ 
+#         limited_english_percent_C16002_004_007_010_013_001,
+#       data = ks_analysis_all_income, 
+#       family = binomial)
+# 
+# logistic_insurance <- 
+#   glm(extant_swd_binary ~ 
+#         no_health_insurance_percent_B27010_017_033_050_066, 
+#       data = ks_analysis_all_income, 
+#       family = binomial)
+# 
+# logistic_renter_occupy <- 
+#   glm(extant_swd_binary ~ 
+#         renter_occupy_percent_B25003_003_001, 
+#       data = ks_analysis_all_income, 
+#       family = binomial)
+# 
+# logistic_unemploy <- 
+#   glm(extant_swd_binary ~ 
+#         unemployed_percent_B23025_005_003, 
+#       data = ks_analysis_all_income, 
+#       family = binomial)
+# 
+# logistic_poverty <- 
+#   glm(extant_swd_binary ~ 
+#         poverty_below_100_percent_C17002_002_003_001, 
+#       data = ks_analysis_all_income, 
+#       family = binomial)
+# 
+# logistic_earn <- 
+#   glm(extant_swd_binary ~ 
+#         earnings_median_B20002_001, 
+#       data = ks_analysis_all_income, 
+#       family = binomial)
+# 
+# logistic_income <- 
+#   glm(extant_swd_binary ~ 
+#         income_house_median_B19013_001, 
+#       data = ks_analysis_all_income, 
+#       family = binomial)
+# 
+# logistic_home <- 
+#   glm(extant_swd_binary ~ 
+#         house_value_median_B25077_001, 
+#       data = ks_analysis_all_income, 
+#       family = binomial)
+# 
+# logistic_ice <- 
+#   glm(extant_swd_binary ~ 
+#         ice_B19001, 
+#       data = ks_analysis_all_income, 
+#       family = binomial)
+# 
+# logistic_land <- 
+#   glm(extant_swd_binary ~ 
+#         ALAND_KM, 
+#       data = ks_analysis_all_income, 
+#       family = binomial)
+# 
+# logistic_water <- 
+#   glm(extant_swd_binary ~ 
+#         AWATER_KM, 
+#       data = ks_analysis_all_income, 
+#       family = binomial)
+# 
+# logistic_horiz <- 
+#   glm(extant_swd_binary ~ 
+#         horizontal_binary, 
+#       data = ks_analysis_all_income, 
+#       family = binomial)
+# 
+# logistic_shale <- 
+#   glm(extant_swd_binary ~ 
+#         shale_presence, 
+#       data = ks_analysis_all_income, 
+#       family = binomial)
+# 
+# 
+# 
+# # review model summaries
+# summary(logistic_pop_tot)
+# confint.default(logistic_pop_tot)
+# summary(logistic_pop_dense)
+# confint.default(logistic_pop_dense)
+# summary(logistic_female)
+# confint.default(logistic_female)
+# summary(logistic_age_0_17)
+# confint.default(logistic_age_0_17)
+# summary(logistic_age_65_plus)
+# confint.default(logistic_age_65_plus)
+# summary(logistic_aian)
+# confint.default(logistic_aian)
+# summary(logistic_hisp_lat)
+# confint.default(logistic_hisp_lat)
+# summary(logistic_white)
+# confint.default(logistic_white)
+# summary(logistic_education)
+# confint.default(logistic_education)
+# summary(logistic_english)
+# confint.default(logistic_english)
+# summary(logistic_insurance)
+# confint.default(logistic_insurance)
+# summary(logistic_renter_occupy)
+# confint.default(logistic_renter_occupy)
+# summary(logistic_unemploy)
+# confint.default(logistic_unemploy)
+# summary(logistic_poverty)
+# confint.default(logistic_poverty)
+# summary(logistic_earn)
+# confint.default(logistic_earn)
+# summary(logistic_income)
+# confint.default(logistic_income)
+# summary(house_value_median_B25077_001)
+# confint.default(house_value_median_B25077_001)
+# summary(logistic_ice)
+# confint.default(logistic_ice)
+# summary(logistic_land)
+# confint.default(logistic_land)
+# summary(logistic_water)
+# confint.default(logistic_water)
+# summary(logistic_shale)
+# confint.default(logistic_shale)
+# summary(logistic_horiz)
+# confint.default(logistic_horiz)
+```
+
+
+
 ```{r big logistic regressions}
 logistic_model_data <- 
   ks_analysis_all_income %>% 
@@ -8165,254 +8411,13 @@ logistic_model_big <-
              data = ks_analysis_all_income, 
              family = binomial)
 
-# list the dependent variable names
-dependent_variable_names <- 
-  c("pop_tot_B01001_001", 
-    "pop_dense_B01001_001_ALAND", 
-    "female_percent_B01001_026_001", 
-    "age_0_to_17_percent_B01001", 
-    "age_65_plus_percent_B01001",   
-    "aian_percent_any_race_B02010_001",   
-    "hisp_lat_percent_B03002_012_001", 
-    "white_non_hisp_lat_percent_B03002_003_001",   
-    "education_high_school_plus_percent_B15003_017_to_025",   
-    "limited_english_percent_C16002_004_007_010_013_001",   
-    "no_health_insurance_percent_B27010_017_033_050_066",   
-    "renter_occupy_percent_B25003_003_001",   
-    "unemployed_percent_B23025_005_003",   
-    "poverty_below_100_percent_C17002_002_003_001",  
-    "earnings_median_B20002_001", 
-    "income_house_median_B19013_001",   
-    "house_value_median_B25077_001",  
-    "ice_B19001",  
-    "ALAND_KM",  
-    "AWATER_KM")
-
-# make model to run all the univariable logistic regressions AT ONCE (MWAHAHA)
-univariable_logistic_model_function <- 
-  sapply(dependent_variable_names, function(x) {
-    glm(substitute(extant_swd_binary ~ indy, 
-        list(indy = as.name(x))), 
-        data = ks_analysis_all_income, 
-        family = binomial)})
-
-# run it
-univariable_logistic_model_summaries <-   # get summary
-  sapply(univariable_logistic_model_function, summary)
-univariable_logistic_Wald_intervals <-   # get confidence intervals
-  sapply(univariable_logistic_model_function, confint.default)
-univariable_logistic_model_p_values <-   # get p values
-  sapply(univariable_logistic_model_function, 
-         function(f) summary(f)$coefficients[,4])
-univariable_logistic_model_coefficients <-   # get coefficients
-  sapply(univariable_logistic_model_function, 
-         function(f) summary(f)$coefficients[,1])
-univariable_logistic_model_errors <-   # get standard errors
-  sapply(univariable_logistic_model_function, 
-         function(f) summary(f)$coefficients[,2])
-
-univariable_logistic_model_summaries
-univariable_logistic_Wald_intervals
-
-
-univariable_logistic_odds_ratios <- 
-  sapply(univariable_logistic_model_function, 
-         function(f) exp(summary(f)$coefficients[,1]))
-
-univariable_logistic_Wald_CIs <- 
-  sapply(univariable_logistic_model_function, 
-         function(f) exp(confint.default(f)))
-univariable_logistic_Wald_CIs
-
-
-
-# individual regressions
-logistic_pop_tot <- 
-  glm(extant_swd_binary ~ 
-        pop_tot_B01001_001, 
-      data = ks_analysis_all_income, 
-      family = binomial)
-
-logistic_pop_dense <- 
-  glm(extant_swd_binary ~ 
-      pop_dense_B01001_001_ALAND, 
-      data = ks_analysis_all_income, 
-      family = binomial)
-
-logistic_female <- 
-  glm(extant_swd_binary ~ 
-        female_percent_B01001_026_001, 
-      data = ks_analysis_all_income, 
-      family = binomial)
-
-logistic_age_0_17 <- 
-  glm(extant_swd_binary ~ 
-        age_0_to_17_percent_B01001, 
-      data = ks_analysis_all_income, 
-      family = binomial)
-
-logistic_age_65_plus <- 
-  glm(extant_swd_binary ~ 
-        age_65_plus_percent_B01001, 
-      data = ks_analysis_all_income, 
-      family = binomial)
-
-logistic_aian <- 
-  glm(extant_swd_binary ~ 
-        aian_percent_any_race_B02010_001, 
-      data = ks_analysis_all_income, 
-      family = binomial)
-
-logistic_hisp_lat <- 
-  glm(extant_swd_binary ~ 
-        hisp_lat_percent_B03002_012_001, 
-      data = ks_analysis_all_income, 
-      family = binomial)
-
-logistic_white <- 
-  glm(extant_swd_binary ~ 
-        white_non_hisp_lat_percent_B03002_003_001, 
-      data = ks_analysis_all_income, 
-      family = binomial)
-
-logistic_education <- 
-  glm(extant_swd_binary ~ 
-        education_high_school_plus_percent_B15003_017_to_025, 
-      data = ks_analysis_all_income, 
-      family = binomial)
-
-logistic_english <- 
-  glm(extant_swd_binary ~ 
-        limited_english_percent_C16002_004_007_010_013_001,
-      data = ks_analysis_all_income, 
-      family = binomial)
-
-logistic_insurance <- 
-  glm(extant_swd_binary ~ 
-        no_health_insurance_percent_B27010_017_033_050_066, 
-      data = ks_analysis_all_income, 
-      family = binomial)
-
-logistic_renter_occupy <- 
-  glm(extant_swd_binary ~ 
-        renter_occupy_percent_B25003_003_001, 
-      data = ks_analysis_all_income, 
-      family = binomial)
-
-logistic_unemploy <- 
-  glm(extant_swd_binary ~ 
-        unemployed_percent_B23025_005_003, 
-      data = ks_analysis_all_income, 
-      family = binomial)
-
-logistic_poverty <- 
-  glm(extant_swd_binary ~ 
-        poverty_below_100_percent_C17002_002_003_001, 
-      data = ks_analysis_all_income, 
-      family = binomial)
-
-logistic_earn <- 
-  glm(extant_swd_binary ~ 
-        earnings_median_B20002_001, 
-      data = ks_analysis_all_income, 
-      family = binomial)
-
-logistic_income <- 
-  glm(extant_swd_binary ~ 
-        income_house_median_B19013_001, 
-      data = ks_analysis_all_income, 
-      family = binomial)
-
-logistic_home <- 
-  glm(extant_swd_binary ~ 
-        house_value_median_B25077_001, 
-      data = ks_analysis_all_income, 
-      family = binomial)
-
-logistic_ice <- 
-  glm(extant_swd_binary ~ 
-        ice_B19001, 
-      data = ks_analysis_all_income, 
-      family = binomial)
-
-logistic_land <- 
-  glm(extant_swd_binary ~ 
-        ALAND_KM, 
-      data = ks_analysis_all_income, 
-      family = binomial)
-
-logistic_water <- 
-  glm(extant_swd_binary ~ 
-        AWATER_KM, 
-      data = ks_analysis_all_income, 
-      family = binomial)
-
-logistic_horiz <- 
-  glm(extant_swd_binary ~ 
-        horizontal_binary, 
-      data = ks_analysis_all_income, 
-      family = binomial)
-
-logistic_shale <- 
-  glm(extant_swd_binary ~ 
-        shale_presence, 
-      data = ks_analysis_all_income, 
-      family = binomial)
-
-
-
-# review model summaries
-summary(logistic_pop_tot)
-confint.default(logistic_pop_tot)
-summary(logistic_pop_dense)
-confint.default(logistic_pop_dense)
-summary(logistic_female)
-confint.default(logistic_female)
-summary(logistic_age_0_17)
-confint.default(logistic_age_0_17)
-summary(logistic_age_65_plus)
-confint.default(logistic_age_65_plus)
-summary(logistic_aian)
-confint.default(logistic_aian)
-summary(logistic_hisp_lat)
-confint.default(logistic_hisp_lat)
-summary(logistic_white)
-confint.default(logistic_white)
-summary(logistic_education)
-confint.default(logistic_education)
-summary(logistic_english)
-confint.default(logistic_english)
-summary(logistic_insurance)
-confint.default(logistic_insurance)
-summary(logistic_renter_occupy)
-confint.default(logistic_renter_occupy)
-summary(logistic_unemploy)
-confint.default(logistic_unemploy)
-summary(logistic_poverty)
-confint.default(logistic_poverty)
-summary(logistic_earn)
-confint.default(logistic_earn)
-summary(logistic_income)
-confint.default(logistic_income)
-summary(house_value_median_B25077_001)
-confint.default(house_value_median_B25077_001)
-summary(logistic_ice)
-confint.default(logistic_ice)
-summary(logistic_land)
-confint.default(logistic_land)
-summary(logistic_water)
-confint.default(logistic_water)
-summary(logistic_shale)
-confint.default(logistic_shale)
-summary(logistic_horiz)
-confint.default(logistic_horiz)
-
 
 # automated choice of best fit
 logistic_matrix <- 
   data.matrix(logistic_model_data)
 
-output_variable <- ks_analysis_all_income$extant_swd_binary
+output_variable <- 
+  ks_analysis_all_income$extant_swd_binary
 
 test_for_automatic_selection <- 
   as.data.frame(cbind(logistic_matrix,output_variable))
@@ -8540,10 +8545,11 @@ probabilities <-
 predicted.classes <- 
   ifelse(probabilities > 0.5, "yes", "no")
 head(predicted.classes)
+```
 
 
 
-# #### Moran's I ####
+```{r moran's i}
 # # isolate extant swd wells
 # ks_extant_swd_working <- 
 #   ks_swd_working[which(ks_swd_working$extant_swd == 1),]
@@ -8564,47 +8570,46 @@ head(predicted.classes)
 # weights <- 1/as.matrix(dist(coordinates(ks_extant_swd_for_moran)))
 # diag(weights) <- 0
 # moran.test(ks_extant_swd_for_moran$lead,mat2listw(w))
-
-
-# Predict the probability (p) of swd well presence
-probabilities <- predict(logistic_model, type = "response")
-
-predicted.classes <- ifelse(probabilities > 0.5, "yes", "no")
-head(predicted.classes)
-
-summary(logistic_model)
-
-predictors <- 
-  colnames(logistic_model_data)
-
-logistic_data_for_little_plots <- 
-  logistic_model_data %>%
-  mutate(logit = log(probabilities/(1-probabilities))) %>%
-  gather(key = "predictors", value = "predictor.value", -logit)
-
-ggplot(logistic_data_for_little_plots_no_tinies, 
-       aes(predictor.value, logit)) +
-  geom_point(size = 0.5, alpha = 0.5) +
-  geom_smooth(method = "loess") + 
-  theme_bw() + 
-  facet_wrap(~predictors, 
-             scales = "free_x")
-
-
-
-logistic_model_pop_tot <- 
-  glm(extant_swd_binary ~ 
-        pop_tot_B01001_001, 
-      data = ks_analysis_all_income, 
-      family = binomial)
-
-summary(logistic_model_pop_tot)
 ```
 
 # ABANDON HOPE ALL YE WHO ENTER HERE, WHERE OLD CODE GOES TO DIE
 
 ```{r dead code, eval=FALSE, include=FALSE}
- 
+
+# # Predict the probability (p) of swd well presence
+# probabilities <- predict(logistic_model, type = "response")
+# 
+# predicted.classes <- ifelse(probabilities > 0.5, "yes", "no")
+# head(predicted.classes)
+# 
+# summary(logistic_model)
+# 
+# predictors <- 
+#   colnames(logistic_model_data)
+# 
+# logistic_data_for_little_plots <- 
+#   logistic_model_data %>%
+#   mutate(logit = log(probabilities/(1-probabilities))) %>%
+#   gather(key = "predictors", value = "predictor.value", -logit)
+# 
+# ggplot(logistic_data_for_little_plots_no_tinies, 
+#        aes(predictor.value, logit)) +
+#   geom_point(size = 0.5, alpha = 0.5) +
+#   geom_smooth(method = "loess") + 
+#   theme_bw() + 
+#   facet_wrap(~predictors, 
+#              scales = "free_x")
+# 
+# 
+# 
+# logistic_model_pop_tot <- 
+#   glm(extant_swd_binary ~ 
+#         pop_tot_B01001_001, 
+#       data = ks_analysis_all_income, 
+#       family = binomial)
+# 
+# summary(logistic_model_pop_tot)
+#
 # # horizontal well summary statistics
 # sum(ks_analysis_all_income$horizontal_binary[  # swd
 #   which(ks_analysis_all_income$extant_swd_binary == 1)])
@@ -8618,21 +8623,21 @@ summary(logistic_model_pop_tot)
 # 
 # sum(ks_analysis_all_income$shale_presence[   # no swd
 #   which(ks_analysis_all_income$extant_swd_binary == 0)])
-
+#
 # horizontal_loess <- 
 #   logitloess(ks_analysis_all_income$horizontal_count, 
 #              ks_analysis_all_income$extant_swd_binary, 
 #              "Horizontal Wells", 
 #              "Horizontal well count") 
-
+#
 # shale_loess <- 
 #   logitloess(ks_analysis_all_income$shale_presence, 
 #              ks_analysis_all_income$extant_swd_binary, 
 #              "Mississippian Lime Play", 
 #              "Presence on the play")
-
-
-
+#
+#
+#
 # mydata <- PimaIndiansDiabetes2 %>%
 #   dplyr::select_if(is.numeric) 
 # predictors <- colnames(mydata)
@@ -8647,9 +8652,9 @@ summary(logistic_model_pop_tot)
 #   geom_smooth(method = "loess") + 
 #   theme_bw() + 
 #   facet_wrap(~predictors, scales = "free_y")
-
-
-
+#
+#
+#
 # "GEOID",
 # "ALAND_KM",
 # "AWATER_KM",
