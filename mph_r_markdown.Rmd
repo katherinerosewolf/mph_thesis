@@ -2071,6 +2071,9 @@ write.csv(acs_geo_cats,
 
 
 #### creating the semi-final well list ####
+
+# load file to start from here
+load(file = "ks_working_with_block_groups.rdata")
 # load the dataframe to start from here
 load(file = "raw_manual_well_assignments_dataframe.rdata")
 
@@ -3183,6 +3186,8 @@ write.csv(ks_analysis_dataset,
 
 
 ```{r make the little datasets from the big one}
+# load dataset to start from here
+load(file = "ks_analysis_dataset.rdata")
 
 # make working datset from the full one
 ks_analysis_all <- ks_analysis_dataset
@@ -3214,7 +3219,7 @@ write.csv(all_map,
 # write urban dataset for mapping
 urban_tract_map <- 
   ks_analysis_all %>% 
-  select(GEOID, ruca_prime, ruca_second, urban_binary)
+  select(GEOID, ruca_prime, ruca_second)
 write.csv(urban_tract_map, file = "urban_tract_map.csv")
 
 ```
@@ -6950,7 +6955,7 @@ horizontal_t_test_all_income
 ```
 
 
-```{r t-tests all populated census tracts}
+```{r t-tests populated block groups}
 
 pop_t_test_populated <-
   t.test(pop_tot_B01001_001 ~ extant_swd_binary,
@@ -7063,7 +7068,7 @@ water_t_test_populated
 ```
 
 
-```{r t tests populated no urban areas, eval=FALSE, include=FALSE}
+```{r t tests populated no urban, eval=FALSE, include=FALSE}
 
 pop_t_test_no_urban <-
   t.test(pop_tot_B01001_001 ~ extant_swd_binary,
