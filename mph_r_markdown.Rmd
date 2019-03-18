@@ -3184,16 +3184,13 @@ save(ks_analysis_dataset,
      file = "ks_analysis_dataset.rdata")
 write.csv(ks_analysis_dataset, 
           file = "ks_analysis_dataset.csv")
-
-# load well data
-load(file = "ks_swd_working.rdata")
+```
 
 
 
+```{r make the little datasets from the big one}
 
-#### horizontal count for all census tracts ####
-# sum(ks_analysis_dataset$horizontal_count)
-
+# make working datset from the full one
 ks_analysis_all <- ks_analysis_dataset
 
 # remove block groups with no population 
@@ -3213,6 +3210,19 @@ save(ks_analysis_all,
      file = "ks_analysis_all.rdata")
 write.csv(ks_analysis_all, 
           file = "ks_analysis_all.csv")
+
+# write big dataset for mapping
+all_map <- 
+  ks_analysis_all
+write.csv(all_map, 
+          file = "all_map.csv")
+
+# write urban dataset for mapping
+urban_tract_map <- 
+  ks_analysis_all %>% 
+  select(GEOID, ruca_prime, ruca_second, urban_binary)
+write.csv(urban_tract_map, file = "urban_tract_map.csv")
+
 ```
 
 
@@ -3225,7 +3235,8 @@ load(file = "ks_analysis_all.rdata")
 ```
 
 
-```{r analyses}
+
+```{r count missing values}
 
 # count NAs in ks_analysis_populated to total the missing values
 missing_value_totals <- 
@@ -3246,8 +3257,6 @@ write.csv(missing_value_totals,
 
 
 ```{r correlation matrix}
-
-#### CORRELATION TABLE ####
 
 # make dataframe for the correlation dataset
 correlation_matrix_data  <-  
@@ -3273,8 +3282,7 @@ correlation_matrix_data  <-
     "house_value_median_B25077_001", 
     "ice_B19001",
     "ALAND_KM", 
-    "AWATER_KM", 
-    "urban_binary")]
+    "AWATER_KM")]
 
 
 # fix names to make them prettier on the heatmap
@@ -3299,8 +3307,7 @@ colnames(correlation_matrix_data) <- c("GEOID",
                                        "Home value", 
                                        "Income concentration at the extremes",
                                        "Land area", 
-                                       "Water area", 
-                                       "Urbanicity")
+                                       "Water area")
 
 # reorder the columns
 correlation_matrix_data <- 
@@ -3324,11 +3331,8 @@ correlation_matrix_data <-
                             "Age > 64", 
                             "Age < 18", 
                             "Female", 
-                            "Urbanicity", 
                             "Population density",
                             "Total population")]
-
-
 
 # make dataframe of rows with NAs in them
 na_rows_correlation_matrix_data <- 
@@ -3345,21 +3349,21 @@ correlation_matrix_data_complete <-
   correlation_matrix_data[
     complete.cases(correlation_matrix_data), ]
 
-# create the correlation matrix with all observations
+# create the correlation matrix with all observations 
+# uses all populated tracts
 # rounds to 2 decimal places
 correlation_matrix  <-  
-  round(cor(correlation_matrix_data[,2:23], 
+  round(cor(correlation_matrix_data_populated[,2:22], 
             method = "spearman", 
             use = "pairwise.complete.obs"), 
         2) 
-
 
 # write to file
 write.csv(correlation_matrix, file = "correlation_matrix.csv")
 
 # count observations going into the correlation matrix
 counts_pairwise_correlations  <-  
-  pairwiseCount(correlation_matrix_data_complete[,2:23], 
+  pairwiseCount(correlation_matrix_data_complete[,2:22], 
                  y = NULL, 
                  diagonal=TRUE)
 
@@ -3474,6 +3478,8 @@ ggheatmap +
                                title.position = "top", title.hjust = 0.5))
 ```
 
+
+
 ```{r make complete cases based on income}
 #### make post-correlation dataset excluding land area, % Hisp/Lat, median earnings, % in poverty, and household value
 
@@ -3523,6 +3529,7 @@ length(ks_analysis_all_income$horizontal_count[  # n = 1807
 length(ks_analysis_all_income$horizontal_count[   # n = 486
   which(ks_analysis_all_income$extant_swd_binary == 1)])
 ```
+
 
 
 ```{r qq and density plots block groups with income, eval=FALSE, include=FALSE}
@@ -5977,6 +5984,7 @@ qqline(ks_analysis_all_income$AWATER_KM[
 ```
 
 
+
 ```{r box plots block groups with income, eval=FALSE, include=FALSE}
 
 # make dataset for box plotting
@@ -6612,6 +6620,7 @@ list_of_boxplots <-
 ```
 
 
+
 ```{r levene tests block groups with income, eval=FALSE, include=FALSE}
 # levene's test homogenous variances
 pop_levene <- 
@@ -6836,238 +6845,242 @@ counts_by_urban <-
 ```
 
 
+
 ```{r t tests block groups with income, eval=FALSE, include=FALSE}
 
 pop_t_test_all_income <-
   t.test(pop_tot_B01001_001 ~ extant_swd_binary,
          data = ks_analysis_all_income)
-pop_t_test
+pop_t_test_all_income
 
-pop_dense_t_test <- 
+pop_dense_t_test_all_income <- 
   t.test(pop_dense_B01001_001_ALAND ~ extant_swd_binary,
          data = ks_analysis_all_income)
-pop_dense_t_test
+pop_dense_t_test_all_income
   
-female_t_test <-
+female_t_test_all_income <-
   t.test(female_percent_B01001_026_001 ~ extant_swd_binary,
          data = ks_analysis_all_income)
-female_t_test
+female_t_test_all_income
 
-age_18_t_test <- 
+age_18_t_test_all_income <- 
   t.test(age_0_to_17_percent_B01001 ~ extant_swd_binary,
          data = ks_analysis_all_income)
-age_18_t_test
+age_18_t_test_all_income
 
-age_65_t_test <- 
+age_65_t_test_all_income <- 
   t.test(age_65_plus_percent_B01001 ~ extant_swd_binary,
          data = ks_analysis_all_income)
-age_65_t_test
+age_65_t_test_all_income
 
-aian_t_test <- 
+aian_t_test_all_income <- 
   t.test(aian_percent_any_race_B02010_001 ~ extant_swd_binary,
          data = ks_analysis_all_income)
-aian_t_test
+aian_t_test_all_income
 
-hisp_lat_t_test <- 
+hisp_lat_t_test_all_income <- 
   t.test(hisp_lat_percent_B03002_012_001 ~ extant_swd_binary,
          data = ks_analysis_all_income)
-hisp_lat_t_test
+hisp_lat_t_test_all_income
 
-black_t_test <- 
+black_t_test_all_income <- 
   t.test(black_percent_B03002_004_001 ~ extant_swd_binary,
          data = ks_analysis_all_income)
-black_t_test
+black_t_test_all_income
 
-white_t_test <- 
+white_t_test_all_income <- 
   t.test(white_non_hisp_lat_percent_B03002_003_001 ~ extant_swd_binary,
          data = ks_analysis_all_income)
-white_t_test
+white_t_test_all_income
 
-education_t_test <-
+education_t_test_all_income <-
   t.test(education_high_school_plus_percent_B15003_017_to_025 ~ 
            extant_swd_binary,
          data = ks_analysis_all_income)
-education_t_test
+education_t_test_all_income
 
-lim_eng_t_test <- 
+lim_eng_t_test_all_income <- 
   t.test(limited_english_percent_C16002_004_007_010_013_001 ~ 
            extant_swd_binary,
          data = ks_analysis_all_income)
-lim_eng_t_test
+lim_eng_t_test_all_income
 
-health_ins_t_test <-
+health_ins_t_test_all_income <-
   t.test(no_health_insurance_percent_B27010_017_033_050_066 ~ 
            extant_swd_binary,
          data = ks_analysis_all_income)
-health_ins_t_test
+health_ins_t_test_all_income
 
-renter_t_test <- 
+renter_t_test_all_income <- 
   t.test(renter_occupy_percent_B25003_003_001 ~ 
            extant_swd_binary,
          data = ks_analysis_all_income)
-renter_t_test
+renter_t_test_all_income
 
-unemploy_t_test <- 
+unemploy_t_test_all_income <- 
   t.test(unemployed_percent_B23025_005_003 ~ extant_swd_binary,
          data = ks_analysis_all_income)
-unemploy_t_test
+unemploy_t_test_all_income
 
-poverty_t_test <- 
+poverty_t_test_all_income <- 
   t.test(poverty_below_100_percent_C17002_002_003_001 ~ extant_swd_binary,
          data = ks_analysis_all_income)
-poverty_t_test
+poverty_t_test_all_income
 
-earnings_t_test <- 
+earnings_t_test_all_income <- 
   t.test(earnings_median_B20002_001 ~ extant_swd_binary,
          data = ks_analysis_all_income)
-earnings_t_test
+earnings_t_test_all_income
 
-income_t_test <- 
+income_t_test_all_income <- 
   t.test(income_house_median_B19013_001 ~ extant_swd_binary,
          data = ks_analysis_all_income)
-income_t_test
+income_t_test_all_income
 
-home_value_t_test <- 
+home_value_t_test_all_income <- 
   t.test(house_value_median_B25077_001 ~ extant_swd_binary,
          data = ks_analysis_all_income)
-home_value_t_test
+home_value_t_test_all_income
 
-ice_t_test <- 
+ice_t_test_all_income <- 
   t.test(ice_B19001 ~ extant_swd_binary,
          data = ks_analysis_all_income)
-ice_t_test
+ice_t_test_all_income
 
-land_t_test <- 
+land_t_test_all_income <- 
   t.test(ALAND_KM ~ extant_swd_binary,
          data = ks_analysis_all_income)
-land_t_test
+land_t_test_all_income
 
-water_t_test <- 
+water_t_test_all_income <- 
   t.test(AWATER_KM ~ extant_swd_binary,
          data = ks_analysis_all_income)
-water_t_test
+water_t_test_all_income
 
-horizontal_t_test <- 
+horizontal_t_test_all_income <- 
   t.test(horizontal_count ~ extant_swd_binary,
          data = ks_analysis_all_income)
-horizontal_t_test
+horizontal_t_test_all_income
 
 ```
+
 
 
 ```{r t-tests all populated census tracts}
 
-pop_t_test <-
+pop_t_test_populated <-
   t.test(pop_tot_B01001_001 ~ extant_swd_binary,
          data = ks_analysis_populated)
-pop_t_test
+pop_t_test_populated
 
-pop_dense_t_test <- 
+pop_dense_t_test_populated <- 
   t.test(pop_dense_B01001_001_ALAND ~ extant_swd_binary,
          data = ks_analysis_populated)
-pop_dense_t_test
+pop_dense_t_test_populated
 
-female_t_test <-
+female_t_test_populated <-
   t.test(female_percent_B01001_026_001 ~ extant_swd_binary,
          data = ks_analysis_populated)
-female_t_test
+female_t_test_populated
 
-age_18_t_test <- 
+age_18_t_test_populated <- 
   t.test(age_0_to_17_percent_B01001 ~ extant_swd_binary,
          data = ks_analysis_populated)
-age_18_t_test
+age_18_t_test_populated
 
-age_65_t_test <- 
+age_65_t_test_populated <- 
   t.test(age_65_plus_percent_B01001 ~ extant_swd_binary,
          data = ks_analysis_populated)
-age_65_t_test
+age_65_t_test_populated
 
-aian_t_test <- 
+aian_t_test_populated <- 
   t.test(aian_percent_any_race_B02010_001 ~ extant_swd_binary,
          data = ks_analysis_populated)
-aian_t_test
+aian_t_test_populated
 
-hisp_lat_t_test <- 
+hisp_lat_t_test_populated <- 
   t.test(hisp_lat_percent_B03002_012_001 ~ extant_swd_binary,
          data = ks_analysis_populated)
-hisp_lat_t_test
+hisp_lat_t_test_populated
 
-black_t_test <- 
+black_t_test_populated <- 
   t.test(black_percent_B03002_004_001 ~ extant_swd_binary,
          data = ks_analysis_populated)
-black_t_test
+black_t_test_populated
 
-white_t_test <- 
+white_t_test_populated <- 
   t.test(white_non_hisp_lat_percent_B03002_003_001 ~ extant_swd_binary,
          data = ks_analysis_populated)
-white_t_test
+white_t_test_populated
 
-education_t_test <-
+education_t_test_populated <-
   t.test(education_high_school_plus_percent_B15003_017_to_025 ~ 
            extant_swd_binary,
          data = ks_analysis_populated)
-education_t_test
+education_t_test_populated
 
-lim_eng_t_test <- 
+lim_eng_t_test_populated <- 
   t.test(limited_english_percent_C16002_004_007_010_013_001 ~ 
            extant_swd_binary,
          data = ks_analysis_populated)
-lim_eng_t_test
+lim_eng_t_test_populated
 
-health_ins_t_test <-
+health_ins_t_test_populated <-
   t.test(no_health_insurance_percent_B27010_017_033_050_066 ~ 
            extant_swd_binary,
          data = ks_analysis_populated)
-health_ins_t_test
+health_ins_t_test_populated
 
-renter_t_test <- 
+renter_t_test_populated <- 
   t.test(renter_occupy_percent_B25003_003_001 ~ 
            extant_swd_binary,
          data = ks_analysis_populated)
-renter_t_test
+renter_t_test_populated
 
-unemploy_t_test <- 
+unemploy_t_test_populated <- 
   t.test(unemployed_percent_B23025_005_003 ~ extant_swd_binary,
          data = ks_analysis_populated)
-unemploy_t_test
+unemploy_t_test_populated
 
-poverty_t_test <- 
+poverty_t_test_populated <- 
   t.test(poverty_below_100_percent_C17002_002_003_001 ~ extant_swd_binary,
          data = ks_analysis_populated)
-poverty_t_test
+poverty_t_test_populated
 
-earnings_t_test <- 
+earnings_t_test_populated <- 
   t.test(earnings_median_B20002_001 ~ extant_swd_binary,
          data = ks_analysis_populated)
-earnings_t_test
+earnings_t_test_populated
 
-income_t_test <- 
+income_t_test_populated <- 
   t.test(income_house_median_B19013_001 ~ extant_swd_binary,
          data = ks_analysis_populated)
-income_t_test
+income_t_test_populated
 
-home_value_t_test <- 
+home_value_t_test_populated <- 
   t.test(house_value_median_B25077_001 ~ extant_swd_binary,
          data = ks_analysis_populated)
-home_value_t_test
+home_value_t_test_populated
 
-ice_t_test <- 
+ice_t_test_populated <- 
   t.test(ice_B19001 ~ extant_swd_binary,
          data = ks_analysis_populated)
-ice_t_test
+ice_t_test_populated
 
-land_t_test <- 
+land_t_test_populated <- 
   t.test(ALAND_KM ~ extant_swd_binary,
          data = ks_analysis_populated)
-land_t_test
+land_t_test_populated
 
-water_t_test <- 
+water_t_test_populated <- 
   t.test(AWATER_KM ~ extant_swd_binary,
          data = ks_analysis_populated)
-water_t_test
+water_t_test_populated
 ```
 
-```{r t tests without urban areas, eval=FALSE, include=FALSE}
+
+
+```{r t tests populated no urban areas, eval=FALSE, include=FALSE}
 
 pop_t_test_no_urban <-
   t.test(pop_tot_B01001_001 ~ extant_swd_binary,
@@ -7181,8 +7194,7 @@ water_t_test_no_urban
 
 
 
-
-```{r summary statistics no urban, eval=FALSE, include=FALSE}
+```{r summary statistics populated no urban, eval=FALSE, include=FALSE}
 # calculate basic summary statistics
 # select variables to summarise
 summary_statistics_no_urban <- 
@@ -7384,65 +7396,11 @@ p_values_corrections_t_tests_no_urban$holm <-
 
 write.csv(p_values_corrections_t_tests_no_urban, 
           file = "p_values_t_tests_no_urban.csv")
+```
 
 
 
-
-
-
-urban_tract_map <- ks_analysis_dataset %>% 
-  select(GEOID, ruca_prime, ruca_second, urban_binary)
-
-write.csv(urban_tract_map, file = "urban_tract_map.csv")
-
-all_map <- ks_analysis_dataset
-
-write.csv(all_map, file = "all_map.csv")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+```{r things}
 
 # collect p-values for correction
 label_categories <- c("Total population", 
