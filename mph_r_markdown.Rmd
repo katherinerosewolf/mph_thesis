@@ -404,14 +404,12 @@ load(file = "ks_block_group_tract_concordance.rdata")
 ```
 
 
-
 ```{r join ruca to block groups} 
 
 # join ruca by tract to block groups
 ruca_block_group <- ks_block_group_tract_concordance %>% 
   left_join(kansas_ruca, by = "tract_geoid")
 ```
-
 
 
 ```{r lime data work}
@@ -437,7 +435,6 @@ working_lime_data <-
   within(working_lime_data,
          shale_presence[is.na(shale_presence)] <- 0)
 ```
-
 
 
 ```{r horizontal well data work}
@@ -518,7 +515,6 @@ write.csv(horizontal_wells_from_2010_exclusions,
 
 # HERE WE PORT THE HORIZONTAL WELL DATA TO ARCGIS FOR MAPPING FUN.  THE END.
 ```
-
 
 
 ```{r uic data work}
@@ -654,7 +650,6 @@ swd_fluid_totals_by_well <-
 write.csv(swd_fluid_totals_by_well,
           file = "swd_fluid_totals_by_well.csv")
 ```
-
 
 
 ```{r select acs data}
@@ -1398,7 +1393,6 @@ write.csv(acs_select_geo, file = "acs_select_geo.csv")
 ```
   
 
-  
 ```{r construct ACS variables}
 
 # load data if necessary
@@ -1860,7 +1854,6 @@ save(acs_geo_cats,
 write.csv(acs_geo_cats,
           file = "acs_geo_cats.csv")
 ```
-
 
 
 ```{r well data work}
@@ -3226,15 +3219,12 @@ write.csv(urban_tract_map, file = "urban_tract_map.csv")
 
 ```
 
-
 # ANALYSES BEGIN HERE
-
 
 ```{r load necessary datasets}
 load(file = "ks_analysis_populated.rdata")
 load(file = "ks_analysis_all.rdata")
 ```
-
 
 
 ```{r count missing values}
@@ -3254,7 +3244,6 @@ save(missing_value_totals,
 write.csv(missing_value_totals, 
           file = "missing_value_totals.csv")
 ```
-
 
 
 ```{r correlation matrix}
@@ -3480,7 +3469,6 @@ ggheatmap +
 ```
 
 
-
 ```{r make complete cases based on income}
 #### make post-correlation dataset excluding land area, % Hisp/Lat, median earnings, % in poverty, and household value
 
@@ -3530,7 +3518,6 @@ length(ks_analysis_all_income$horizontal_count[  # n = 1807
 length(ks_analysis_all_income$horizontal_count[   # n = 486
   which(ks_analysis_all_income$extant_swd_binary == 1)])
 ```
-
 
 
 ```{r qq and density plots block groups with income, eval=FALSE, include=FALSE}
@@ -5985,7 +5972,6 @@ qqline(ks_analysis_all_income$AWATER_KM[
 ```
 
 
-
 ```{r box plots block groups with income, eval=FALSE, include=FALSE}
 
 # make dataset for box plotting
@@ -6621,7 +6607,6 @@ list_of_boxplots <-
 ```
 
 
-
 ```{r levene tests block groups with income, eval=FALSE, include=FALSE}
 # levene's test homogenous variances
 pop_levene <- 
@@ -6755,7 +6740,6 @@ horizontal_levene <-
 ```
 
 
-
 ```{r urban chi-square tests populated block groups, eval=FALSE, include=FALSE}
 #### chi-square tests
 # chi-square test for urbanicity (broadly defined)
@@ -6845,7 +6829,6 @@ counts_by_urban <-
   summarise(well_count_thing <- 
               sum(extant_swd_count))
 ```
-
 
 
 ```{r t tests block groups with income, eval=FALSE, include=FALSE}
@@ -6967,7 +6950,6 @@ horizontal_t_test_all_income
 ```
 
 
-
 ```{r t-tests all populated census tracts}
 
 pop_t_test_populated <-
@@ -7079,7 +7061,6 @@ water_t_test_populated <-
          data = ks_analysis_populated)
 water_t_test_populated
 ```
-
 
 
 ```{r t tests populated no urban areas, eval=FALSE, include=FALSE}
@@ -7260,7 +7241,6 @@ p_values_corrections_t_test_no_urbans$holm <-
 write.csv(p_values_corrections_t_test_no_urbans, 
           file = "p_values_t_tests.csv")
 ```
-
 
 
 ```{r summary statistics populated no urban, eval=FALSE, include=FALSE}
@@ -7467,9 +7447,7 @@ write.csv(p_values_corrections_t_tests_no_urban,
           file = "p_values_t_tests_no_urban.csv")
 ```
 
-
 ## bivariate analyses
-
 
 ```{r bivariate analyses data setup}
 
@@ -7499,7 +7477,6 @@ ks_analysis_all_income_for_loops <-
     "ALAND_KM", 
     "AWATER_KM")]
 ```
-
 
 
 ```{r mann-whitney u tests block groups with all income only}
@@ -7786,7 +7763,6 @@ write.csv(p_values_wilcox,
 ```
 
 
-
 ```{r summary statistics block groups with income only}
 
 # calculate basic summary statistics   # select variables to summarise
@@ -7927,9 +7903,7 @@ write.csv(ks_stats_with_wells_income_only,
           file = "ks_stats_with_wells_income_only.csv")
 ```
 
-
 ## logistic regression and summary statistics
-
 
 ```{r loess plots for all income}
 
@@ -8097,7 +8071,6 @@ multiplot(pop_loess,
                             13,14,15,16,
                             17,18,19,20), nrow=5, byrow=TRUE))
 ```
-
 
 
 ```{r univariate logistic regressions}
@@ -8386,7 +8359,6 @@ abline(h = 0, lty = 2)
 ```
 
 
-
 ```{r big logistic regressions}
 logistic_model_data <- 
   ks_analysis_all_income %>% 
@@ -8533,9 +8505,7 @@ second_best_glm_run <-
 second_best_glm_run
 ```
 
-
 ## Moran's I
-
 
 ```{r moran's i}
 # # isolate extant swd wells
@@ -8560,9 +8530,7 @@ second_best_glm_run
 # moran.test(ks_extant_swd_for_moran$lead,mat2listw(w))
 ```
 
-
 # ABANDON HOPE ALL YE WHO ENTER HERE, WHERE OLD CODE GOES TO DIE
-
 
 ```{r dead code, eval=FALSE, include=FALSE}
 # # Predict the probability (p) of swd well presence
