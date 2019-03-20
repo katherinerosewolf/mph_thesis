@@ -2003,10 +2003,52 @@ write.csv(acs_geo_cats,
 # write.csv(ks_working_with_block_groups,
 #      file = "ks_working_with_block_groups.csv")
 
+```
 
 
+```{r production well work}
+load(file = "ks_working_with_block_groups.rdata")
+
+# make production dataset (?)
+ks_production <- 
+  ks_working_with_block_groups
+
+unique_statii <- 
+  ks_production %>% 
+  select(STATUS) %>% 
+  unique() %>% 
+  arrange(STATUS)
+
+# write.csv(unique_statii, 
+#           file = "unique_statii.csv")
+
+# I assigned the statuses manually outside of R, so
+# this reads them back into R
+unique_statii_assigned <- 
+  read_csv(file = "unique_statii_assigned.csv")
+
+# list statii assigned to production
+production_statii <- 
+  unique_statii_assigned %>% 
+  select(STATUS, PRODUCTION) %>% 
+  filter(PRODUCTION == "P") %>% 
+  pull(STATUS)
+
+question_production_statii <-
+  unique_statii_assigned %>% 
+  select(STATUS, PRODUCTION) %>% 
+  filter(PRODUCTION == "M") %>% 
+  pull(STATUS)
+
+not_production_statii <-
+  unique_statii_assigned %>% 
+  select(STATUS, PRODUCTION) %>% 
+  filter(PRODUCTION == "N") %>% 
+  pull(STATUS)
+```
 
 
+```{r assigining saltwater disposal wells}
 # #### investigating rows based on comments ####
 # load file to start from here
 # load(file = "ks_working_with_block_groups.rdata")
