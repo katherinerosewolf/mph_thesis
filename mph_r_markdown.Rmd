@@ -654,7 +654,7 @@ write.csv(swd_fluid_totals_by_well,
 ```
 
 
-```{r select acs data}
+```{r select acs data, eval=FALSE, include=FALSE}
 
 # make working acs
 working_acs <-
@@ -1855,7 +1855,14 @@ save(acs_geo_cats,
 # make constructed variables into .csv
 write.csv(acs_geo_cats,
           file = "acs_geo_cats.csv")
+
 ```
+
+
+```{r load acs data to avoid that chunk}
+load(file = "acs_geo_cats.rdata")
+```
+
 
 
 ```{r well data work}
@@ -12151,23 +12158,6 @@ abline(h = 0, lty = 2)
 
 
 ```{r big logistic regressions}
-logistic_model_data <- 
-  ks_analysis_all_income %>% 
-         c("pop_dense_B01001_001_ALAND", 
-         "female_percent_B01001_026_001",
-         "aian_percent_any_race_B02010_001", 
-         "white_non_hisp_lat_percent_B03002_003_001", 
-         "age_0_to_17_percent_B01001", 
-         "age_65_plus_percent_B01001", 
-         "education_high_school_plus_percent_B15003_017_to_025", 
-         "limited_english_percent_C16002_004_007_010_013_001", 
-         "no_health_insurance_percent_B27010_017_033_050_066", 
-         "renter_occupy_percent_B25003_003_001", 
-         "unemployed_percent_B23025_005_003", 
-         "income_house_median_B19013_001", 
-         "shale_presence", 
-         "horizontal_binary")
-
 logistic_model_revised_data <- 
   ks_analysis_populated %>% 
   c("pop_dense_B01001_001_ALAND", 
@@ -12192,13 +12182,14 @@ logistic_model_revised_data <-
                age_65_plus_percent_B01001 + 
                white_non_hisp_lat_percent_B03002_003_001 +
                education_high_school_plus_percent_B15003_017_to_025 + 
-    "no_health_insurance_percent_B27010_017_033_050_066 + 
-    "renter_occupy_percent_B25003_003_001 + 
-    "unemployed_percent_B23025_005_003 + 
-    "ice_B19001 +
-    "prod_count + 
-    "ALAND_KM +
-    "AWATER_KM"
+               no_health_insurance_percent_B27010_017_033_050_066 + 
+               renter_occupy_percent_B25003_003_001 + 
+               unemployed_percent_B23025_005_003 + 
+               ice_B19001 +
+               prod_count + 
+               ALAND_KM +
+               AWATER_KM, 
+             data = ks_analysis_populated)
 
   
 
