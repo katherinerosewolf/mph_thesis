@@ -2006,7 +2006,7 @@ write.csv(acs_geo_cats,
 ```
 
 
-```{r production well work}
+```{r production well data work}
 load(file = "ks_working_with_block_groups.rdata")
 
 # make production dataset (?)
@@ -2018,6 +2018,12 @@ unique_statii <-
   select(STATUS) %>% 
   unique() %>% 
   arrange(STATUS)
+
+unique_statii_two <- 
+  ks_production %>% 
+  select(STATUS2) %>% 
+  unique() %>% 
+  arrange(STATUS2)
 
 # write.csv(unique_statii, 
 #           file = "unique_statii.csv")
@@ -2045,6 +2051,45 @@ not_production_statii <-
   select(STATUS, PRODUCTION) %>% 
   filter(PRODUCTION == "N") %>% 
   pull(STATUS)
+
+# filter according to production statii
+ks_production_only <- 
+  ks_production %>% 
+  filter(STATUS %in% 
+           production_statii)
+
+# nrow(ks_production_only)
+
+# limit to those with APIs
+ks_prod_api <- 
+  ks_production_only %>% 
+  filter(!is.na(API_NUMBER))
+
+# limit to those with unique apis
+ks_prod_unique_api <- 
+  ks_prod_api %>% 
+  arrange(desc(API_NUMBER)) %>% 
+  distinct(API_NUMBER_SIMPLE, 
+           .keep_all = TRUE)
+
+# limit to those with unique lat/longs
+ks_prod_api_lat_long <- 
+  ks_prod_unique_api %>% 
+  distinct(LATITUDE, LONGITUDE, 
+           .keep_all = TRUE)
+
+# count per block group
+prod_block_group <- 
+  ks_prod_api_lat_long %>% 
+  group_by(GEOID) %>% 
+  count() %>%
+  rename(prod_count = n)
+
+View(prod_block_group)
+
+save(prod_block_group, 
+     file = "prod_block_group.rdata")
+
 ```
 
 
@@ -2912,15 +2957,15 @@ just_swd <-
 # save ks_swd_working to file
 write.csv(ks_swd_working, file = "ks_swd_working.csv")
 write.csv(just_swd, file = "just_swd.csv")
+```
 
 
+```{r block group counts}
 #### BEGIN BLOCK GROUP COUNTS ####
 
 # pull KIDs and GEOIDs from master list of wells
 kids_and_geoids <-
   ks_working_with_block_groups[,c("KID", "GEOID")]
-
-
 
 
 #### counting fluid by block group ####
@@ -2997,10 +3042,12 @@ horizontal_counts <-
   ),]
 
 
-
 #### shale data sums ####
 # already summed, just don't forget it
 
+
+#### production data sums ####
+# already summed, just don't forget it
 
 
 #### merge well counts, fluid counts, horizontal counts, shale presence, and ruca code data ####
@@ -3020,144 +3067,173 @@ lime_fluid_swd_horiz <-   # merge with horizontal well counts
             by = "GEOID")
 
 # merge with ruca data
-lime_fluid_swd_horiz_ruca <-   # merge with horizontal well counts
+lime_fluid_swd_horiz_ruca <-   # merge with ruca data
   full_join(lime_fluid_swd_horiz, 
             ruca_block_group, 
             by = c("GEOID" = "block_group_geoid"))
+
+# merge with production well data
+lime_fluid_swd_horiz_ruca_prod <-   # merge with ruca data
+  full_join(lime_fluid_swd_horiz_ruca, 
+            prod_block_group, 
+            by = c("GEOID"))
 
 
 
 #### make the full dataset ####
 # merge everything with acs!  hey-o!
-lime_fluid_swd_horiz_ruca_acs <- merge(lime_fluid_swd_horiz_ruca,
+lime_fluid_swd_horiz_ruca_prod_acs <- merge(lime_fluid_swd_horiz_ruca_prod,
                                   acs_geo_cats,
                                   by = "GEOID",
                                   all = TRUE)
 
 #### replace NAs with 0s ####
+# production
+lime_fluid_swd_horiz_ruca_prod_acs <-
+  within(lime_fluid_swd_horiz_ruca_prod_acs,
+         prod_count[is.na(
+           lime_fluid_swd_horiz_ruca_prod_acs$prod_count)] <- 0)
+
 # shale presence
-lime_fluid_swd_horiz_ruca_acs <-
-  within(lime_fluid_swd_horiz_ruca_acs,
+lime_fluid_swd_horiz_ruca_prod_acs <-
+  within(lime_fluid_swd_horiz_ruca_prod_acs,
          shale_presence[is.na(
-           lime_fluid_swd_horiz_ruca_acs$shale_presence)] <- 0)
+           lime_fluid_swd_horiz_ruca_prod_acs$shale_presence)] <- 0)
 
 # total lifetime fluid injected
-lime_fluid_swd_horiz_ruca_acs <-
-  within(lime_fluid_swd_horiz_ruca_acs,
+lime_fluid_swd_horiz_ruca_prod_acs <-
+  within(lime_fluid_swd_horiz_ruca_prod_acs,
          total_fluid[is.na(
-           lime_fluid_swd_horiz_ruca_acs$total_fluid)] <- 0)
+           lime_fluid_swd_horiz_ruca_prod_acs$total_fluid)] <- 0)
 
 # from 2010 fluid injected
-lime_fluid_swd_horiz_ruca_acs <-
-  within(lime_fluid_swd_horiz_ruca_acs,
+lime_fluid_swd_horiz_ruca_prod_acs <-
+  within(lime_fluid_swd_horiz_ruca_prod_acs,
          from_2010_fluid[is.na(
-           lime_fluid_swd_horiz_ruca_acs$from_2010_fluid)] <- 0)
+           lime_fluid_swd_horiz_ruca_prod_acs$from_2010_fluid)] <- 0)
 
 # all swd well count
-lime_fluid_swd_horiz_ruca_acs <-
-  within(lime_fluid_swd_horiz_ruca_acs,
+lime_fluid_swd_horiz_ruca_prod_acs <-
+  within(lime_fluid_swd_horiz_ruca_prod_acs,
          all_swd_count[is.na(
-           lime_fluid_swd_horiz_ruca_acs$all_swd_count)] <- 0)
+           lime_fluid_swd_horiz_ruca_prod_acs$all_swd_count)] <- 0)
 
 # extant swd well count
-lime_fluid_swd_horiz_ruca_acs <-
-  within(lime_fluid_swd_horiz_ruca_acs,
+lime_fluid_swd_horiz_ruca_prod_acs <-
+  within(lime_fluid_swd_horiz_ruca_prod_acs,
          extant_swd_count[is.na(
-           lime_fluid_swd_horiz_ruca_acs$extant_swd_count)] <- 0)
+           lime_fluid_swd_horiz_ruca_prod_acs$extant_swd_count)] <- 0)
 
 # all swd wells from 2010 count
-lime_fluid_swd_horiz_ruca_acs <-
-  within(lime_fluid_swd_horiz_ruca_acs,
+lime_fluid_swd_horiz_ruca_prod_acs <-
+  within(lime_fluid_swd_horiz_ruca_prod_acs,
          all_swd_from_2010_count[is.na(
-           lime_fluid_swd_horiz_ruca_acs$all_swd_from_2010_count)] <- 0)
+           lime_fluid_swd_horiz_ruca_prod_acs$all_swd_from_2010_count)] <- 0)
 
 # extant swd wells from 2010 count
-lime_fluid_swd_horiz_ruca_acs <-
-  within(lime_fluid_swd_horiz_ruca_acs,
+lime_fluid_swd_horiz_ruca_prod_acs <-
+  within(lime_fluid_swd_horiz_ruca_prod_acs,
          extant_swd_from_2010_count[is.na(
-           lime_fluid_swd_horiz_ruca_acs$extant_swd_from_2010_count)] <- 0)
+           lime_fluid_swd_horiz_ruca_prod_acs$extant_swd_from_2010_count)] <- 0)
 
 # horizontal well count
-lime_fluid_swd_horiz_ruca_acs <-
-  within(lime_fluid_swd_horiz_ruca_acs,
+lime_fluid_swd_horiz_ruca_prod_acs <-
+  within(lime_fluid_swd_horiz_ruca_prod_acs,
          horizontal_count[is.na(
-           lime_fluid_swd_horiz_ruca_acs$horizontal_count)] <- 0)
+           lime_fluid_swd_horiz_ruca_prod_acs$horizontal_count)] <- 0)
 
 
 
 #### construct the binaries! ####
 
 # make the variables
-lime_fluid_swd_horiz_ruca_acs$total_fluid_binary <- NA
-lime_fluid_swd_horiz_ruca_acs$from_2010_fluid_binary <- NA
-lime_fluid_swd_horiz_ruca_acs$horizontal_binary <- NA
-lime_fluid_swd_horiz_ruca_acs$all_swd_binary <- NA
-lime_fluid_swd_horiz_ruca_acs$extant_swd_binary <- NA
-lime_fluid_swd_horiz_ruca_acs$all_swd_from_2010_binary <- NA
-lime_fluid_swd_horiz_ruca_acs$extant_swd_from_2010_binary <- NA
+lime_fluid_swd_horiz_ruca_prod_acs$total_fluid_binary <- NA
+lime_fluid_swd_horiz_ruca_prod_acs$from_2010_fluid_binary <- NA
+lime_fluid_swd_horiz_ruca_prod_acs$horizontal_binary <- NA
+lime_fluid_swd_horiz_ruca_prod_acs$all_swd_binary <- NA
+lime_fluid_swd_horiz_ruca_prod_acs$extant_swd_binary <- NA
+lime_fluid_swd_horiz_ruca_prod_acs$all_swd_from_2010_binary <- NA
+lime_fluid_swd_horiz_ruca_prod_acs$extant_swd_from_2010_binary <- NA
+lime_fluid_swd_horiz_ruca_prod_acs$prod_binary <- NA
+
+# production binary 
+lime_fluid_swd_horiz_ruca_prod_acs <-
+  within(lime_fluid_swd_horiz_ruca_prod_acs,
+         prod_binary[prod_count == 0] <- 0)
+lime_fluid_swd_horiz_ruca_prod_acs <-
+  within(lime_fluid_swd_horiz_ruca_prod_acs,
+         prod_binary[prod_count > 0] <- 1)
 
 # total fluid binary
-lime_fluid_swd_horiz_ruca_acs <-
-  within(lime_fluid_swd_horiz_ruca_acs,
+lime_fluid_swd_horiz_ruca_prod_acs <-
+  within(lime_fluid_swd_horiz_ruca_prod_acs,
          total_fluid_binary[total_fluid == 0] <- 0)
-lime_fluid_swd_horiz_ruca_acs <-
-  within(lime_fluid_swd_horiz_ruca_acs,
+lime_fluid_swd_horiz_ruca_prod_acs <-
+  within(lime_fluid_swd_horiz_ruca_prod_acs,
          total_fluid_binary[total_fluid > 0] <- 1)
 
 # from 2010 fluid binary
-lime_fluid_swd_horiz_ruca_acs <-
-  within(lime_fluid_swd_horiz_ruca_acs,
+lime_fluid_swd_horiz_ruca_prod_acs <-
+  within(lime_fluid_swd_horiz_ruca_prod_acs,
          from_2010_fluid_binary[from_2010_fluid == 0] <- 0)
-lime_fluid_swd_horiz_ruca_acs <-
-  within(lime_fluid_swd_horiz_ruca_acs,
+lime_fluid_swd_horiz_ruca_prod_acs <-
+  within(lime_fluid_swd_horiz_ruca_prod_acs,
+         from_2010_fluid_binary[from_2010_fluid > 0] <- 1)
+
+# production binary
+lime_fluid_swd_horiz_ruca_prod_acs <-
+  within(lime_fluid_swd_horiz_ruca_prod_acs,
+         from_2010_fluid_binary[from_2010_fluid == 0] <- 0)
+lime_fluid_swd_horiz_ruca_prod_acs <-
+  within(lime_fluid_swd_horiz_ruca_prod_acs,
          from_2010_fluid_binary[from_2010_fluid > 0] <- 1)
 
 # horizontal binary
-lime_fluid_swd_horiz_ruca_acs <-
-  within(lime_fluid_swd_horiz_ruca_acs,
+lime_fluid_swd_horiz_ruca_prod_acs <-
+  within(lime_fluid_swd_horiz_ruca_prod_acs,
          horizontal_binary[horizontal_count == 0] <- 0)
-lime_fluid_swd_horiz_ruca_acs <-
-  within(lime_fluid_swd_horiz_ruca_acs,
+lime_fluid_swd_horiz_ruca_prod_acs <-
+  within(lime_fluid_swd_horiz_ruca_prod_acs,
          horizontal_binary[horizontal_count > 0] <- 1)
 
 # all swd binary
-lime_fluid_swd_horiz_ruca_acs <-
-  within(lime_fluid_swd_horiz_ruca_acs,
+lime_fluid_swd_horiz_ruca_prod_acs <-
+  within(lime_fluid_swd_horiz_ruca_prod_acs,
          all_swd_binary[all_swd_count == 0] <- 0)
-lime_fluid_swd_horiz_ruca_acs <-
-  within(lime_fluid_swd_horiz_ruca_acs,
+lime_fluid_swd_horiz_ruca_prod_acs <-
+  within(lime_fluid_swd_horiz_ruca_prod_acs,
          all_swd_binary[all_swd_count > 0] <- 1)
 
 # all swd from 2010 binary
-lime_fluid_swd_horiz_ruca_acs <-
-  within(lime_fluid_swd_horiz_ruca_acs,
+lime_fluid_swd_horiz_ruca_prod_acs <-
+  within(lime_fluid_swd_horiz_ruca_prod_acs,
          all_swd_from_2010_binary[all_swd_from_2010_count == 0] <- 0)
-lime_fluid_swd_horiz_ruca_acs <-
-  within(lime_fluid_swd_horiz_ruca_acs,
+lime_fluid_swd_horiz_ruca_prod_acs <-
+  within(lime_fluid_swd_horiz_ruca_prod_acs,
          all_swd_from_2010_binary[all_swd_from_2010_count > 0] <- 1)
 
 # extant swd binary
-lime_fluid_swd_horiz_ruca_acs <-
-  within(lime_fluid_swd_horiz_ruca_acs,
+lime_fluid_swd_horiz_ruca_prod_acs <-
+  within(lime_fluid_swd_horiz_ruca_prod_acs,
          extant_swd_binary[extant_swd_count == 0] <- 0)
-lime_fluid_swd_horiz_ruca_acs <-
-  within(lime_fluid_swd_horiz_ruca_acs,
+lime_fluid_swd_horiz_ruca_prod_acs <-
+  within(lime_fluid_swd_horiz_ruca_prod_acs,
          extant_swd_binary[extant_swd_count > 0] <- 1)
 
 # extant swd from 2010 binary
-lime_fluid_swd_horiz_ruca_acs <-
-  within(lime_fluid_swd_horiz_ruca_acs,
+lime_fluid_swd_horiz_ruca_prod_acs <-
+  within(lime_fluid_swd_horiz_ruca_prod_acs,
          extant_swd_from_2010_binary[extant_swd_from_2010_count == 0] <- 0)
-lime_fluid_swd_horiz_ruca_acs <-
-  within(lime_fluid_swd_horiz_ruca_acs,
+lime_fluid_swd_horiz_ruca_prod_acs <-
+  within(lime_fluid_swd_horiz_ruca_prod_acs,
          extant_swd_from_2010_binary[extant_swd_from_2010_count > 0] <- 1)
 
 
 # save/write chunk
-save(lime_fluid_swd_horiz_ruca_acs,
-     file = "lime_fluid_swd_horiz_ruca_acs.rdata")
-write.csv(lime_fluid_swd_horiz_ruca_acs,
-          file = "lime_fluid_swd_horiz_ruca_acs.csv")
+save(lime_fluid_swd_horiz_ruca_prod_acs,
+     file = "lime_fluid_swd_horiz_ruca_prod_acs.rdata")
+write.csv(lime_fluid_swd_horiz_ruca_prod_acs,
+          file = "lime_fluid_swd_horiz_ruca_prod_acs.csv")
 
 save(ks_swd_working, 
      file = "ks_swd_working.rdata")
@@ -3165,8 +3241,8 @@ write.csv(ks_swd_working,
           file = "ks_swd_working.csv")
 
 # simplifying to only the variables that I really, really need
-lime_fluid_swd_horiz_ruca_acs_analysis <-
-  lime_fluid_swd_horiz_ruca_acs[,c(
+lime_fluid_swd_horiz_ruca_prod_acs_analysis <-
+  lime_fluid_swd_horiz_ruca_prod_acs[,c(
     "GEOID",
     "all_swd_count",
     "extant_swd_count",
@@ -3210,14 +3286,14 @@ lime_fluid_swd_horiz_ruca_acs_analysis <-
     )]
 
 # save/write/load chunk
-save(lime_fluid_swd_horiz_ruca_acs_analysis,
-     file = "lime_fluid_swd_horiz_ruca_acs_analysis.rdata")
-write.csv(lime_fluid_swd_horiz_ruca_acs_analysis,
-          file = "lime_fluid_swd_horiz_ruca_acs_analysis.csv")
+save(lime_fluid_swd_horiz_ruca_prod_acs_analysis,
+     file = "lime_fluid_swd_horiz_ruca_prod_acs_analysis.rdata")
+write.csv(lime_fluid_swd_horiz_ruca_prod_acs_analysis,
+          file = "lime_fluid_swd_horiz_ruca_prod_acs_analysis.csv")
 
 # make working dataset
 ks_analysis_dataset <-   
-  lime_fluid_swd_horiz_ruca_acs_analysis
+  lime_fluid_swd_horiz_ruca_prod_acs_analysis
 
 # save write load block
 save(ks_analysis_dataset, 
