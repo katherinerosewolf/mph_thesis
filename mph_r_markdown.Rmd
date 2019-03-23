@@ -12189,67 +12189,16 @@ logistic_model_revised_data <-
                prod_count + 
                ALAND_KM +
                AWATER_KM, 
-             data = ks_analysis_populated)
-
-  
-
-# fit the big regression
-logistic_model_70_cutoff <- 
-  stats::glm(extant_swd_binary ~ 
-        pop_dense_B01001_001_ALAND + 
-        female_percent_B01001_026_001 + 
-        aian_percent_any_race_B02010_001 +  
-        white_non_hisp_lat_percent_B03002_003_001 +  
-        age_0_to_17_percent_B01001 +  
-        age_65_plus_percent_B01001 +  
-        education_high_school_plus_percent_B15003_017_to_025 +  
-        limited_english_percent_C16002_004_007_010_013_001 +  
-        no_health_insurance_percent_B27010_017_033_050_066 +  
-        renter_occupy_percent_B25003_003_001 +  
-        unemployed_percent_B23025_005_003 +  
-        income_house_median_B19013_001 +  
-        shale_presence + 
-        horizontal_binary, 
-      data = ks_analysis_all_income, 
-      family = binomial)
-
-# all data model that I should not run (SHAME)
-logistic_model_big <- 
-  stats::glm(extant_swd_binary ~ 
-               pop_tot_B01001_001 +
-               pop_dense_B01001_001_ALAND + 
-               female_percent_B01001_026_001 + 
-               age_0_to_17_percent_B01001 +  
-               age_65_plus_percent_B01001 +  
-               aian_percent_any_race_B02010_001 +  
-               hisp_lat_percent_B03002_012_001 +
-               white_non_hisp_lat_percent_B03002_003_001 +  
-               education_high_school_plus_percent_B15003_017_to_025 +  
-               limited_english_percent_C16002_004_007_010_013_001 +  
-               no_health_insurance_percent_B27010_017_033_050_066 +  
-               renter_occupy_percent_B25003_003_001 +  
-               unemployed_percent_B23025_005_003 +  
-               poverty_below_100_percent_C17002_002_003_001 + 
-               earnings_median_B20002_001 +
-               income_house_median_B19013_001 +  
-               house_value_median_B25077_001 + 
-               ice_B19001 + 
-               ALAND_KM + 
-               AWATER_KM +
-               shale_presence + 
-               horizontal_binary, 
-             data = ks_analysis_all_income, 
+             data = ks_analysis_populated, 
              family = binomial)
-summary(logistic_model_big)
-
-
+summary(logistic_model_revised_data)
 
 # automated choice of best fit
 logistic_matrix <- 
-  data.matrix(logistic_model_data)
+  data.matrix(logistic_model_revised_data)
 
 output_variable <- 
-  ks_analysis_all_income$extant_swd_binary
+  ks_analysis_populated$extant_swd_binary
 
 test_for_automatic_selection <- 
   as.data.frame(cbind(logistic_matrix,output_variable))
