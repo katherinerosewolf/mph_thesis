@@ -48,6 +48,9 @@ library(bestglm)
 library(safeBinaryRegression)
 library(scales)
 library(ResourceSelection)
+library(knitr)
+library(kableExtra)
+library(broom)
 
 
 
@@ -11431,7 +11434,7 @@ write.csv(p_values_wilcox,
 
 ## logistic regression and summary statistics
 
-```{r loess plots for all income}
+```{r loess plots for all income, eval=FALSE, include=FALSE}
 
 pop_loess <- 
   logitloess(ks_analysis_all_income$pop_tot_B01001_001, 
@@ -11600,7 +11603,7 @@ multiplot(pop_loess,
 ```
 
 
-```{r ADD Ns loess plots for all populated}
+```{r ADD Ns loess plots for all populated, eval=FALSE, include=FALSE}
 
 pop_loess <- 
   logitloess(ks_analysis_populated$pop_tot_B01001_001, 
@@ -11841,7 +11844,6 @@ multiplot(pop_loess,
 ```
 
 
-
 ```{r univariate logistic regressions}
 
 # list the dependent variable names
@@ -11887,27 +11889,51 @@ small_dependent_variables <-
     "ALAND_KM",  
     "AWATER_KM")
 
-# make model to run all the univariable logistic regressions AT ONCE (MWAHAHA)
-univariable_logistic_model_function <- 
-  sapply(dependent_variable_names, function(x) {
-    glm(substitute(extant_swd_binary ~ indy, 
-        list(indy = as.name(x))), 
-        data = ks_analysis_populated, 
+# run all the univariable logistic regressions AT ONCE (MWAHAHA)
+univariable_logistic_models <-
+  sapply(small_dependent_variables, function(x) {
+    glm(substitute(extant_swd_binary ~ indy,
+        list(indy = as.name(x))),
+        data = ks_analysis_populated,
         family = binomial)})
 
+names(univariable_logistic_models) <- 
+  small_dependent_variables
+
+# makes table of estimate, standard error, statistic, and p-value
+all_coefficients <- 
+  plyr::ldply(univariable_logistic_models, tidy, .id = "model")
+head(all_coefficients)
+class(all_coefficients)
+
+
+
+
+univariable_logistic_odds_ratios <- 
+  sapply(univariable_logistic_model_function, 
+         function(f) exp(summary(f)$coefficients[,1]))
+
+univariable_logistic_Wald_CIs <- 
+  sapply(univariable_logistic_model_function, 
+         function(f) exp(confint.default(f)))
+univariable_logistic_Wald_CIs
+
+
+
+
 # run it
-univariable_logistic_model_summaries <-   # get summary
+univariable_logistic_model_summaries <-       # get summary
   sapply(univariable_logistic_model_function, summary)
-univariable_logistic_estimates <- 
+univariable_logistic_estimates <-             # 
   sapply(univariable_logistic_model_function, tidy)
-univariable_cute_estimates <- 
+univariable_cute_estimates <-                 # 
   sapply(univariable_logistic_estimates, kable)
-univariable_logistic_Wald_intervals <-   # get confidence intervals
+univariable_logistic_Wald_intervals <-        # get confidence intervals
   sapply(univariable_logistic_model_function, confint.default)
-univariable_logistic_model_p_values <-   # get p values
+univariable_logistic_model_p_values <-        # get p values
   sapply(univariable_logistic_model_function, 
          function(f) summary(f)$coefficients[,4])
-univariable_logistic_model_coefficients <-   # get coefficients
+univariable_logistic_model_coefficients <-    # get coefficients
   sapply(univariable_logistic_model_function, 
          function(f) summary(f)$coefficients[,1])
 univariable_logistic_model_errors <-   # get standard errors
@@ -11918,14 +11944,6 @@ univariable_logistic_model_summaries
 univariable_logistic_Wald_intervals
 univariable_cute_estimates
 
-univariable_logistic_odds_ratios <- 
-  sapply(univariable_logistic_model_function, 
-         function(f) exp(summary(f)$coefficients[,1]))
-
-univariable_logistic_Wald_CIs <- 
-  sapply(univariable_logistic_model_function, 
-         function(f) exp(confint.default(f)))
-univariable_logistic_Wald_CIs
 
 
 
