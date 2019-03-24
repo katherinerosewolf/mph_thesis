@@ -1867,7 +1867,6 @@ load(file = "acs_geo_cats.rdata")
 ```
 
 
-
 ```{r well data work}
 
 # # make well data file for cleaning
@@ -6139,7 +6138,7 @@ qqline(ks_analysis_all_income$AWATER_KM[
 ```
 
 
-```{r ADD AUTO OUTPUT OTHER PLOTS qq and density plots populated block groups, echo=TRUE}
+```{r ADD AUTO OUTPUT OTHER PLOTS qq and density plots populated block groups, eval=FALSE, include=FALSE}
 
 # ice
 density_ice <-
@@ -9884,8 +9883,6 @@ multiplot(pop_boxplot,
 ```
 
 
-
-
 ```{r levene tests block groups with income, eval=FALSE, include=FALSE}
 # levene's test homogenous variances
 pop_levene <- 
@@ -10771,7 +10768,6 @@ write.csv(ks_stats_with_wells_populated_ordered,
 ```
 
 
-
 ```{r summary statistics block groups with income only}
 
 # calculate basic summary statistics   # select variables to summarise
@@ -10910,7 +10906,6 @@ ks_stats_with_wells_income_only <-
 write.csv(ks_stats_with_wells_income_only, 
           file = "ks_stats_with_wells_income_only.csv")
 ```
-
 
 
 ```{r summary statistics populated no urban, eval=FALSE, include=FALSE}
@@ -11855,6 +11850,7 @@ dependent_variable_names <-
     "age_65_plus_percent_B01001",   
     "aian_percent_any_race_B02010_001",   
     "hisp_lat_percent_B03002_012_001", 
+    "black_percent_B03002_004_001",
     "white_non_hisp_lat_percent_B03002_003_001",   
     "education_high_school_plus_percent_B15003_017_to_025",   
     "limited_english_percent_C16002_004_007_010_013_001",   
@@ -11870,83 +11866,212 @@ dependent_variable_names <-
     "ALAND_KM",  
     "AWATER_KM")
 
-small_dependent_variables <- 
-  c("pop_dense_B01001_001_ALAND", 
-    "female_percent_B01001_026_001", 
-    "age_0_to_17_percent_B01001", 
-    "age_65_plus_percent_B01001", 
-    "white_non_hisp_lat_percent_B03002_003_001",   
-    "education_high_school_plus_percent_B15003_017_to_025", 
-    "no_health_insurance_percent_B27010_017_033_050_066",   
-    "renter_occupy_percent_B25003_003_001",   
-    "unemployed_percent_B23025_005_003",   
-    "poverty_below_100_percent_C17002_002_003_001",  
-    "earnings_median_B20002_001", 
-    "income_house_median_B19013_001",   
-    "house_value_median_B25077_001",  
-    "ice_B19001",  
-    "prod_count",
-    "ALAND_KM",  
-    "AWATER_KM")
-
 # run all the univariable logistic regressions AT ONCE (MWAHAHA)
 univariable_logistic_models <-
-  sapply(small_dependent_variables, function(x) {
+  sapply(dependent_variable_names, 
+         function(x) {
     glm(substitute(extant_swd_binary ~ indy,
         list(indy = as.name(x))),
         data = ks_analysis_populated,
         family = binomial)})
 
 names(univariable_logistic_models) <- 
-  small_dependent_variables
+  dependent_variable_names
 
 # makes table of estimate, standard error, statistic, and p-value
-all_coefficients <- 
-  plyr::ldply(univariable_logistic_models, tidy, .id = "model")
-head(all_coefficients)
-class(all_coefficients)
+initial_coefficients <- 
+  plyr::ldply(univariable_logistic_models, 
+              tidy, 
+              .id = "model")
+
+# add odds ratios
+univariable_initial_tibble <- 
+  as_tibble(initial_coefficients)
+
+univariable_initial_tibble <- 
+  univariable_initial_tibble %>% 
+  mutate(odds_ratio = exp(estimate))
+
+# make model a character vector
+univariable_initial_tibble <- 
+  univariable_initial_tibble %>% 
+  mutate(model = as.character(model))
+  
+```
 
 
+```{r wald confidence intervals}
+# get wald confidence intervals #
+# function to make them
+waldinator <- 
+  function(x) {
+  wald_confint_estimate <- 
+    confint_tidy(x, 
+                 conf.level = 0.95, 
+                 func = stats::confint.default)
+  wald_confint_odds_ratio <- 
+    exp(wald_confint_estimate)
+}
+
+# make list of tibbles with cis
+wald_ci_list <- 
+  lapply(univariable_logistic_models, waldinator)
+
+# get names of tibbles
+names_wald_ci_variables <- 
+  names(wald_ci_list)
+
+# add names of tibbles as a new column
+wald_ci_list_with_names <- 
+  mapply(cbind, 
+         wald_ci_list, 
+         "model" = names_wald_ci_variables, 
+         SIMPLIFY = F)
+wald_ci_list_with_names
+  
+# add term as new column
+wald_ci_list_with_names_terms <- 
+  mapply(cbind, 
+         wald_ci_list_with_names, 
+         "term" = names_wald_ci_variables, 
+         SIMPLIFY = F)
+wald_ci_list_with_names_terms
+
+# fix it back into a tibble
+wald_ci_list_tibble_try <- 
+  map(wald_ci_list_with_names_terms, as.tibble)
+
+# make factor columns into character columns
+wald_ci_list_tibble <- 
+   lapply(wald_ci_list_tibble_try, 
+          function(x) {
+            x$model <- as.character(x$model) 
+            return(x)
+          })
+
+wald_ci_list_tibble <- 
+   lapply(wald_ci_list_tibble, 
+          function(x) {
+            x$term <- as.character(x$term) 
+            return(x)
+          })
+
+# replace intercept term with "(Intercept)"
+cute_function <- 
+  function(x) {
+    x[1,4] <- 
+      "(Intercept)"
+    return(x)
+  }
+
+wald_ci_list_tibble <- 
+  lapply(wald_ci_list_tibble, 
+         cute_function)
+  
+# make one big tibble from all the rows
+univariable_wald_ci_tibble <- 
+  bind_rows(wald_ci_list_tibble)
+
+# rename wald ci as wald
+univariable_wald_ci_tibble <- 
+  univariable_wald_ci_tibble %>% 
+  rename(wald_ci_low = conf.low, wald_ci_high = conf.high)
+```
 
 
-univariable_logistic_odds_ratios <- 
-  sapply(univariable_logistic_model_function, 
-         function(f) exp(summary(f)$coefficients[,1]))
+```{r profile confidence intervals}
 
-univariable_logistic_Wald_CIs <- 
-  sapply(univariable_logistic_model_function, 
-         function(f) exp(confint.default(f)))
-univariable_logistic_Wald_CIs
+# function to make them
+profilinator <- 
+  function(x) {
+  profile_confint_estimate <- 
+    confint_tidy(x, 
+                 conf.level = 0.95, 
+                 func = stats::confint)
+  profile_confint_odds_ratio <- 
+    exp(profile_confint_estimate)
+}
+
+# make list of tibbles with cis
+profile_ci_list <- 
+  lapply(univariable_logistic_models, profilinator)
+
+# get names of tibbles
+names_profile_ci_variables <- 
+  names(profile_ci_list)
+
+# add names of tibbles as a new column
+profile_ci_list_with_names <- 
+  mapply(cbind, 
+         profile_ci_list, 
+         "model" = names_profile_ci_variables, 
+         SIMPLIFY = F)
+profile_ci_list_with_names
+  
+# add term as new column
+profile_ci_list_with_names_terms <- 
+  mapply(cbind, 
+         profile_ci_list_with_names, 
+         "term" = names_profile_ci_variables, 
+         SIMPLIFY = F)
+profile_ci_list_with_names_terms
+
+# fix it back into a tibble
+profile_ci_list_tibble_try <- 
+  map(profile_ci_list_with_names_terms, as.tibble)
+
+# make factor columns into character columns
+profile_ci_list_tibble <- 
+   lapply(profile_ci_list_tibble_try, 
+          function(x) {
+            x$model <- as.character(x$model) 
+            return(x)
+          })
+
+profile_ci_list_tibble <- 
+   lapply(profile_ci_list_tibble, 
+          function(x) {
+            x$term <- as.character(x$term) 
+            return(x)
+          })
+
+# replace intercept term with "(Intercept)"
+cute_function <- 
+  function(x) {
+    x[1,4] <- 
+      "(Intercept)"
+    return(x)
+  }
+
+profile_ci_list_tibble <- 
+  lapply(profile_ci_list_tibble, 
+         cute_function)
+  
+# make one big tibble from all the rows
+univariable_profile_ci_tibble <- 
+  bind_rows(profile_ci_list_tibble)
+univariable_profile_ci_tibble
+
+# rename confidence interval as profile
+univariable_profile_ci_tibble <- 
+  univariable_profile_ci_tibble %>% 
+  rename(profile_ci_low = conf.low, 
+         profile_ci_high = conf.high)
+  
+```
 
 
+```{r pulling together the final univariable data}
+
+univariable_logistic_tibble <- 
+  univariable_initial_tibble %>% 
+  full_join(univariable_wald_ci_tibble, by = c("model", "term")) %>% 
+  full_join(univariable_profile_ci_tibble, by = c("model", "term"))
+univariable_logistic_tibble
+```
 
 
-# run it
-univariable_logistic_model_summaries <-       # get summary
-  sapply(univariable_logistic_model_function, summary)
-univariable_logistic_estimates <-             # 
-  sapply(univariable_logistic_model_function, tidy)
-univariable_cute_estimates <-                 # 
-  sapply(univariable_logistic_estimates, kable)
-univariable_logistic_Wald_intervals <-        # get confidence intervals
-  sapply(univariable_logistic_model_function, confint.default)
-univariable_logistic_model_p_values <-        # get p values
-  sapply(univariable_logistic_model_function, 
-         function(f) summary(f)$coefficients[,4])
-univariable_logistic_model_coefficients <-    # get coefficients
-  sapply(univariable_logistic_model_function, 
-         function(f) summary(f)$coefficients[,1])
-univariable_logistic_model_errors <-   # get standard errors
-  sapply(univariable_logistic_model_function, 
-         function(f) summary(f)$coefficients[,2])
-
-univariable_logistic_model_summaries
-univariable_logistic_Wald_intervals
-univariable_cute_estimates
-
-
-
-
+```{r big logistic model}
 # pop tot model evaluation
 logistic_pop_tot
 
@@ -12288,7 +12413,7 @@ second_best_glm_run <-
 second_best_glm_run
 ```
 
-## Moran's I
+## spatial evaluation
 
 ```{r moran's i}
 # # isolate extant swd wells
