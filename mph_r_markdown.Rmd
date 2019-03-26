@@ -29,6 +29,8 @@ getwd() # this directory should be the one with your data files in it!
 
 
 #### load libraries ####
+
+library(DescTools)
 library(data.table)
 library(extrafont)
 library(ggplot2)
@@ -40,6 +42,7 @@ library(tidyverse)
 library(geoRglm)
 library(spatstat)
 library(spdep)
+library(rms)
 library(dplyr)
 library(tidyr)
 library(readr)
@@ -51,6 +54,7 @@ library(ResourceSelection)
 library(knitr)
 library(kableExtra)
 library(broom)
+
 
 
 
@@ -11866,8 +11870,8 @@ dependent_variable_names <-
     "ALAND_KM",  
     "AWATER_KM")
 
-# run all the univariable logistic regressions AT ONCE (MWAHAHA)
-univariable_logistic_models <-
+# run all the univariable logistic regressions AT ONCE (MWAHAHA) for glm
+univariable_logistic_models_glm <-
   sapply(dependent_variable_names, 
          function(x) {
     glm(substitute(extant_swd_binary ~ indy,
@@ -11875,12 +11879,31 @@ univariable_logistic_models <-
         data = ks_analysis_populated,
         family = binomial)})
 
-names(univariable_logistic_models) <- 
+names(univariable_logistic_models_glm) <- 
   dependent_variable_names
 
+# run all the univariable logisitic regression AT ONCE (MWAHAHA) for lrm package
+
+# make function
+lrm_function <- 
+  function(dependent_variable) {
+    lrm(extant_swd_binary ~ ks_analysis_populated[[dependent_variable]],
+        data = ks_analysis_populated, 
+        x = TRUE, y = TRUE)}
+
+univariable_logistic_models_lrm <-
+  lapply(dependent_variable_names, 
+         lrm_function)
+
+names(univariable_logistic_models_lrm) <- 
+  dependent_variable_names
+```
+
+
+```{r logistic regression initial table}
 # makes table of estimate, standard error, statistic, and p-value
 initial_coefficients <- 
-  plyr::ldply(univariable_logistic_models, 
+  plyr::ldply(univariable_logistic_models_glm, 
               tidy, 
               .id = "model")
 
@@ -11899,8 +11922,109 @@ univariable_initial_tibble <-
   
 ```
 
+```{r logistic regression goodness of fit statistics}
 
-```{r wald confidence intervals}
+# make function to get them
+new_hoslem_cessie_gof_inator <- 
+  function(x) {
+  gof_cessie <- 
+    resid(x, 
+                 "gof")
+  return(gof_cessie)
+  }
+
+# make list of tibbles with gofs
+cessie_gof_list <- 
+  lapply(univariable_logistic_models_lrm, 
+         new_hoslem_cessie_gof_inator)
+
+cessie_gof_list$ALAND_KM
+str(cessie_gof_list$ALAND_KM)
+class(cessie_gof_list$ALAND_KM)
+
+```
+
+
+```{r wald confidence intervals for estimate}
+# get wald confidence intervals #
+# function to make them
+estimate_waldinator <- 
+  function(x) {
+  wald_confint_estimate <- 
+    confint_tidy(x, 
+                 conf.level = 0.95, 
+                 func = stats::confint.default)
+  return(wald_confint_estimate)
+}
+
+# make list of tibbles with cis
+wald_ci_est_list <- 
+  lapply(univariable_logistic_models_glm, 
+         estimate_waldinator)
+
+# get names of tibbles
+names_wald_ci_est_variables <- 
+  names(wald_ci_est_list)
+
+# add names of tibbles as a new column
+wald_ci_est_list_with_names <- 
+  mapply(cbind, 
+         wald_ci_est_list, 
+         "model" = names_wald_ci_est_variables, 
+         SIMPLIFY = F)
+wald_ci_est_list_with_names
+  
+# add term as new column
+wald_ci_est_list_with_names_terms <- 
+  mapply(cbind, 
+         wald_ci_est_list_with_names, 
+         "term" = names_wald_ci_est_variables, 
+         SIMPLIFY = F)
+wald_ci_est_list_with_names_terms
+
+# fix it back into a tibble
+wald_ci_est_list_tibble_try <- 
+  map(wald_ci_est_list_with_names_terms, as.tibble)
+
+# make factor columns into character columns
+wald_ci_est_list_tibble <- 
+   lapply(wald_ci_est_list_tibble_try, 
+          function(x) {
+            x$model <- as.character(x$model) 
+            return(x)
+          })
+
+wald_ci_est_list_tibble <- 
+   lapply(wald_ci_est_list_tibble, 
+          function(x) {
+            x$term <- as.character(x$term) 
+            return(x)
+          })
+
+# replace intercept term with "(Intercept)"
+cute_function <- 
+  function(x) {
+    x[1,4] <- 
+      "(Intercept)"
+    return(x)
+  }
+
+wald_ci_est_list_tibble <- 
+  lapply(wald_ci_est_list_tibble, 
+         cute_function)
+  
+# make one big tibble from all the rows
+univariable_wald_ci_est_tibble <- 
+  bind_rows(wald_ci_est_list_tibble)
+
+# rename wald ci as wald
+univariable_wald_ci_est_tibble <- 
+  univariable_wald_ci_est_tibble %>% 
+  rename(wald_ci_est_low = conf.low, wald_ci_est_high = conf.high)
+```
+
+
+```{r wald confidence intervals for odds ratio}
 # get wald confidence intervals #
 # function to make them
 waldinator <- 
@@ -11915,7 +12039,7 @@ waldinator <-
 
 # make list of tibbles with cis
 wald_ci_list <- 
-  lapply(univariable_logistic_models, waldinator)
+  lapply(univariable_logistic_models_glm, waldinator)
 
 # get names of tibbles
 names_wald_ci_variables <- 
@@ -11975,11 +12099,94 @@ univariable_wald_ci_tibble <-
 # rename wald ci as wald
 univariable_wald_ci_tibble <- 
   univariable_wald_ci_tibble %>% 
-  rename(wald_ci_low = conf.low, wald_ci_high = conf.high)
+  rename(wald_ci_or_low = conf.low, wald_ci_or_high = conf.high)
 ```
 
 
-```{r profile confidence intervals}
+
+```{r profile confidence intervals for estimate}
+
+# function to make them
+estimate_profilinator <- 
+  function(x) {
+  profile_confint_estimate <- 
+    confint_tidy(x, 
+                 conf.level = 0.95, 
+                 func = stats::confint)
+  return(profile_confint_estimate)
+}
+
+# make list of tibbles with cis
+profile_ci_est_list <- 
+  lapply(univariable_logistic_models_glm, 
+         estimate_profilinator)
+
+# get names of tibbles
+names_profile_ci_est_variables <- 
+  names(profile_ci_est_list)
+
+# add names of tibbles as a new column
+profile_ci_est_list_with_names <- 
+  mapply(cbind, 
+         profile_ci_est_list, 
+         "model" = names_profile_ci_est_variables, 
+         SIMPLIFY = F)
+profile_ci_est_list_with_names
+  
+# add term as new column
+profile_ci_est_list_with_names_terms <- 
+  mapply(cbind, 
+         profile_ci_est_list_with_names, 
+         "term" = names_profile_ci_est_variables, 
+         SIMPLIFY = F)
+profile_ci_est_list_with_names_terms
+
+# fix it back into a tibble
+profile_ci_est_list_tibble_try <- 
+  map(profile_ci_est_list_with_names_terms, as.tibble)
+
+# make factor columns into character columns
+profile_ci_est_list_tibble <- 
+   lapply(profile_ci_est_list_tibble_try, 
+          function(x) {
+            x$model <- as.character(x$model) 
+            return(x)
+          })
+
+profile_ci_est_list_tibble <- 
+   lapply(profile_ci_est_list_tibble, 
+          function(x) {
+            x$term <- as.character(x$term) 
+            return(x)
+          })
+
+# replace intercept term with "(Intercept)"
+cute_function <- 
+  function(x) {
+    x[1,4] <- 
+      "(Intercept)"
+    return(x)
+  }
+
+profile_ci_est_list_tibble <- 
+  lapply(profile_ci_est_list_tibble, 
+         cute_function)
+  
+# make one big tibble from all the rows
+univariable_profile_ci_est_tibble <- 
+  bind_rows(profile_ci_est_list_tibble)
+univariable_profile_ci_est_tibble
+
+# rename confidence interval as profile
+univariable_profile_ci_est_tibble <- 
+  univariable_profile_ci_est_tibble %>% 
+  rename(profile_ci_est_low = conf.low, 
+         profile_ci_est_high = conf.high)
+  
+```
+
+
+```{r profile confidence intervals for odds ratio}
 
 # function to make them
 profilinator <- 
@@ -11994,7 +12201,7 @@ profilinator <-
 
 # make list of tibbles with cis
 profile_ci_list <- 
-  lapply(univariable_logistic_models, profilinator)
+  lapply(univariable_logistic_models_glm, profilinator)
 
 # get names of tibbles
 names_profile_ci_variables <- 
@@ -12055,9 +12262,28 @@ univariable_profile_ci_tibble
 # rename confidence interval as profile
 univariable_profile_ci_tibble <- 
   univariable_profile_ci_tibble %>% 
-  rename(profile_ci_low = conf.low, 
-         profile_ci_high = conf.high)
+  rename(profile_ci_or_low = conf.low, 
+         profile_ci_or_high = conf.high)
   
+```
+
+
+```{r diagnostics for logistic regression}
+residuals.lrm(univariable_logistic_models_lrm)
+class(univariable_logistic_models_lrm)
+View(univariable_logistic_models_lrm)
+
+
+HosmerLemeshowTest(
+  fit = fitted(univariable_logistic_models_glm$pop_tot_B01001_001), 
+  obs = univariable_logistic_models_glm$pop_tot_B01001_001$data$extant_swd_binary, 
+  X = as.matrix(univariable_logistic_models_glm$pop_tot_B01001_001$data$pop_tot_B01001_001))
+
+
+
+
+
+
 ```
 
 
@@ -12065,9 +12291,29 @@ univariable_profile_ci_tibble <-
 
 univariable_logistic_tibble <- 
   univariable_initial_tibble %>% 
+  full_join(univariable_wald_ci_est_tibble, by = c("model", "term")) %>% 
   full_join(univariable_wald_ci_tibble, by = c("model", "term")) %>% 
-  full_join(univariable_profile_ci_tibble, by = c("model", "term"))
+  full_join(univariable_profile_ci_est_tibble, by = c("model", "term")) %>% 
+  full_join(univariable_profile_ci_tibble, by = c("model", "term")) %>% 
+  dplyr::select(model, 
+                term, 
+                estimate, 
+                wald_ci_est_low, 
+                wald_ci_est_high, 
+                profile_ci_est_low, 
+                profile_ci_est_high, 
+                std.error, 
+                statistic, 
+                p.value, 
+                odds_ratio, 
+                wald_ci_or_low, 
+                wald_ci_or_high, 
+                profile_ci_or_low, 
+                profile_ci_or_high)
 univariable_logistic_tibble
+
+write_csv(univariable_logistic_tibble, 
+          file.path("univariable_logistic_model_results.csv"))
 ```
 
 
