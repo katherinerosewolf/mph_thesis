@@ -54,7 +54,7 @@ library(ResourceSelection)
 library(knitr)
 library(kableExtra)
 library(broom)
-
+library(MKmisc)
 
 
 
@@ -11925,22 +11925,85 @@ univariable_initial_tibble <-
 ```{r logistic regression goodness of fit statistics}
 
 # make function to get them
-new_hoslem_cessie_gof_inator <- 
+cessie_gof_inator <- 
   function(x) {
   gof_cessie <- 
-    resid(x, 
-                 "gof")
+    resid(x, "gof")
   return(gof_cessie)
   }
 
 # make list of tibbles with gofs
 cessie_gof_list <- 
   lapply(univariable_logistic_models_lrm, 
-         new_hoslem_cessie_gof_inator)
+         cessie_gof_inator)
 
-cessie_gof_list$ALAND_KM
-str(cessie_gof_list$ALAND_KM)
-class(cessie_gof_list$ALAND_KM)
+# make tables of le cessie gof statistics
+
+filter(!! sym(year_varname) == early_year)
+
+naminator <- 
+  function(glm_model) {
+    name_of_model <- 
+      deparse(substitute(glm_model))
+    name_of_model_short <- 
+      str_split(name_of_model, "\\$")[[1]][[1]]
+  }
+
+    name_of_model <- 
+      deparse(substitute(glm_model))
+    name_of_model_short <- 
+      str_split(name_of_model, "\\$")[[1]][[1]]
+    remove_nas_from_data <- 
+      ks_analysis_populated %>% 
+      drop_na(predictor)
+
+thing <- lapply(univariable_logistic_models_glm, naminator)
+
+thing$pop_dense_B01001_001_ALAND
+
+# make hl gof function
+hl_gof_inator <- 
+  function(glm_model, predictor_name) {
+    remove_nas_from_data <-   # drops values for which na in current predictor
+      ks_analysis_populated %>% 
+      drop_na(predictor_name)
+    hl_gof <- HLgof.test(
+      fit = fitted(glm_model), 
+      obs = remove_nas_from_data$extant_swd_binary)
+    print(hl_gof)
+    return(hl_gof)
+  }
+
+# hl_gof_inator(univariable_logistic_models_glm$house_value_median_B25077_001, 
+#              "house_value_median_B25077_001")
+
+options(warn = 1)
+
+# Hosmer-Lemeshow
+
+hl_gof_matrix <- 
+  mapply(hl_gof_inator, 
+         univariable_logistic_models_glm, 
+         dependent_variable_names)
+
+hl_gof_list <- 
+  as.list(data.frame(t(hl_gof_matrix)))
+
+# count unique values by variable
+
+# aggregate(values ~ ind, unique(stack(ks_analysis_populated)), length)
+
+# Hosmer-Lemeshow
+
+# make function to find the goodness of fit
+
+# deviance (G2)
+
+# area under the curve
+
+# gold standard for p likelihood ratio?
+
+# could also make deviance residual plots
 
 ```
 
@@ -11967,7 +12030,7 @@ names_wald_ci_est_variables <-
   names(wald_ci_est_list)
 
 # add names of tibbles as a new column
-wald_ci_est_list_with_names <- 
+wald_ci_est_list_with_names <-  
   mapply(cbind, 
          wald_ci_est_list, 
          "model" = names_wald_ci_est_variables, 
