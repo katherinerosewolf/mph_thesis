@@ -42,7 +42,6 @@ library(tidyverse)
 library(geoRglm)
 library(spatstat)
 library(spdep)
-library(rms)
 library(dplyr)
 library(tidyr)
 library(readr)
@@ -55,7 +54,7 @@ library(knitr)
 library(kableExtra)
 library(broom)
 library(MKmisc)
-
+library(rms)
 
 
 #### load fonts ####
@@ -11870,6 +11869,10 @@ dependent_variable_names <-
     "ALAND_KM",  
     "AWATER_KM")
 
+# thing that rms needs, who knows why
+dd = datadist(ks_analysis_populated)
+options(datadist="dd")
+
 # run all the univariable logistic regressions AT ONCE (MWAHAHA) for glm
 univariable_logistic_models_glm <-
   sapply(dependent_variable_names, 
@@ -11890,6 +11893,14 @@ lrm_function <-
     lrm(extant_swd_binary ~ ks_analysis_populated[[dependent_variable]],
         data = ks_analysis_populated, 
         x = TRUE, y = TRUE)}
+
+thing<-lrm(extant_swd_binary ~ pop_dense_B01001_001_ALAND + house_value_median_B25077_001 + pop_dense_B01001_001_ALAND * house_value_median_B25077_001,
+        data = ks_analysis_populated, 
+        x = TRUE, y = TRUE)
+
+hi <- anova.rms(thing, indnl = TRUE)
+print(hi, "subscripts")
+
 
 univariable_logistic_models_lrm <-
   lapply(dependent_variable_names, 
@@ -11924,12 +11935,220 @@ univariable_initial_tibble <-
 
 ```{r logistic regression goodness of fit statistics}
 
-# make function to get them
+# box tidwell for linearity of logit
+
+# remove ice
+dependent_variable_names_no_ice <- 
+  c("pop_tot_B01001_001", 
+    "pop_dense_B01001_001_ALAND", 
+    "female_percent_B01001_026_001", 
+    "age_0_to_17_percent_B01001", 
+    "age_65_plus_percent_B01001",   
+    "aian_percent_any_race_B02010_001",   
+    "hisp_lat_percent_B03002_012_001", 
+    "black_percent_B03002_004_001",
+    "white_non_hisp_lat_percent_B03002_003_001",   
+    "education_high_school_plus_percent_B15003_017_to_025",   
+    "limited_english_percent_C16002_004_007_010_013_001",   
+    "no_health_insurance_percent_B27010_017_033_050_066",   
+    "renter_occupy_percent_B25003_003_001",   
+    "unemployed_percent_B23025_005_003",   
+    "poverty_below_100_percent_C17002_002_003_001",  
+    "earnings_median_B20002_001", 
+    "income_house_median_B19013_001",   
+    "house_value_median_B25077_001", 
+    "prod_count",
+    "ALAND_KM",  
+    "AWATER_KM")
+
+# make box tidwell function
+box_tidwell_inator <- 
+  function(glm_model, 
+           predictor_name) {
+    remove_nas_from_data <-   # drops values for which na in current predictor
+      ks_analysis_populated %>% 
+      drop_na(predictor_name)
+    tibble_with_logit_dependent <- 
+      remove_nas_from_data %>% 
+      mutate(logit_dependent = logit(fitted(glm_model)))
+    thing <- 
+      dplyr::pull(tibble_with_logit_dependent, 
+                               predictor_name)
+    boxTidwell(tibble_with_logit_dependent$logit_dependent ~ 
+                 thing
+               )
+  }
+
+# box_tidwell_inator(
+#   univariable_logistic_models_glm, 
+#   dependent_variable_names_no_ice)
+
+thing <- anova(univariable_logistic_models_lrm$pop_tot_B01001_001, indnl = TRUE)
+summary(thing)
+
+
+
+box_tidwell_inator(
+  univariable_logistic_models_glm$pop_tot_B01001_001, 
+  "pop_tot_B01001_001")
+
+box_tidwell_inator(
+  univariable_logistic_models_glm$pop_dense_B01001_001_ALAND, 
+  "pop_dense_B01001_001_ALAND")
+
+box_tidwell_inator(
+  univariable_logistic_models_glm$female_percent_B01001_026_001, 
+  "female_percent_B01001_026_001")
+
+box_tidwell_inator(
+  univariable_logistic_models_glm$age_0_to_17_percent_B01001, 
+  "age_0_to_17_percent_B01001")
+
+box_tidwell_inator(
+  univariable_logistic_models_glm$age_65_plus_percent_B01001, 
+  "age_65_plus_percent_B01001")
+
+box_tidwell_inator(
+  univariable_logistic_models_glm$aian_percent_any_race_B02010_001, 
+  "aian_percent_any_race_B02010_001")
+
+box_tidwell_inator(
+  univariable_logistic_models_glm$hisp_lat_percent_B03002_012_001, 
+  "hisp_lat_percent_B03002_012_001")
+
+box_tidwell_inator(
+  univariable_logistic_models_glm$black_percent_B03002_004_001, 
+  "black_percent_B03002_004_001")
+
+box_tidwell_inator(
+  univariable_logistic_models_glm$white_non_hisp_lat_percent_B03002_003_001, 
+  "white_non_hisp_lat_percent_B03002_003_001")
+
+box_tidwell_inator(
+  univariable_logistic_models_glm$education_high_school_plus_percent_B15003_017_to_025, 
+  "education_high_school_plus_percent_B15003_017_to_025")
+
+box_tidwell_inator(
+  univariable_logistic_models_glm$limited_english_percent_C16002_004_007_010_013_001, 
+  "limited_english_percent_C16002_004_007_010_013_001")
+
+box_tidwell_inator(
+  univariable_logistic_models_glm$no_health_insurance_percent_B27010_017_033_050_066, 
+  "no_health_insurance_percent_B27010_017_033_050_066")
+
+box_tidwell_inator(
+  univariable_logistic_models_glm$renter_occupy_percent_B25003_003_001, 
+  "renter_occupy_percent_B25003_003_001")
+
+box_tidwell_inator(
+  univariable_logistic_models_glm$unemployed_percent_B23025_005_003, 
+  "unemployed_percent_B23025_005_003")
+
+box_tidwell_inator(
+  univariable_logistic_models_glm$poverty_below_100_percent_C17002_002_003_001, 
+  "poverty_below_100_percent_C17002_002_003_001")
+
+box_tidwell_inator(
+  univariable_logistic_models_glm$earnings_median_B20002_001, 
+  "earnings_median_B20002_001")
+
+box_tidwell_inator(
+  univariable_logistic_models_glm$income_house_median_B19013_001, 
+  "income_house_median_B19013_001")
+
+box_tidwell_inator(
+  univariable_logistic_models_glm$house_value_median_B25077_001, 
+  "house_value_median_B25077_001")
+
+box_tidwell_inator(
+  univariable_logistic_models_glm$ice_B19001, 
+  "ice_B19001")
+
+box_tidwell_inator(
+  univariable_logistic_models_glm$prod_count, 
+  "prod_count")
+
+box_tidwell_inator(
+  univariable_logistic_models_glm$ALAND_KM, 
+  "ALAND_KM")
+
+box_tidwell_inator(
+  univariable_logistic_models_glm$ALAND_KM, 
+  "AWATER_KM")
+
+dependent_variable_names <- 
+  c("pop_tot_B01001_001", 
+    "pop_dense_B01001_001_ALAND", 
+    "female_percent_B01001_026_001", 
+    "age_0_to_17_percent_B01001", 
+    "age_65_plus_percent_B01001",   
+    "aian_percent_any_race_B02010_001",   
+    "hisp_lat_percent_B03002_012_001", 
+    "black_percent_B03002_004_001",
+    "white_non_hisp_lat_percent_B03002_003_001",   
+    "education_high_school_plus_percent_B15003_017_to_025",   
+    "limited_english_percent_C16002_004_007_010_013_001",   
+    "no_health_insurance_percent_B27010_017_033_050_066",   
+    "renter_occupy_percent_B25003_003_001",   
+    "unemployed_percent_B23025_005_003",   
+    "poverty_below_100_percent_C17002_002_003_001",  
+    "earnings_median_B20002_001", 
+    "income_house_median_B19013_001",   
+    "house_value_median_B25077_001",  
+    "ice_B19001",  
+    "prod_count",
+    "ALAND_KM",  
+    "AWATER_KM")
+
+options(warn = 1)
+
+box_tidwell_list <- 
+  mapply(box_tidwell_inator, 
+         univariable_logistic_models_glm, 
+         dependent_variable_names)
+
+thing <- rms::anova(univariable_logistic_models_lrm$pop_tot_B01001_001)
+summary(thing)
+
+hl_gof_inator <- 
+  function(glm_model, 
+           predictor_name) {
+    remove_nas_from_data <-   # drops values for which na in current predictor
+      ks_analysis_populated %>% 
+      drop_na(predictor_name)
+    hl_gof <- HLgof.test(
+      fit = fitted(glm_model), 
+      obs = remove_nas_from_data$extant_swd_binary)
+    print(hl_gof$H)
+    return(hl_gof$H)
+  }
+
+
+
+# make function to get le cessie one
 cessie_gof_inator <- 
-  function(x) {
+  function(lrm_model) {
   gof_cessie <- 
-    resid(x, "gof")
-  return(gof_cessie)
+    resid(lrm_model, "gof")
+  cessie_sum_sq_err <- 
+    gof_cessie["Sum of squared errors"]
+  cessie_exp_val_h0 <- 
+    gof_cessie["Expected value|H0"]
+  cessie_sd <- 
+    gof_cessie["SD"]
+  cessie_z <- 
+    gof_cessie["Z"]
+  cessie_p <- 
+    gof_cessie["P"]
+  cessie_gof_tibble <- 
+    tibble(
+    cessie_sum_sq_err, 
+    cessie_exp_val_h0,
+    cessie_sd, 
+    cessie_z, 
+    cessie_p
+    )
+  return(cessie_gof_tibble)
   }
 
 # make list of tibbles with gofs
@@ -11939,65 +12158,71 @@ cessie_gof_list <-
 
 # make tables of le cessie gof statistics
 
-filter(!! sym(year_varname) == early_year)
 
-naminator <- 
-  function(glm_model) {
-    name_of_model <- 
-      deparse(substitute(glm_model))
-    name_of_model_short <- 
-      str_split(name_of_model, "\\$")[[1]][[1]]
-  }
 
-    name_of_model <- 
-      deparse(substitute(glm_model))
-    name_of_model_short <- 
-      str_split(name_of_model, "\\$")[[1]][[1]]
-    remove_nas_from_data <- 
-      ks_analysis_populated %>% 
-      drop_na(predictor)
 
-thing <- lapply(univariable_logistic_models_glm, naminator)
-
-thing$pop_dense_B01001_001_ALAND
 
 # make hl gof function
 hl_gof_inator <- 
-  function(glm_model, predictor_name) {
+  function(glm_model, 
+           predictor_name) {
     remove_nas_from_data <-   # drops values for which na in current predictor
       ks_analysis_populated %>% 
       drop_na(predictor_name)
     hl_gof <- HLgof.test(
       fit = fitted(glm_model), 
       obs = remove_nas_from_data$extant_swd_binary)
-    print(hl_gof)
-    return(hl_gof)
+    print(hl_gof$H)
+    return(hl_gof$H)
   }
 
 # hl_gof_inator(univariable_logistic_models_glm$house_value_median_B25077_001, 
 #              "house_value_median_B25077_001")
 
-options(warn = 1)
+options(warn = 1)   # force warnings to apply to specific model
 
 # Hosmer-Lemeshow
-
 hl_gof_matrix <- 
   mapply(hl_gof_inator, 
          univariable_logistic_models_glm, 
          dependent_variable_names)
 
 hl_gof_list <- 
-  as.list(data.frame(t(hl_gof_matrix)))
+  as.list(data.frame(hl_gof_matrix))
 
-# count unique values by variable
 
-# aggregate(values ~ ind, unique(stack(ks_analysis_populated)), length)
-
-# Hosmer-Lemeshow
-
-# make function to find the goodness of fit
 
 # deviance (G2)
+g2inator <- 
+  function(lrm_model){
+    g2 <- lrm_model$stats["Model L.R."]
+    df_for_g2 <- lrm_model$stats["d.f."]
+    p_for_g2 <- lrm_model$stats["P"]
+    g2_stats_tibble <- 
+      tibble(g2, 
+                df_for_g2, 
+                p_for_g2)
+    return(g2_stats_tibble)
+  }
+
+g2_list <- 
+  lapply(univariable_logistic_models_lrm, 
+         g2inator)
+
+
+# ROC
+roc_inator <- 
+  function(lrm_model){
+    ROC <- lrm_model$stats["C"]
+    return(ROC)
+  }  
+
+roc_list <-   # list of numerics
+   lapply(univariable_logistic_models_lrm, 
+          roc_inator)
+
+
+
 
 # area under the curve
 
@@ -12750,6 +12975,21 @@ second_best_glm_run
 # ABANDON HOPE ALL YE WHO ENTER HERE, WHERE OLD CODE GOES TO DIE
 
 ```{r dead code, eval=FALSE, include=FALSE}
+
+# G2 <- model1$null.deviance-model1$deviance
+# # deviance (G2)
+# g2inator <- 
+#   function(glm_model){
+#     g2 <- glm_model$null.deviance - 
+#       glm_model$deviance
+#     return(g2)
+#   }
+# 
+# g2_list <- 
+#   lapply(univariable_logistic_models_glm, 
+#          g2inator)
+# count unique values by variable
+# aggregate(values ~ ind, unique(stack(ks_analysis_populated)), length)
 # # Predict the probability (p) of swd well presence
 # probabilities <- 
 #   predict(logistic_model_no_tinies, type = "response")
