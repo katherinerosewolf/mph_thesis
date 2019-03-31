@@ -3251,19 +3251,21 @@ lime_fluid_swd_horiz_ruca_prod_acs <-
 lime_fluid_swd_horiz_ruca_prod_acs <- 
   lime_fluid_swd_horiz_ruca_prod_acs %>% 
   mutate(
-    pop_tot_thousands_B01001_001 = 
-      pop_tot_B01001_001 / 1000,
-    pop_dense_thousands_B01001_001_ALAND = 
-      pop_dense_B01001_001_ALAND / 1000,
+    pop_tot_hundreds_B01001_001 = 
+      pop_tot_B01001_001 / 100,
+    pop_dense_hundreds_B01001_001_ALAND = 
+      pop_dense_B01001_001_ALAND / 100,
+    female_true_percent_B01001_026_001 = 
+      female_percent_B01001_026_001 * 100,
     age_0_to_17_true_percent_B01001 = 
       age_0_to_17_percent_B01001 * 100,
-    age_65_plus_true_percent_B01001_big = 
+    age_65_plus_true_percent_B01001 = 
       age_65_plus_percent_B01001 * 100,
-    white_non_hisp_lat_true_percent_B03002_003_001_big = 
+    white_non_hisp_lat_true_percent_B03002_003_001 = 
       white_non_hisp_lat_percent_B03002_003_001 * 100,
-    hisp_lat_true_percent_B03002_012_001_big = 
+    hisp_lat_true_percent_B03002_012_001 = 
       hisp_lat_percent_B03002_012_001 * 100,
-    black_true_percent_B03002_004_001_big = 
+    black_true_percent_B03002_004_001 = 
       black_percent_B03002_004_001 * 100,
     aian_true_percent_any_race_B02010_001 = 
       aian_percent_any_race_B02010_001 * 100,
@@ -3273,18 +3275,22 @@ lime_fluid_swd_horiz_ruca_prod_acs <-
       renter_occupy_percent_B25003_003_001 * 100,
     limited_english_true_percent_C16002_004_007_010_013_001 = 
       limited_english_percent_C16002_004_007_010_013_001 * 100,
-    earnings_median_thousands_B20002_001 = 
-      earnings_median_B20002_001 / 1000,
-    income_house_median_thousands_B19013_001 = 
-      income_house_median_B19013_001 / 1000,
-    house_value_median_thousands_B25077_001 = 
-      house_value_median_B25077_001 / 1000,
+    earnings_median_ten_thousands_B20002_001 = 
+      earnings_median_B20002_001 / 10000,
+    income_house_median_ten_thousands_B19013_001 = 
+      income_house_median_B19013_001 / 10000,
+    house_value_median_ten_thousands_B25077_001 = 
+      house_value_median_B25077_001 / 10000,
     no_health_insurance_true_percent_B27010_017_033_050_066 = 
       no_health_insurance_percent_B27010_017_033_050_066 * 100,
     poverty_below_100_true_percent_C17002_002_003_001 = 
       poverty_below_100_percent_C17002_002_003_001 * 100,
     unemployed_true_percent_B23025_005_003 = 
-      unemployed_percent_B23025_005_003 * 100)
+      unemployed_percent_B23025_005_003 * 100, 
+    ALAND_KM_ten = 
+      ALAND_KM / 10, 
+    AWATER_KM_ten = 
+      AWATER_KM / 10)
 
 ```
 
@@ -3349,23 +3355,26 @@ lime_fluid_swd_horiz_ruca_prod_acs_analysis <-
     "tract_geoid", 
     "ruca_prime", 
     "ruca_second", 
-    "pop_tot_thousands_B01001_001",
-    "pop_dense_thousands_B01001_001_ALAND",
+    "pop_tot_hundreds_B01001_001",
+    "pop_dense_hundreds_B01001_001_ALAND", 
+    "female_true_percent_B01001_026_001", 
     "age_0_to_17_true_percent_B01001",
-    "age_65_plus_true_percent_B01001_big",
-    "white_non_hisp_lat_true_percent_B03002_003_001_big",
-    "hisp_lat_true_percent_B03002_012_001_big",
-    "black_true_percent_B03002_004_001_big",
+    "age_65_plus_true_percent_B01001",
+    "white_non_hisp_lat_true_percent_B03002_003_001",
+    "hisp_lat_true_percent_B03002_012_001",
+    "black_true_percent_B03002_004_001",
     "aian_true_percent_any_race_B02010_001",
     "education_high_school_plus_true_percent_B15003_017_to_025",
     "renter_occupy_true_percent_B25003_003_001",
     "limited_english_true_percent_C16002_004_007_010_013_001",
-    "earnings_median_thousands_B20002_001",
-    "income_house_median_thousands_B19013_001",
-    "house_value_median_thousands_B25077_001",
+    "earnings_median_ten_thousands_B20002_001",
+    "income_house_median_ten_thousands_B19013_001",
+    "house_value_median_ten_thousands_B25077_001",
     "no_health_insurance_true_percent_B27010_017_033_050_066",
     "poverty_below_100_true_percent_C17002_002_003_001",
-    "unemployed_true_percent_B23025_005_003"
+    "unemployed_true_percent_B23025_005_003", 
+    "ALAND_KM_ten", 
+    "AWATER_KM_ten"
     )]
 
 # save/write/load chunk
@@ -11932,13 +11941,37 @@ dependent_variable_names <-
     "ALAND_KM",  
     "AWATER_KM")
 
+revised_dependent_variable_names <- 
+  c("pop_tot_hundreds_B01001_001", 
+    "pop_dense_hundreds_B01001_001_ALAND", 
+    "female_true_percent_B01001_026_001", 
+    "age_0_to_17_true_percent_B01001", 
+    "age_65_plus_true_percent_B01001",   
+    "aian_true_percent_any_race_B02010_001",   
+    "hisp_lat_true_percent_B03002_012_001", 
+    "black_true_percent_B03002_004_001",
+    "white_non_hisp_lat_true_percent_B03002_003_001",   
+    "education_high_school_plus_true_percent_B15003_017_to_025",   
+    "limited_english_true_percent_C16002_004_007_010_013_001",   
+    "no_health_insurance_true_percent_B27010_017_033_050_066",   
+    "renter_occupy_true_percent_B25003_003_001",   
+    "unemployed_true_percent_B23025_005_003",   
+    "poverty_below_100_true_percent_C17002_002_003_001",  
+    "earnings_median_ten_thousands_B20002_001", 
+    "income_house_median_ten_thousands_B19013_001",   
+    "house_value_median_ten_thousands_B25077_001",  
+    "ice_B19001",  
+    "prod_count",
+    "ALAND_KM",  
+    "AWATER_KM")
+  
 # thing that rms needs, who knows why
 dd = datadist(ks_analysis_populated)
 options(datadist="dd")
 
 # run all the univariable logistic regressions AT ONCE (MWAHAHA) for glm
 univariable_logistic_models_glm <-
-  sapply(dependent_variable_names, 
+  sapply(revised_dependent_variable_names, 
          function(x) {
     glm(substitute(extant_swd_binary ~ indy,
         list(indy = as.name(x))),
@@ -11946,7 +11979,7 @@ univariable_logistic_models_glm <-
         family = binomial)})
 
 names(univariable_logistic_models_glm) <- 
-  dependent_variable_names
+  revised_dependent_variable_names
 
 # run all the univariable logisitic regression AT ONCE (MWAHAHA) for lrm package
 
@@ -11957,47 +11990,17 @@ lrm_function <-
         data = ks_analysis_populated, 
         x = TRUE, y = TRUE)}
 
-thing<-lrm(extant_swd_binary ~ pop_dense_B01001_001_ALAND + prod_count + prod_count * pop_dense_B01001_001_ALAND,
-        data = ks_analysis_populated, 
-        x = TRUE, y = TRUE)
-
-
-hi <- anova(thing, indnl = TRUE)
-print(hi, "subscripts")
-
-vcov(thing)
-
-
-require(rms)
-
-#Fit a logistic model containing predictors age, blood.pressure, sex
-#and cholesterol, with age fitted with a smooth 5-knot restricted cubic 
-#spline function and a different shape of the age relationship for males 
-#and females.  As an intermediate step, predict mean cholesterol from
-#age using a proportional odds ordinal logistic model
-#
-n <- 1000    # define sample size
-set.seed(17) # so can reproduce the results
-age            <- rnorm(n, 120, 15)
-blood.pressure <- rnorm(n, 120, 15)
-height         <- rnorm(n, 50, 10)
-cholesterol    <- rnorm(n, 200, 25)
-sex            <- factor(sample(c('female','male'), n,TRUE))
-
-
-f <- lrm(cholesterol ~ age + rcs(blood.pressure,5) + sex + rcs(height,4))
-# Fits restricted cubic splines in 3 variables with default knots
-# 4, 5, 4 knots = 2, 3, 2 nonlinear terms
-Function(f)   # display algebraic form of fit
-anova(f)      # obtain individual + combined linearity tests
-
+thing <- 
+  lrm(extant_swd_binary ~ pop_dense_B01001_001_ALAND + prod_count + prod_count * pop_dense_B01001_001_ALAND, 
+      data = ks_analysis_populated, 
+      x = TRUE, y = TRUE)
 
 univariable_logistic_models_lrm <-
-  lapply(dependent_variable_names, 
+  lapply(revised_dependent_variable_names, 
          lrm_function)
 
 names(univariable_logistic_models_lrm) <- 
-  dependent_variable_names
+  revised_dependent_variable_names
 ```
 
 
@@ -12008,22 +12011,138 @@ initial_coefficients <-
               tidy, 
               .id = "model")
 
-# add odds ratios
+# make tibble
 univariable_initial_tibble <- 
   as_tibble(initial_coefficients)
 
+# add odds ratios
 univariable_initial_tibble <- 
   univariable_initial_tibble %>% 
   mutate(odds_ratio = exp(estimate))
 
-# make model a character vector
-univariable_initial_tibble <- 
+```
+
+
+```{r make table for thesis}
+
+univariable_logistic_table_tibble <- 
   univariable_initial_tibble %>% 
-  mutate(model = as.character(model))
+  select(model, term, odds_ratio) %>%   # select relevant columns
+  filter(term != "(Intercept)") %>%   # remove intercept rows
+  mutate(model = as.character(model)) %>%   # make model a character vector
+  select(model, odds_ratio)   # get rid of term
+
+```
+
+
+```{r profile confidence intervals for odds ratio}
+
+# function to make them
+profilinator <- 
+  function(x) {
+  profile_confint_estimate <- 
+    confint_tidy(x, 
+                 conf.level = 0.95, 
+                 func = stats::confint)
+  profile_confint_odds_ratio <- 
+    exp(profile_confint_estimate)
+}
+
+options(warn = 1)
+
+# make list of tibbles with cis
+profile_ci_list <- 
+  lapply(univariable_logistic_models_glm, 
+         profilinator)
+
+# get names of tibbles
+names_profile_ci_variables <- 
+  names(profile_ci_list)
+
+# add names of tibbles as a new column
+profile_ci_list_with_names <- 
+  mapply(cbind, 
+         profile_ci_list, 
+         "model" = names_profile_ci_variables, 
+         SIMPLIFY = F)
+profile_ci_list_with_names
+  
+# add term as new column
+profile_ci_list_with_names_terms <- 
+  mapply(cbind, 
+         profile_ci_list_with_names, 
+         "term" = names_profile_ci_variables, 
+         SIMPLIFY = F)
+profile_ci_list_with_names_terms
+
+# fix it back into a tibble
+profile_ci_list_tibble_try <- 
+  map(profile_ci_list_with_names_terms, as.tibble)
+
+# make factor columns into character columns
+profile_ci_list_tibble <- 
+   lapply(profile_ci_list_tibble_try, 
+          function(x) {
+            x$model <- as.character(x$model) 
+            return(x)
+          })
+
+profile_ci_list_tibble <- 
+   lapply(profile_ci_list_tibble, 
+          function(x) {
+            x$term <- as.character(x$term) 
+            return(x)
+          })
+
+# replace intercept term with "(Intercept)"
+cute_function <- 
+  function(x) {
+    x[1,4] <- 
+      "(Intercept)"
+    return(x)
+  }
+
+profile_ci_list_tibble <- 
+  lapply(profile_ci_list_tibble, 
+         cute_function)
+  
+# make one big tibble from all the rows
+univariable_profile_ci_tibble <- 
+  bind_rows(profile_ci_list_tibble)
+univariable_profile_ci_tibble
+
+# rename confidence interval as profile
+univariable_profile_ci_tibble <- 
+  univariable_profile_ci_tibble %>% 
+  rename(profile_ci_or_low = conf.low, 
+         profile_ci_or_high = conf.high)
   
 ```
 
-```{r logistic regression goodness of fit statistics}
+```{r combine profile confidence intervals with odds ratios}
+
+# remove intercept rows
+univariable_profile_ci_tibble_for_thesis <- 
+  univariable_profile_ci_tibble %>% 
+  filter(term != "(Intercept)") %>% 
+  select(-term)
+
+# merge with prior table
+univariable_logistic_table_tibble <- 
+  univariable_logistic_table_tibble %>% 
+  full_join(univariable_profile_ci_tibble_for_thesis, 
+            by = "model") %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+
+
+write_csv(univariable_logistic_table_tibble, 
+          path = "univariable_logistic_table_tibble.csv")
+
+```
+
+
+```{r box tidwell goodness of fit statistics}
 
 # box tidwell for linearity of logit
 
@@ -12094,7 +12213,8 @@ box_tidwell_inator(
   univariable_logistic_models_glm,
   dependent_variable_names_no_ice_prod_count)
 
-thing <- anova(univariable_logistic_models_lrm$pop_tot_B01001_001, indnl = TRUE)
+thing <- 
+  anova(univariable_logistic_models_lrm$pop_tot_B01001_001, indnl = TRUE)
 summary(thing)
 
 box_tidwell_inator(
@@ -12193,55 +12313,17 @@ box_tidwell_inator(
   univariable_logistic_models_glm$AWATER_KM, 
   "AWATER_KM")
 
-dependent_variable_names <- 
-  c("pop_tot_B01001_001", 
-    "pop_dense_B01001_001_ALAND", 
-    "female_percent_B01001_026_001", 
-    "age_0_to_17_percent_B01001", 
-    "age_65_plus_percent_B01001",   
-    "aian_percent_any_race_B02010_001",   
-    "hisp_lat_percent_B03002_012_001", 
-    "black_percent_B03002_004_001",
-    "white_non_hisp_lat_percent_B03002_003_001",   
-    "education_high_school_plus_percent_B15003_017_to_025",   
-    "limited_english_percent_C16002_004_007_010_013_001",   
-    "no_health_insurance_percent_B27010_017_033_050_066",   
-    "renter_occupy_percent_B25003_003_001",   
-    "unemployed_percent_B23025_005_003",   
-    "poverty_below_100_percent_C17002_002_003_001",  
-    "earnings_median_B20002_001", 
-    "income_house_median_B19013_001",   
-    "house_value_median_B25077_001",  
-    "ice_B19001",  
-    "prod_count",
-    "ALAND_KM",  
-    "AWATER_KM")
-
-options(warn = 1)
-
 # box_tidwell_list <- 
 #   mapply(box_tidwell_inator, 
 #          univariable_logistic_models_glm, 
 #          dependent_variable_names)
 
-thing <- rms::anova(univariable_logistic_models_lrm$pop_tot_B01001_001)
+thing <- 
+  rms::anova(univariable_logistic_models_lrm$pop_tot_B01001_001)
 summary(thing)
 
-hl_gof_inator <- 
-  function(glm_model, 
-           predictor_name) {
-    remove_nas_from_data <-   # drops values for which na in current predictor
-      ks_analysis_populated %>% 
-      drop_na(predictor_name)
-    hl_gof <- HLgof.test(
-      fit = fitted(glm_model), 
-      obs = remove_nas_from_data$extant_swd_binary)
-    print(hl_gof$H)
-    return(hl_gof$H)
-  }
-
-
 ```
+
 
 ```{r cessie goodness of fit}
 # make function to get le cessie one
@@ -12308,11 +12390,7 @@ univariable_cessie_gof_tibble <-
 write_csv(univariable_cessie_gof_tibble, 
           path = "cessie_test_results.csv")
 
-
 ```
-
-
-
 
 
 ```{r hosmer lemeshow}
@@ -12365,7 +12443,6 @@ write.csv(hl_gof_big_matrix,
 
 anova(univariable_logistic_models_glm$pop_tot_B01001_001, test="LRT")
 ```
-
 
 
 ```{r g2 statistics}
@@ -12421,7 +12498,6 @@ write_csv(g2_tibble,
 ```
 
 
-
 ```{r roc}
 # ROC
 roc_inator <- 
@@ -12467,6 +12543,7 @@ roc_tibble <-
 write_csv(roc_tibble, 
           path = "roc_test_results.csv")
 ```
+
 
 ```{r deviances}
 # deviances 
@@ -12537,6 +12614,7 @@ write_csv(deviance_tibble,
 univariable_logistic_models_glm$pop_dense_B01001_001_ALAND$
 univariable_logistic_models_glm$pop_dense_B01001_001_ALAND$deviance
 ```
+
 
 ```{r area under curve}
 # area under the curve
@@ -12706,7 +12784,6 @@ univariable_wald_ci_tibble <-
 ```
 
 
-
 ```{r profile confidence intervals for estimate}
 
 # function to make them
@@ -12785,88 +12862,6 @@ univariable_profile_ci_est_tibble <-
   univariable_profile_ci_est_tibble %>% 
   rename(profile_ci_est_low = conf.low, 
          profile_ci_est_high = conf.high)
-  
-```
-
-
-```{r profile confidence intervals for odds ratio}
-
-# function to make them
-profilinator <- 
-  function(x) {
-  profile_confint_estimate <- 
-    confint_tidy(x, 
-                 conf.level = 0.95, 
-                 func = stats::confint)
-  profile_confint_odds_ratio <- 
-    exp(profile_confint_estimate)
-}
-
-# make list of tibbles with cis
-profile_ci_list <- 
-  lapply(univariable_logistic_models_glm, profilinator)
-
-# get names of tibbles
-names_profile_ci_variables <- 
-  names(profile_ci_list)
-
-# add names of tibbles as a new column
-profile_ci_list_with_names <- 
-  mapply(cbind, 
-         profile_ci_list, 
-         "model" = names_profile_ci_variables, 
-         SIMPLIFY = F)
-profile_ci_list_with_names
-  
-# add term as new column
-profile_ci_list_with_names_terms <- 
-  mapply(cbind, 
-         profile_ci_list_with_names, 
-         "term" = names_profile_ci_variables, 
-         SIMPLIFY = F)
-profile_ci_list_with_names_terms
-
-# fix it back into a tibble
-profile_ci_list_tibble_try <- 
-  map(profile_ci_list_with_names_terms, as.tibble)
-
-# make factor columns into character columns
-profile_ci_list_tibble <- 
-   lapply(profile_ci_list_tibble_try, 
-          function(x) {
-            x$model <- as.character(x$model) 
-            return(x)
-          })
-
-profile_ci_list_tibble <- 
-   lapply(profile_ci_list_tibble, 
-          function(x) {
-            x$term <- as.character(x$term) 
-            return(x)
-          })
-
-# replace intercept term with "(Intercept)"
-cute_function <- 
-  function(x) {
-    x[1,4] <- 
-      "(Intercept)"
-    return(x)
-  }
-
-profile_ci_list_tibble <- 
-  lapply(profile_ci_list_tibble, 
-         cute_function)
-  
-# make one big tibble from all the rows
-univariable_profile_ci_tibble <- 
-  bind_rows(profile_ci_list_tibble)
-univariable_profile_ci_tibble
-
-# rename confidence interval as profile
-univariable_profile_ci_tibble <- 
-  univariable_profile_ci_tibble %>% 
-  rename(profile_ci_or_low = conf.low, 
-         profile_ci_or_high = conf.high)
   
 ```
 
