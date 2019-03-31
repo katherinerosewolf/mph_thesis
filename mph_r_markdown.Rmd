@@ -3242,8 +3242,54 @@ lime_fluid_swd_horiz_ruca_prod_acs <-
 lime_fluid_swd_horiz_ruca_prod_acs <-
   within(lime_fluid_swd_horiz_ruca_prod_acs,
          extant_swd_from_2010_binary[extant_swd_from_2010_count > 0] <- 1)
+```
 
 
+```{r construct percent variables}
+
+# make new, cool variables that make more sense for the odds ratios
+lime_fluid_swd_horiz_ruca_prod_acs <- 
+  lime_fluid_swd_horiz_ruca_prod_acs %>% 
+  mutate(
+    pop_tot_thousands_B01001_001 = 
+      pop_tot_B01001_001 / 1000,
+    pop_dense_thousands_B01001_001_ALAND = 
+      pop_dense_B01001_001_ALAND / 1000,
+    age_0_to_17_true_percent_B01001 = 
+      age_0_to_17_percent_B01001 * 100,
+    age_65_plus_true_percent_B01001_big = 
+      age_65_plus_percent_B01001 * 100,
+    white_non_hisp_lat_true_percent_B03002_003_001_big = 
+      white_non_hisp_lat_percent_B03002_003_001 * 100,
+    hisp_lat_true_percent_B03002_012_001_big = 
+      hisp_lat_percent_B03002_012_001 * 100,
+    black_true_percent_B03002_004_001_big = 
+      black_percent_B03002_004_001 * 100,
+    aian_true_percent_any_race_B02010_001 = 
+      aian_percent_any_race_B02010_001 * 100,
+    education_high_school_plus_true_percent_B15003_017_to_025 = 
+       education_high_school_plus_percent_B15003_017_to_025 * 100,
+    renter_occupy_true_percent_B25003_003_001 = 
+      renter_occupy_percent_B25003_003_001 * 100,
+    limited_english_true_percent_C16002_004_007_010_013_001 = 
+      limited_english_percent_C16002_004_007_010_013_001 * 100,
+    earnings_median_thousands_B20002_001 = 
+      earnings_median_B20002_001 / 1000,
+    income_house_median_thousands_B19013_001 = 
+      income_house_median_B19013_001 / 1000,
+    house_value_median_thousands_B25077_001 = 
+      house_value_median_B25077_001 / 1000,
+    no_health_insurance_true_percent_B27010_017_033_050_066 = 
+      no_health_insurance_percent_B27010_017_033_050_066 * 100,
+    poverty_below_100_true_percent_C17002_002_003_001 = 
+      poverty_below_100_percent_C17002_002_003_001 * 100,
+    unemployed_true_percent_B23025_005_003 = 
+      unemployed_percent_B23025_005_003 * 100)
+
+```
+
+
+```{r save the above}
 # save/write chunk
 save(lime_fluid_swd_horiz_ruca_prod_acs,
      file = "lime_fluid_swd_horiz_ruca_prod_acs.rdata")
@@ -3302,7 +3348,24 @@ lime_fluid_swd_horiz_ruca_prod_acs_analysis <-
     "ice_B19001", 
     "tract_geoid", 
     "ruca_prime", 
-    "ruca_second"
+    "ruca_second", 
+    "pop_tot_thousands_B01001_001",
+    "pop_dense_thousands_B01001_001_ALAND",
+    "age_0_to_17_true_percent_B01001",
+    "age_65_plus_true_percent_B01001_big",
+    "white_non_hisp_lat_true_percent_B03002_003_001_big",
+    "hisp_lat_true_percent_B03002_012_001_big",
+    "black_true_percent_B03002_004_001_big",
+    "aian_true_percent_any_race_B02010_001",
+    "education_high_school_plus_true_percent_B15003_017_to_025",
+    "renter_occupy_true_percent_B25003_003_001",
+    "limited_english_true_percent_C16002_004_007_010_013_001",
+    "earnings_median_thousands_B20002_001",
+    "income_house_median_thousands_B19013_001",
+    "house_value_median_thousands_B25077_001",
+    "no_health_insurance_true_percent_B27010_017_033_050_066",
+    "poverty_below_100_true_percent_C17002_002_003_001",
+    "unemployed_true_percent_B23025_005_003"
     )]
 
 # save/write/load chunk
@@ -11894,12 +11957,39 @@ lrm_function <-
         data = ks_analysis_populated, 
         x = TRUE, y = TRUE)}
 
-thing<-lrm(extant_swd_binary ~ pop_dense_B01001_001_ALAND + house_value_median_B25077_001 + pop_dense_B01001_001_ALAND * house_value_median_B25077_001,
+thing<-lrm(extant_swd_binary ~ pop_dense_B01001_001_ALAND + prod_count + prod_count * pop_dense_B01001_001_ALAND,
         data = ks_analysis_populated, 
         x = TRUE, y = TRUE)
 
-hi <- anova.rms(thing, indnl = TRUE)
+
+hi <- anova(thing, indnl = TRUE)
 print(hi, "subscripts")
+
+vcov(thing)
+
+
+require(rms)
+
+#Fit a logistic model containing predictors age, blood.pressure, sex
+#and cholesterol, with age fitted with a smooth 5-knot restricted cubic 
+#spline function and a different shape of the age relationship for males 
+#and females.  As an intermediate step, predict mean cholesterol from
+#age using a proportional odds ordinal logistic model
+#
+n <- 1000    # define sample size
+set.seed(17) # so can reproduce the results
+age            <- rnorm(n, 120, 15)
+blood.pressure <- rnorm(n, 120, 15)
+height         <- rnorm(n, 50, 10)
+cholesterol    <- rnorm(n, 200, 25)
+sex            <- factor(sample(c('female','male'), n,TRUE))
+
+
+f <- lrm(cholesterol ~ age + rcs(blood.pressure,5) + sex + rcs(height,4))
+# Fits restricted cubic splines in 3 variables with default knots
+# 4, 5, 4 knots = 2, 3, 2 nonlinear terms
+Function(f)   # display algebraic form of fit
+anova(f)      # obtain individual + combined linearity tests
 
 
 univariable_logistic_models_lrm <-
@@ -11938,7 +12028,7 @@ univariable_initial_tibble <-
 # box tidwell for linearity of logit
 
 # remove ice
-dependent_variable_names_no_ice <- 
+dependent_variable_names_no_ice_prod_count <- 
   c("pop_tot_B01001_001", 
     "pop_dense_B01001_001_ALAND", 
     "female_percent_B01001_026_001", 
@@ -11956,45 +12046,65 @@ dependent_variable_names_no_ice <-
     "poverty_below_100_percent_C17002_002_003_001",  
     "earnings_median_B20002_001", 
     "income_house_median_B19013_001",   
-    "house_value_median_B25077_001", 
-    "prod_count",
+    "house_value_median_B25077_001",
     "ALAND_KM",  
     "AWATER_KM")
 
 # make box tidwell function
 box_tidwell_inator <- 
   function(glm_model, 
-           predictor_name) {
+           predictor_name, 
+           na.rm = TRUE) {
     remove_nas_from_data <-   # drops values for which na in current predictor
       ks_analysis_populated %>% 
       drop_na(predictor_name)
     tibble_with_logit_dependent <- 
       remove_nas_from_data %>% 
-      mutate(logit_dependent = logit(fitted(glm_model)))
+      mutate(logit_dependent = logit(fitted(glm_model))) 
     thing <- 
       dplyr::pull(tibble_with_logit_dependent, 
                                predictor_name)
+    thing2 <- as.double(thing) + 0.000000000000001
     boxTidwell(tibble_with_logit_dependent$logit_dependent ~ 
-                 thing
+                 thing2
                )
   }
 
-# box_tidwell_inator(
-#   univariable_logistic_models_glm, 
-#   dependent_variable_names_no_ice)
+box_tidwell_inator_for_ice <- 
+  function(glm_model, 
+           predictor_name, 
+           na.rm = TRUE) {
+    remove_nas_from_data <-   # drops values for which na in current predictor
+      ks_analysis_populated %>% 
+      drop_na(predictor_name)
+    tibble_with_logit_dependent <- 
+      remove_nas_from_data %>% 
+      mutate(logit_dependent = logit(fitted(glm_model))) 
+    thing <- 
+      dplyr::pull(tibble_with_logit_dependent, 
+                               predictor_name)
+    thing2 <- as.double(thing) + 2
+    boxTidwell(tibble_with_logit_dependent$logit_dependent ~ 
+                 thing2
+               )
+  }
+
+
+box_tidwell_inator(
+  univariable_logistic_models_glm,
+  dependent_variable_names_no_ice_prod_count)
 
 thing <- anova(univariable_logistic_models_lrm$pop_tot_B01001_001, indnl = TRUE)
 summary(thing)
-
-
 
 box_tidwell_inator(
   univariable_logistic_models_glm$pop_tot_B01001_001, 
   "pop_tot_B01001_001")
 
-box_tidwell_inator(
+pop_tid <- box_tidwell_inator(
   univariable_logistic_models_glm$pop_dense_B01001_001_ALAND, 
   "pop_dense_B01001_001_ALAND")
+class(pop_tid$result)
 
 box_tidwell_inator(
   univariable_logistic_models_glm$female_percent_B01001_026_001, 
@@ -12060,7 +12170,7 @@ box_tidwell_inator(
   univariable_logistic_models_glm$house_value_median_B25077_001, 
   "house_value_median_B25077_001")
 
-box_tidwell_inator(
+box_tidwell_inator_for_ice(
   univariable_logistic_models_glm$ice_B19001, 
   "ice_B19001")
 
@@ -12068,12 +12178,19 @@ box_tidwell_inator(
   univariable_logistic_models_glm$prod_count, 
   "prod_count")
 
+# boxTidwell(
+#   
+#   y = (logit(fitted(univariable_logistic_models_glm$prod_count)) + 0.0001), 
+#   x1 = ks_analysis_populated$prod_count, na.rm = TRUE)
+# 
+# View(ks_analysis_dataset$prod_count)
+
 box_tidwell_inator(
   univariable_logistic_models_glm$ALAND_KM, 
   "ALAND_KM")
 
 box_tidwell_inator(
-  univariable_logistic_models_glm$ALAND_KM, 
+  univariable_logistic_models_glm$AWATER_KM, 
   "AWATER_KM")
 
 dependent_variable_names <- 
@@ -12102,10 +12219,10 @@ dependent_variable_names <-
 
 options(warn = 1)
 
-box_tidwell_list <- 
-  mapply(box_tidwell_inator, 
-         univariable_logistic_models_glm, 
-         dependent_variable_names)
+# box_tidwell_list <- 
+#   mapply(box_tidwell_inator, 
+#          univariable_logistic_models_glm, 
+#          dependent_variable_names)
 
 thing <- rms::anova(univariable_logistic_models_lrm$pop_tot_B01001_001)
 summary(thing)
@@ -12124,7 +12241,9 @@ hl_gof_inator <-
   }
 
 
+```
 
+```{r cessie goodness of fit}
 # make function to get le cessie one
 cessie_gof_inator <- 
   function(lrm_model) {
@@ -12155,12 +12274,48 @@ cessie_gof_inator <-
 cessie_gof_list <- 
   lapply(univariable_logistic_models_lrm, 
          cessie_gof_inator)
+cessie_gof_list
 
 # make tables of le cessie gof statistics
+# get names of tibbles
+names_cessie_gof_variables <- 
+  names(cessie_gof_list)
+
+# add names of tibbles as a new column
+cessie_gof_list_with_names <-  
+  mapply(cbind, 
+         cessie_gof_list, 
+         "model" = names_cessie_gof_variables, 
+         SIMPLIFY = F)
+cessie_gof_list_with_names
+
+# fix it back into a tibble
+cessie_gof_list_tibble_try <- 
+  map(cessie_gof_list_with_names, as_tibble)
+
+# make factor columns into character columns
+cessie_gof_list_tibble <- 
+   lapply(cessie_gof_list_tibble_try, 
+          function(x) {
+            x$model <- as.character(x$model) 
+            return(x)
+          })
+
+# make one big tibble from all the rows
+univariable_cessie_gof_tibble <- 
+  bind_rows(cessie_gof_list_tibble)
+
+write_csv(univariable_cessie_gof_tibble, 
+          path = "cessie_test_results.csv")
+
+
+```
 
 
 
 
+
+```{r hosmer lemeshow}
 
 # make hl gof function
 hl_gof_inator <- 
@@ -12188,10 +12343,32 @@ hl_gof_matrix <-
          dependent_variable_names)
 
 hl_gof_list <- 
-  as.list(data.frame(hl_gof_matrix))
+  as.list(data.frame(t(hl_gof_matrix)))
+
+hl_gof_list_names <- 
+  names(hl_gof_list$p.value)
+
+class(hl_gof_list$statistic)
+
+hl_gof_big_matrix <- 
+  cbind(hl_gof_list_names, 
+        unlist(hl_gof_list$statistic), 
+         unlist(hl_gof_list$parameter), 
+         unlist(hl_gof_list$p.value))
+
+class(hl_gof_big_matrix)
+
+hl_gof_big_matrix
+
+write.csv(hl_gof_big_matrix, 
+          file = "homer_lemeshow_results.csv")
+
+anova(univariable_logistic_models_glm$pop_tot_B01001_001, test="LRT")
+```
 
 
 
+```{r g2 statistics}
 # deviance (G2)
 g2inator <- 
   function(lrm_model){
@@ -12209,7 +12386,43 @@ g2_list <-
   lapply(univariable_logistic_models_lrm, 
          g2inator)
 
+# make tables of  g2 statistics
+# get names of tibbles
+names_g2 <- 
+  names(g2_list)
 
+# add names of tibbles as a new column
+g2_list_with_names <-  
+  mapply(cbind, 
+         g2_list, 
+         "model" = names_g2, 
+         SIMPLIFY = F)
+g2_list_with_names
+
+# fix it back into a tibble
+g2_list_tibble_try <- 
+  map(g2_list_with_names, as_tibble)
+
+# make factor columns into character columns
+g2_list_tibble <- 
+   lapply(g2_list_tibble_try, 
+          function(x) {
+            x$model <- as.character(x$model) 
+            return(x)
+          }
+          )
+
+# make one big tibble from all the rows
+g2_tibble <- 
+  bind_rows(g2_list_tibble)
+
+write_csv(g2_tibble, 
+          path = "g2_test_results.csv")
+```
+
+
+
+```{r roc}
 # ROC
 roc_inator <- 
   function(lrm_model){
@@ -12221,9 +12434,111 @@ roc_list <-   # list of numerics
    lapply(univariable_logistic_models_lrm, 
           roc_inator)
 
+# make tables of roc statistics
+# get names of tibbles
+names_roc <- 
+  names(roc_list)
+
+# add names of tibbles as a new column
+roc_list_with_names <-  
+  mapply(cbind, 
+         roc_list, 
+         "model" = names_roc, 
+         SIMPLIFY = F)
+roc_list_with_names
+
+# fix it back into a tibble
+roc_list_tibble_try <- 
+  map(roc_list_with_names, as_tibble)
+
+# make factor columns into character columns
+roc_list_tibble <- 
+   lapply(roc_list_tibble_try, 
+          function(x) {
+            x$model <- as.character(x$model) 
+            return(x)
+          }
+          )
+
+# make one big tibble from all the rows
+roc_tibble <- 
+  bind_rows(roc_list_tibble)
+
+write_csv(roc_tibble, 
+          path = "roc_test_results.csv")
+```
+
+```{r deviances}
+# deviances 
+devianator <- 
+  function(glm_model) {
+  null_deviance <- 
+    glm_model$deviance
+  null_df <- 
+    glm_model$df.null
+  deviance <- 
+    glm_model$null.deviance
+  residual_df <- 
+    glm_model$df.residual
+  aic <- 
+    glm_model$aic
+    
+  deviance_tibble <- 
+    tibble(
+    null_deviance, 
+    null_df,
+    deviance,
+    residual_df, 
+    aic
+    )
+  return(deviance_tibble)
+  }
+
+deviance_list <- 
+  lapply(univariable_logistic_models_glm, 
+         devianator)
+deviance_list
+
+# make tables of deviance statistics
+# get names of tibbles
+names_deviance <- 
+  names(deviance_list)
+
+# add names of tibbles as a new column
+deviance_list_with_names <-  
+  mapply(cbind, 
+         deviance_list, 
+         "model" = names_deviance, 
+         SIMPLIFY = F)
+deviance_list_with_names
+
+# fix it back into a tibble
+deviance_list_tibble_try <- 
+  map(deviance_list_with_names, as_tibble)
+
+# make factor columns into character columns
+deviance_list_tibble <- 
+   lapply(deviance_list_tibble_try, 
+          function(x) {
+            x$model <- as.character(x$model) 
+            return(x)
+          }
+          )
+
+# make one big tibble from all the rows
+deviance_tibble <- 
+  bind_rows(deviance_list_tibble)
+
+write_csv(deviance_tibble, 
+          path = "deviance_test_results.csv")
 
 
 
+univariable_logistic_models_glm$pop_dense_B01001_001_ALAND$
+univariable_logistic_models_glm$pop_dense_B01001_001_ALAND$deviance
+```
+
+```{r area under curve}
 # area under the curve
 
 # gold standard for p likelihood ratio?
@@ -12649,7 +12964,7 @@ abline(h = 0, lty = 2)
 
 
 
-
+univariable_logistic_models_glm
 
 # # individual regressions
 # logistic_pop_tot <- 
@@ -12658,17 +12973,19 @@ abline(h = 0, lty = 2)
 #       data = ks_analysis_all_income, 
 #       family = binomial)
 # 
-# logistic_pop_dense <- 
-#   glm(extant_swd_binary ~ 
-#       pop_dense_B01001_001_ALAND, 
-#       data = ks_analysis_all_income, 
+# logistic_pop_dense <-
+#   glm(extant_swd_binary ~
+#       pop_dense_B01001_001_ALAND,
+#       data = ks_analysis_all_income,
+#       family = binomial)
+#  
+# logistic_female <-
+#   glm(extant_swd_binary ~
+#         female_percent_B01001_026_001,
+#       data = ks_analysis_all_income,
 #       family = binomial)
 # 
-# logistic_female <- 
-#   glm(extant_swd_binary ~ 
-#         female_percent_B01001_026_001, 
-#       data = ks_analysis_all_income, 
-#       family = binomial)
+# logistic_female
 # 
 # logistic_age_0_17 <- 
 #   glm(extant_swd_binary ~ 
@@ -12791,8 +13108,9 @@ abline(h = 0, lty = 2)
 # confint.default(logistic_pop_tot)
 # summary(logistic_pop_dense)
 # confint.default(logistic_pop_dense)
-# summary(logistic_female)
-# confint.default(logistic_female)
+summary(logistic_female)
+exp(confint.default(logistic_female))
+
 # summary(logistic_age_0_17)
 # confint.default(logistic_age_0_17)
 # summary(logistic_age_65_plus)
