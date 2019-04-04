@@ -42,9 +42,6 @@ library(tidyverse)
 library(geoRglm)
 library(spatstat)
 library(spdep)
-library(dplyr)
-library(tidyr)
-library(readr)
 library(car)
 library(bestglm)
 library(safeBinaryRegression)
@@ -55,6 +52,14 @@ library(kableExtra)
 library(broom)
 library(MKmisc)
 library(rms)
+library(tidyr)
+library(readr)
+library(dplyr)
+library(tidyverse)
+library(pscl)
+library(boot)
+library(mgcv)
+
 
 
 #### load fonts ####
@@ -368,7 +373,7 @@ block_groups_to_tracts <-
 # make table assigning block groups to tracts
 ks_block_group_tract_concordance <-
   block_groups_to_tracts %>%
-  rename(block_group_geoid = GEOID, # fix column names
+  dplyr::rename(block_group_geoid = GEOID, # fix column names
          tract_geoid = GEOID_1) %>%
   select(block_group_geoid, tract_geoid) # select the columns
 
@@ -428,7 +433,8 @@ working_lime_data <-
 
 # change shale presence to be meaningful
 colnames(working_lime_data)[which(
-  names(working_lime_data) == "Id")] <- "shale_presence"
+  names(working_lime_data) == "Id")] <- 
+  "shale_presence"
 
 # delete unneeded columns
 working_lime_data$Join_Count <- NULL
@@ -2097,7 +2103,7 @@ prod_block_group <-
   ks_prod_api_lat_long %>% 
   group_by(GEOID) %>% 
   count() %>%
-  rename(prod_count = n) %>% 
+  dplyr::rename(prod_count = n) %>% 
   filter(!is.na(GEOID)) %>% 
   filter(GEOID != "")
 
@@ -11962,7 +11968,7 @@ revised_dependent_variable_names <-
     "house_value_median_ten_thousands_B25077_001",  
     "ice_B19001",  
     "prod_count",
-    "ALAND_KM",  
+    "ALAND_KM_ten",  
     "AWATER_KM")
   
 # thing that rms needs, who knows why
@@ -11983,18 +11989,14 @@ names(univariable_logistic_models_glm) <-
 
 # run all the univariable logisitic regression AT ONCE (MWAHAHA) for lrm package
 
-# make function
+# make function using lrm package
 lrm_function <- 
   function(dependent_variable) {
     lrm(extant_swd_binary ~ ks_analysis_populated[[dependent_variable]],
         data = ks_analysis_populated, 
         x = TRUE, y = TRUE)}
 
-thing <- 
-  lrm(extant_swd_binary ~ pop_dense_B01001_001_ALAND + prod_count + prod_count * pop_dense_B01001_001_ALAND, 
-      data = ks_analysis_populated, 
-      x = TRUE, y = TRUE)
-
+# run all of the lrms
 univariable_logistic_models_lrm <-
   lapply(revised_dependent_variable_names, 
          lrm_function)
@@ -12114,7 +12116,7 @@ univariable_profile_ci_tibble
 # rename confidence interval as profile
 univariable_profile_ci_tibble <- 
   univariable_profile_ci_tibble %>% 
-  rename(profile_ci_or_low = conf.low, 
+  dplyr::rename(profile_ci_or_low = conf.low, 
          profile_ci_or_high = conf.high)
   
 ```
@@ -12701,7 +12703,7 @@ univariable_wald_ci_est_tibble <-
 # rename wald ci as wald
 univariable_wald_ci_est_tibble <- 
   univariable_wald_ci_est_tibble %>% 
-  rename(wald_ci_est_low = conf.low, wald_ci_est_high = conf.high)
+  dplyr::rename(wald_ci_est_low = conf.low, wald_ci_est_high = conf.high)
 ```
 
 
@@ -12780,7 +12782,7 @@ univariable_wald_ci_tibble <-
 # rename wald ci as wald
 univariable_wald_ci_tibble <- 
   univariable_wald_ci_tibble %>% 
-  rename(wald_ci_or_low = conf.low, wald_ci_or_high = conf.high)
+  dplyr::rename(wald_ci_or_low = conf.low, wald_ci_or_high = conf.high)
 ```
 
 
@@ -12860,17 +12862,13 @@ univariable_profile_ci_est_tibble
 # rename confidence interval as profile
 univariable_profile_ci_est_tibble <- 
   univariable_profile_ci_est_tibble %>% 
-  rename(profile_ci_est_low = conf.low, 
+  dplyr::rename(profile_ci_est_low = conf.low, 
          profile_ci_est_high = conf.high)
   
 ```
 
 
 ```{r diagnostics for logistic regression}
-residuals.lrm(univariable_logistic_models_lrm)
-class(univariable_logistic_models_lrm)
-View(univariable_logistic_models_lrm)
-
 
 HosmerLemeshowTest(
   fit = fitted(univariable_logistic_models_glm$pop_tot_B01001_001), 
@@ -12915,7 +12913,7 @@ write_csv(univariable_logistic_tibble,
 ```
 
 
-```{r big logistic model}
+```{r big logistic model, eval=FALSE, include=FALSE}
 # pop tot model evaluation
 logistic_pop_tot
 
@@ -13147,48 +13145,960 @@ exp(confint.default(logistic_female))
 ```
 
 
-```{r big logistic regressions}
-logistic_model_revised_data <- 
+```{r logistic gam because I AM STUBBORN}
+
+big_gam_model <- 
+  gam(extant_swd_binary ~ 
+        s(pop_dense_hundreds_B01001_001_ALAND) + 
+        s(female_true_percent_B01001_026_001) + 
+        s(age_0_to_17_true_percent_B01001) + 
+        s(age_65_plus_true_percent_B01001) + 
+        s(white_non_hisp_lat_true_percent_B03002_003_001) + 
+        s(education_high_school_plus_true_percent_B15003_017_to_025) + 
+        s(no_health_insurance_true_percent_B27010_017_033_050_066) + 
+        s(renter_occupy_percent_B25003_003_001) + 
+        s(unemployed_true_percent_B23025_005_003) + 
+        s(income_house_median_ten_thousands_B19013_001) + 
+        s(prod_count) + 
+        # s(ALAND_KM_ten) + 
+        s(AWATER_KM), 
+      data = ks_analysis_populated, 
+      family = binomial, 
+      method = "REML")
+
+gam.check(big_gam_model)
+
+summary(big_gam_model)
+
+plot(big_gam_model, 
+     pages = 12,
+     trans = plogis,
+     shift = coef(big_gam_model)[1],
+     seWithMean = TRUE, 
+     rug = TRUE, 
+     shade = TRUE, 
+     shade.col = "lightgreen", 
+     col = "purple", 
+     residuals = TRUE)
+
+big_gam_no_rent <- 
+ gam(extant_swd_binary ~ 
+        s(pop_dense_hundreds_B01001_001_ALAND) + 
+        s(female_true_percent_B01001_026_001) + 
+        s(age_0_to_17_true_percent_B01001) + 
+        s(age_65_plus_true_percent_B01001) + 
+        s(white_non_hisp_lat_true_percent_B03002_003_001) + 
+        s(education_high_school_plus_true_percent_B15003_017_to_025) + 
+        s(no_health_insurance_true_percent_B27010_017_033_050_066) + 
+        # s(renter_occupy_percent_B25003_003_001) + 
+        s(unemployed_true_percent_B23025_005_003) + 
+        s(income_house_median_ten_thousands_B19013_001) + 
+        s(prod_count) + 
+        # s(ALAND_KM_ten) + 
+        s(AWATER_KM), 
+      data = ks_analysis_populated, 
+      family = binomial, 
+      method = "REML")
+
+gam.check(big_gam_no_rent)
+
+summary(big_gam_no_rent)
+
+concurvity(big_gam_no_rent)
+
+plot(big_gam_no_rent, 
+     pages = 12,
+     trans = plogis,
+     shift = coef(big_gam_model)[1],
+     seWithMean = TRUE, 
+     rug = TRUE, 
+     shade = TRUE, 
+     shade.col = "lightgreen", 
+     col = "purple", 
+     residuals = TRUE)
+
+big_gam_no_rent_white <- 
+ gam(extant_swd_binary ~ 
+        s(pop_dense_hundreds_B01001_001_ALAND) + 
+        s(female_true_percent_B01001_026_001) + 
+        s(age_0_to_17_true_percent_B01001) + 
+        s(age_65_plus_true_percent_B01001) + 
+        # s(white_non_hisp_lat_true_percent_B03002_003_001) + 
+        s(education_high_school_plus_true_percent_B15003_017_to_025) + 
+        s(no_health_insurance_true_percent_B27010_017_033_050_066) + 
+        # s(renter_occupy_percent_B25003_003_001) + 
+        s(unemployed_true_percent_B23025_005_003) + 
+        s(income_house_median_ten_thousands_B19013_001) + 
+        s(prod_count) + 
+        # s(ALAND_KM_ten) + 
+        s(AWATER_KM), 
+      data = ks_analysis_populated, 
+      family = binomial, 
+      method = "REML")
+
+gam.check(big_gam_no_rent_white)
+
+concurvity(big_gam_no_rent)
+
+summary(big_gam_no_rent_white)
+
+plot(big_gam_no_rent_white, 
+     pages = 12,
+     trans = plogis,
+     shift = coef(big_gam_model)[1],
+     seWithMean = TRUE, 
+     rug = TRUE, 
+     shade = TRUE, 
+     shade.col = "lightgreen", 
+     col = "purple", 
+     residuals = TRUE)
+
+big_gam_no_rent_white_health <- 
+ gam(extant_swd_binary ~ 
+        s(pop_dense_hundreds_B01001_001_ALAND) + 
+        s(female_true_percent_B01001_026_001) + 
+        s(age_0_to_17_true_percent_B01001) + 
+        s(age_65_plus_true_percent_B01001) + 
+        # s(white_non_hisp_lat_true_percent_B03002_003_001) + 
+        s(education_high_school_plus_true_percent_B15003_017_to_025) + 
+        # s(no_health_insurance_true_percent_B27010_017_033_050_066) + 
+        # s(renter_occupy_percent_B25003_003_001) + 
+        s(unemployed_true_percent_B23025_005_003) + 
+        s(income_house_median_ten_thousands_B19013_001) + 
+        s(prod_count) + 
+        # s(ALAND_KM_ten) + 
+        s(AWATER_KM), 
+      data = ks_analysis_populated, 
+      family = binomial, 
+      method = "REML")
+
+gam.check(big_gam_no_rent_white_health)
+
+concurvity(big_gam_no_rent_white_health)
+
+summary(big_gam_no_rent_white_health)
+
+plot(big_gam_no_rent_white_health, 
+     pages = 12,
+     trans = plogis,
+     shift = coef(big_gam_model)[1],
+     seWithMean = TRUE, 
+     rug = TRUE, 
+     shade = TRUE, 
+     shade.col = "lightgreen", 
+     col = "purple", 
+     residuals = TRUE)
+
+
+big_gam_no_rent_white_health_youth <- 
+ gam(extant_swd_binary ~ 
+        s(pop_dense_hundreds_B01001_001_ALAND) + 
+        s(female_true_percent_B01001_026_001) + 
+        # s(age_0_to_17_true_percent_B01001) + 
+        s(age_65_plus_true_percent_B01001) + 
+        # s(white_non_hisp_lat_true_percent_B03002_003_001) + 
+        s(education_high_school_plus_true_percent_B15003_017_to_025) + 
+        # s(no_health_insurance_true_percent_B27010_017_033_050_066) + 
+        # s(renter_occupy_percent_B25003_003_001) + 
+        s(unemployed_true_percent_B23025_005_003) + 
+        s(income_house_median_ten_thousands_B19013_001) + 
+        s(prod_count) + 
+        # s(ALAND_KM_ten) + 
+        s(AWATER_KM), 
+      data = ks_analysis_populated, 
+      family = binomial, 
+      method = "REML")
+
+gam.check(big_gam_no_rent_white_health_youth)
+
+concurvity(big_gam_no_rent_white_health_youth)
+
+summary(big_gam_no_rent_white_health_youth)
+
+plot(big_gam_no_rent_white_health_youth, 
+     pages = 12,
+     trans = plogis,
+     shift = coef(big_gam_model)[1],
+     seWithMean = TRUE, 
+     rug = TRUE, 
+     shade = TRUE, 
+     shade.col = "lightgreen", 
+     col = "purple", 
+     residuals = TRUE)
+
+big_gam_no_rent_white_health_youth_education <- 
+ gam(extant_swd_binary ~ 
+        s(pop_dense_hundreds_B01001_001_ALAND) + 
+        s(female_true_percent_B01001_026_001) + 
+        # s(age_0_to_17_true_percent_B01001) + 
+        s(age_65_plus_true_percent_B01001) + 
+        # s(white_non_hisp_lat_true_percent_B03002_003_001) + 
+        # s(education_high_school_plus_true_percent_B15003_017_to_025) + 
+        # s(no_health_insurance_true_percent_B27010_017_033_050_066) + 
+        # s(renter_occupy_percent_B25003_003_001) + 
+        s(unemployed_true_percent_B23025_005_003) + 
+        s(income_house_median_ten_thousands_B19013_001) + 
+        s(prod_count) + 
+        # s(ALAND_KM_ten) + 
+        s(AWATER_KM), 
+      data = ks_analysis_populated, 
+      family = binomial, 
+      method = "REML")
+
+gam.check(big_gam_no_rent_white_health_youth_education)
+
+concurvity(big_gam_no_rent_white_health_youth_education)
+
+summary(big_gam_no_rent_white_health_youth_education)
+
+plot(big_gam_no_rent_white_health_youth_education, 
+     pages = 12,
+     trans = plogis,
+     shift = coef(big_gam_model)[1],
+     seWithMean = TRUE, 
+     rug = TRUE, 
+     shade = TRUE, 
+     shade.col = "lightgreen", 
+     col = "purple", 
+     residuals = TRUE)
+
+big_gam_no_rent_white_health_youth_education_income <- 
+ gam(extant_swd_binary ~ 
+        s(pop_dense_hundreds_B01001_001_ALAND) + 
+        s(female_true_percent_B01001_026_001) + 
+        # s(age_0_to_17_true_percent_B01001) + 
+        s(age_65_plus_true_percent_B01001) + 
+        # s(white_non_hisp_lat_true_percent_B03002_003_001) + 
+        # s(education_high_school_plus_true_percent_B15003_017_to_025) + 
+        # s(no_health_insurance_true_percent_B27010_017_033_050_066) + 
+        # s(renter_occupy_percent_B25003_003_001) + 
+        s(unemployed_true_percent_B23025_005_003) + 
+        # s(income_house_median_ten_thousands_B19013_001) + 
+        s(prod_count) + 
+        # s(ALAND_KM_ten) + 
+        s(AWATER_KM), 
+      data = ks_analysis_populated, 
+      family = binomial, 
+      method = "REML")
+
+gam.check(big_gam_no_rent_white_health_youth_education_income)
+
+concurvity(big_gam_no_rent_white_health_youth_education_income)
+
+summary(big_gam_no_rent_white_health_youth_education_income)
+
+plot(big_gam_no_rent_white_health_youth_education_income, 
+     pages = 12,
+     trans = plogis,
+     shift = coef(big_gam_model)[1],
+     seWithMean = TRUE, 
+     rug = TRUE, 
+     shade = TRUE, 
+     shade.col = "lightgreen", 
+     col = "purple", 
+     residuals = TRUE)
+
+# down to 62.2% of deviance explained
+big_gam_no_rent_white_health_youth_education_income_old <-   
+ gam(extant_swd_binary ~ 
+        s(pop_dense_hundreds_B01001_001_ALAND) + 
+        s(female_true_percent_B01001_026_001) + 
+        # s(age_0_to_17_true_percent_B01001) + 
+        # s(age_65_plus_true_percent_B01001) + 
+        # s(white_non_hisp_lat_true_percent_B03002_003_001) + 
+        # s(education_high_school_plus_true_percent_B15003_017_to_025) + 
+        # s(no_health_insurance_true_percent_B27010_017_033_050_066) + 
+        # s(renter_occupy_percent_B25003_003_001) + 
+        s(unemployed_true_percent_B23025_005_003) + 
+        # s(income_house_median_ten_thousands_B19013_001) + 
+        s(prod_count) + 
+        # s(ALAND_KM_ten) + 
+        s(AWATER_KM), 
+      data = ks_analysis_populated, 
+      family = binomial, 
+      method = "REML")
+
+gam.check(big_gam_no_rent_white_health_youth_education_income_old)
+
+concurvity(big_gam_no_rent_white_health_youth_education_income_old)
+
+summary(big_gam_no_rent_white_health_youth_education_income_old)
+
+plot(big_gam_no_rent_white_health_youth_education_income_old, 
+     pages = 12,
+     trans = plogis,
+     shift = coef(big_gam_model)[1],
+     seWithMean = TRUE, 
+     rug = TRUE, 
+     shade = TRUE, 
+     shade.col = "lightgreen", 
+     col = "purple", 
+     residuals = TRUE)
+
+
+# down to 61.9% of deviance explained
+big_gam_no_rent_white_health_youth_education_income_old_water <-   
+ gam(extant_swd_binary ~ 
+        s(pop_dense_hundreds_B01001_001_ALAND) + 
+        s(female_true_percent_B01001_026_001) + 
+        # s(age_0_to_17_true_percent_B01001) + 
+        # s(age_65_plus_true_percent_B01001) + 
+        # s(white_non_hisp_lat_true_percent_B03002_003_001) + 
+        # s(education_high_school_plus_true_percent_B15003_017_to_025) + 
+        # s(no_health_insurance_true_percent_B27010_017_033_050_066) + 
+        # s(renter_occupy_percent_B25003_003_001) + 
+        s(unemployed_true_percent_B23025_005_003) + 
+        # s(income_house_median_ten_thousands_B19013_001) + 
+        s(prod_count),
+        # s(ALAND_KM_ten) + 
+        # s(AWATER_KM)       ,
+      data = ks_analysis_populated, 
+      family = binomial, 
+      method = "REML")
+
+gam.check(big_gam_no_rent_white_health_youth_education_income_old_water)
+
+concurvity(big_gam_no_rent_white_health_youth_education_income_old_water)
+
+summary(big_gam_no_rent_white_health_youth_education_income_old_water)
+
+plot(big_gam_no_rent_white_health_youth_education_income_old_water, 
+     pages = 12,
+     trans = plogis,
+     shift = coef(big_gam_model)[1],
+     seWithMean = TRUE, 
+     rug = TRUE, 
+     shade = TRUE, 
+     shade.col = "lightgreen", 
+     col = "purple", 
+     residuals = TRUE)
+
+# down to 58.3% of deviance explained
+big_gam_no_rent_white_health_youth_education_income_old_water_fix_k <-   
+ gam(extant_swd_binary ~ 
+        s(pop_dense_hundreds_B01001_001_ALAND, k = 5) + 
+        s(female_true_percent_B01001_026_001, k = 5) + 
+        # s(age_0_to_17_true_percent_B01001) + 
+        # s(age_65_plus_true_percent_B01001) + 
+        # s(white_non_hisp_lat_true_percent_B03002_003_001) + 
+        # s(education_high_school_plus_true_percent_B15003_017_to_025) + 
+        # s(no_health_insurance_true_percent_B27010_017_033_050_066) + 
+        # s(renter_occupy_percent_B25003_003_001) + 
+        s(unemployed_true_percent_B23025_005_003, k = 7) + 
+        # s(income_house_median_ten_thousands_B19013_001) + 
+        s(prod_count, k = 5),
+        # s(ALAND_KM_ten) + 
+        # s(AWATER_KM)       ,
+      data = ks_analysis_populated, 
+      family = binomial, 
+      method = "REML")
+
+gam.check(big_gam_no_rent_white_health_youth_education_income_old_water_fix_k)
+
+concurvity(big_gam_no_rent_white_health_youth_education_income_old_water_fix_k)
+
+summary(big_gam_no_rent_white_health_youth_education_income_old_water_fix_k)
+
+plot(big_gam_no_rent_white_health_youth_education_income_old_water_fix_k, 
+     pages = 12,
+     trans = plogis,
+     shift = coef(big_gam_model)[1],
+     seWithMean = TRUE, 
+     rug = TRUE, 
+     shade = TRUE, 
+     shade.col = "lightgreen", 
+     col = "purple", 
+     residuals = TRUE)
+
+# redo smaller k's
+big_gam_k_5 <-   
+ gam(extant_swd_binary ~ 
+        s(pop_dense_hundreds_B01001_001_ALAND, k = 5) + 
+        s(female_true_percent_B01001_026_001, k = 5) + 
+        s(age_0_to_17_true_percent_B01001, k = 5) + 
+        s(age_65_plus_true_percent_B01001, k = 5) + 
+        s(white_non_hisp_lat_true_percent_B03002_003_001, k = 5) + 
+        s(education_high_school_plus_true_percent_B15003_017_to_025, k = 5) + 
+        s(no_health_insurance_true_percent_B27010_017_033_050_066, k = 5) + 
+        s(renter_occupy_percent_B25003_003_001, k = 5) + 
+        s(unemployed_true_percent_B23025_005_003, k = 5) + 
+        s(income_house_median_ten_thousands_B19013_001, k = 5) + 
+        s(prod_count, k = 5) +
+        # s(ALAND_KM_ten) + 
+        s(AWATER_KM, k = 5)       ,
+      data = ks_analysis_populated, 
+      family = binomial, 
+      method = "REML")
+
+gam.check(big_gam_k_5)
+
+concurvity(big_gam_k_5)
+
+summary(big_gam_k_5)
+
+plot(big_gam_k_5, 
+     pages = 12,
+     trans = plogis,
+     shift = coef(big_gam_k_5)[1],
+     seWithMean = TRUE, 
+     rug = TRUE, 
+     shade = TRUE, 
+     shade.col = "lightgreen", 
+     col = "purple", 
+     residuals = TRUE)
+
+# let the model select itself
+big_gam_k_5_self_select <-   
+ gam(extant_swd_binary ~ 
+        s(pop_dense_hundreds_B01001_001_ALAND, k = 5) + 
+        s(female_true_percent_B01001_026_001, k = 5) + 
+        s(age_0_to_17_true_percent_B01001, k = 5) + 
+        s(age_65_plus_true_percent_B01001, k = 5) + 
+        s(white_non_hisp_lat_true_percent_B03002_003_001, k = 5) + 
+        s(education_high_school_plus_true_percent_B15003_017_to_025, k = 5) + 
+        s(no_health_insurance_true_percent_B27010_017_033_050_066, k = 5) + 
+        s(renter_occupy_percent_B25003_003_001, k = 5) + 
+        s(unemployed_true_percent_B23025_005_003, k = 5) + 
+        s(income_house_median_ten_thousands_B19013_001, k = 5) + 
+        s(prod_count, k = 5) +
+        # s(ALAND_KM_ten) + 
+        s(AWATER_KM, k = 5)       ,
+      data = ks_analysis_populated, 
+      family = binomial, 
+      method = "REML", 
+     select = TRUE)
+
+gam.check(big_gam_k_5_self_select)
+
+concurvity(big_gam_k_5_self_select)
+
+summary(big_gam_k_5_self_select)
+
+plot(big_gam_k_5_self_select, 
+     pages = 12,
+     trans = plogis,
+     shift = coef(big_gam_model)[1],
+     seWithMean = TRUE, 
+     rug = TRUE, 
+     shade = TRUE, 
+     shade.col = "lightgreen", 
+     col = "purple", 
+     residuals = TRUE)
+
+
+big_gam_k_10_self_select <-   
+ gam(extant_swd_binary ~ 
+        s(pop_dense_hundreds_B01001_001_ALAND) + 
+        s(female_true_percent_B01001_026_001) + 
+        s(age_0_to_17_true_percent_B01001) + 
+        s(age_65_plus_true_percent_B01001) + 
+        s(white_non_hisp_lat_true_percent_B03002_003_001) + 
+        s(education_high_school_plus_true_percent_B15003_017_to_025) + 
+        s(no_health_insurance_true_percent_B27010_017_033_050_066) + 
+        s(renter_occupy_percent_B25003_003_001) + 
+        s(unemployed_true_percent_B23025_005_003) + 
+        s(income_house_median_ten_thousands_B19013_001) + 
+        s(prod_count) +
+        # s(ALAND_KM_ten) + 
+        s(AWATER_KM)       ,
+      data = ks_analysis_populated, 
+      family = binomial, 
+      method = "REML", 
+     select = TRUE)
+
+gam.check(big_gam_k_10_self_select)
+
+concurvity(big_gam_k_10_self_select)
+
+summary(big_gam_k_10_self_select)
+
+plot(big_gam_k_10_self_select, 
+     pages = 12,
+     trans = plogis,
+     shift = coef(big_gam_model)[1],
+     seWithMean = TRUE, 
+     rug = TRUE, 
+     shade = TRUE, 
+     shade.col = "lightgreen", 
+     col = "purple", 
+     residuals = TRUE)
+
+
+big_gam_k_5_some_fixed_self_select <-   
+ gam(extant_swd_binary ~ 
+        s(pop_dense_hundreds_B01001_001_ALAND, k = 5) + 
+        s(female_true_percent_B01001_026_001, k = 5) + 
+        s(age_0_to_17_true_percent_B01001, k = 5) + 
+        s(age_65_plus_true_percent_B01001, k = 5) + 
+        s(white_non_hisp_lat_true_percent_B03002_003_001, k = 5) + 
+        s(education_high_school_plus_true_percent_B15003_017_to_025, k = 5) + 
+        s(no_health_insurance_true_percent_B27010_017_033_050_066, k = 5) + 
+        s(renter_occupy_percent_B25003_003_001, k = 5) + 
+        s(unemployed_true_percent_B23025_005_003, k = 5) + 
+        s(income_house_median_ten_thousands_B19013_001, k = 5) + 
+        s(prod_count, k = 5) +
+        # s(ALAND_KM_ten) + 
+        s(AWATER_KM, k = 5)       ,
+      data = ks_analysis_populated, 
+      family = binomial, 
+      method = "REML", 
+     select = TRUE)
+
+gam.check(big_gam_k_5_some_fixed_self_select)
+
+concurvity(big_gam_k_5_some_fixed_self_select)
+
+summary(big_gam_k_5_some_fixed_self_select)
+
+plot(big_gam_k_5, 
+     pages = 12,
+     trans = plogis,
+     shift = coef(big_gam_model)[1],
+     seWithMean = TRUE, 
+     rug = TRUE, 
+     shade = TRUE, 
+     shade.col = "lightgreen", 
+     col = "purple", 
+     residuals = TRUE)
+
+
+
+
+
+
+
+big_gam_k_20_self_select <-   
+ gam(extant_swd_binary ~ 
+        s(pop_dense_hundreds_B01001_001_ALAND, k = 20) + 
+        s(female_true_percent_B01001_026_001, k = 20) + 
+        s(age_0_to_17_true_percent_B01001, k = 20) + 
+        s(age_65_plus_true_percent_B01001, k = 20) + 
+        s(white_non_hisp_lat_true_percent_B03002_003_001, k = 20) + 
+        s(education_high_school_plus_true_percent_B15003_017_to_025, k = 20) + 
+        s(no_health_insurance_true_percent_B27010_017_033_050_066, k = 20) + 
+        s(renter_occupy_percent_B25003_003_001, k = 20) + 
+        s(unemployed_true_percent_B23025_005_003, k = 20) + 
+        s(income_house_median_ten_thousands_B19013_001, k = 20) + 
+        s(prod_count, k = 20) +
+        # s(ALAND_KM_ten) + 
+        s(AWATER_KM, k = 20)       ,
+      data = ks_analysis_populated, 
+      family = binomial, 
+      method = "REML", 
+     select = TRUE)
+
+gam.check(big_gam_k_20_self_select)
+
+concurvity(big_gam_k_20_self_select)
+
+summary(big_gam_k_20_self_select)
+
+big_gam_k_20_self_select <- 
+  big_gam_k_20_some_fixed_self_select
+
+plot(big_gam_k_20_self_select, 
+     pages = 12,
+     trans = plogis,
+     shift = coef(big_gam_model)[1],
+     seWithMean = TRUE, 
+     rug = TRUE, 
+     shade = TRUE, 
+     shade.col = "lightgreen", 
+     col = "purple", 
+     residuals = TRUE)
+
+
+big_gam_k_20_select_adapt <-   
+ gam(extant_swd_binary ~ 
+        s(pop_dense_hundreds_B01001_001_ALAND, k = 20, bs = "ad") + 
+        s(female_true_percent_B01001_026_001, k = 20, bs = "ad") + 
+        s(age_0_to_17_true_percent_B01001, k = 20, bs = "ad") + 
+        s(age_65_plus_true_percent_B01001, k = 20, bs = "ad") + 
+        s(white_non_hisp_lat_true_percent_B03002_003_001, k = 20, bs = "ad") + 
+        s(education_high_school_plus_true_percent_B15003_017_to_025, k = 20, bs = "ad") + 
+        s(no_health_insurance_true_percent_B27010_017_033_050_066, k = 20, bs = "ad") + 
+        s(renter_occupy_percent_B25003_003_001, k = 20, bs = "ad") + 
+        s(unemployed_true_percent_B23025_005_003, k = 20, bs = "ad") + 
+        s(income_house_median_ten_thousands_B19013_001, k = 20, bs = "ad") + 
+        s(prod_count, k = 20, bs = "ad") +
+        # s(ALAND_KM_ten) + 
+        s(AWATER_KM, k = 20, bs = "ad"),
+      data = ks_analysis_populated, 
+      family = binomial, 
+      method = "REML", 
+     select = TRUE)
+
+gam.check(big_gam_k_20_select_adapt)
+
+concurvity(big_gam_k_20_select_adapt)
+
+summary(big_gam_k_20_select_adapt)
+
+plot(big_gam_k_20_select_adapt, 
+     pages = 12,
+     trans = plogis,
+     shift = coef(big_gam_model)[1],
+     seWithMean = TRUE, 
+     rug = TRUE, 
+     shade = TRUE, 
+     shade.col = "lightgreen", 
+     col = "purple", 
+     residuals = TRUE)
+
+
+big_gam_k_5_self_select <-   
+ gam(extant_swd_binary ~ 
+        s(pop_dense_hundreds_B01001_001_ALAND, k = 5) + 
+        s(female_true_percent_B01001_026_001, k = 5) + 
+        s(age_0_to_17_true_percent_B01001, k = 5) + 
+        s(age_65_plus_true_percent_B01001, k = 5) + 
+        s(white_non_hisp_lat_true_percent_B03002_003_001, k = 5) + 
+        s(education_high_school_plus_true_percent_B15003_017_to_025, k = 5) + 
+        s(no_health_insurance_true_percent_B27010_017_033_050_066, k = 5) + 
+        s(renter_occupy_percent_B25003_003_001, k = 5) + 
+        s(unemployed_true_percent_B23025_005_003, k = 5) + 
+        s(income_house_median_ten_thousands_B19013_001, k = 5) + 
+        s(prod_count, k = 5) +
+        # s(ALAND_KM_ten) + 
+        s(AWATER_KM, k = 5)       ,
+      data = ks_analysis_populated, 
+      family = binomial, 
+      method = "REML", 
+     select = TRUE)
+
+gam.check(big_gam_k_5_self_select)
+
+concurvity(big_gam_k_5_self_select)
+
+summary(big_gam_k_5_self_select)
+
+plot(big_gam_k_5_self_select, 
+     pages = 12,
+     trans = plogis,
+     shift = coef(big_gam_k_5_self_select)[1],
+     seWithMean = TRUE, 
+     rug = TRUE, 
+     shade = TRUE, 
+     shade.col = "lightgreen", 
+     col = "purple", 
+     residuals = TRUE)
+
+
+big_gam_k_20_self_select <-   
+ gam(extant_swd_binary ~ 
+        s(pop_dense_hundreds_B01001_001_ALAND, k = 20) + 
+        s(female_true_percent_B01001_026_001, k = 20) + 
+        s(age_0_to_17_true_percent_B01001, k = 20) + 
+        s(age_65_plus_true_percent_B01001, k = 20) + 
+        s(white_non_hisp_lat_true_percent_B03002_003_001, k = 20) + 
+        s(education_high_school_plus_true_percent_B15003_017_to_025, k = 20) + 
+        s(no_health_insurance_true_percent_B27010_017_033_050_066, k = 20) + 
+        s(renter_occupy_percent_B25003_003_001, k = 20) + 
+        s(unemployed_true_percent_B23025_005_003, k = 20) + 
+        s(income_house_median_ten_thousands_B19013_001, k = 20) + 
+        s(prod_count, k = 20) +
+        # s(ALAND_KM_ten) + 
+        s(AWATER_KM, k = 20),
+      data = ks_analysis_populated, 
+      family = binomial, 
+      method = "REML", 
+     select = TRUE)
+
+gam.check(big_gam_k_20_self_select)
+
+concurvity(big_gam_k_20_self_select)
+
+summary(big_gam_k_20_self_select)
+
+plot(big_gam_k_20_self_select, 
+     pages = 12,
+     trans = plogis,
+     shift = coef(big_gam_k_20_self_select)[1],
+     seWithMean = TRUE, 
+     rug = TRUE, 
+     shade = TRUE, 
+     shade.col = "lightgreen", 
+     col = "purple", 
+     residuals = TRUE)
+
+
+
+big_gam_k_5 <-   
+ gam(extant_swd_binary ~ 
+        s(pop_dense_hundreds_B01001_001_ALAND, k = 5) + 
+        s(female_true_percent_B01001_026_001, k = 5) + 
+        s(age_0_to_17_true_percent_B01001, k = 5) + 
+        s(age_65_plus_true_percent_B01001, k = 5) + 
+        s(white_non_hisp_lat_true_percent_B03002_003_001, k = 5) + 
+        s(education_high_school_plus_true_percent_B15003_017_to_025, k = 5) + 
+        s(no_health_insurance_true_percent_B27010_017_033_050_066, k = 5) + 
+        s(renter_occupy_percent_B25003_003_001, k = 5) + 
+        s(unemployed_true_percent_B23025_005_003, k = 5) + 
+        s(income_house_median_ten_thousands_B19013_001, k = 5) + 
+        s(prod_count, k = 5) +
+        # s(ALAND_KM_ten) + 
+        s(AWATER_KM, k = 5)       ,
+      data = ks_analysis_populated, 
+      family = binomial, 
+      method = "REML")
+
+gam.check(big_gam_k_5)
+
+concurvity(big_gam_k_5)
+
+summary(big_gam_k_5)
+
+plot(big_gam_k_5, 
+     pages = 12,
+     trans = plogis,
+     shift = coef(big_gam_k_5)[1],
+     seWithMean = TRUE, 
+     rug = TRUE, 
+     shade = TRUE, 
+     shade.col = "lightgreen", 
+     col = "purple", 
+     residuals = TRUE)
+
+# big_gam_k_5_fix <-   
+#  gam(extant_swd_binary ~ 
+#         s(pop_dense_hundreds_B01001_001_ALAND, k = 5) + 
+#         s(female_true_percent_B01001_026_001, k = 5) + 
+#         s(age_0_to_17_true_percent_B01001, k = 5) + 
+#         s(age_65_plus_true_percent_B01001, k = 5) + 
+#         s(white_non_hisp_lat_true_percent_B03002_003_001, k = 5) + 
+#         s(education_high_school_plus_true_percent_B15003_017_to_025, k = 5) + 
+#         s(no_health_insurance_true_percent_B27010_017_033_050_066, k = 5) + 
+#         s(renter_occupy_percent_B25003_003_001, k = 5) + 
+#         s(unemployed_true_percent_B23025_005_003, k = 5) + 
+#         s(income_house_median_ten_thousands_B19013_001, k = 5) + 
+#         s(prod_count, k = 100) +
+#         # s(ALAND_KM_ten) + 
+#         s(AWATER_KM, k = 5)       ,
+#       data = ks_analysis_populated, 
+#       family = binomial, 
+#       method = "REML")
+# 
+# gam.check(big_gam_k_5_fix)
+# 
+# concurvity(big_gam_k_5_fix)
+# 
+# summary(big_gam_k_5_fix)
+# 
+# plot(big_gam_k_5_fix, 
+#      pages = 12,
+#      trans = plogis,
+#      shift = coef(big_gam_k_5)[1],
+#      seWithMean = TRUE, 
+#      rug = TRUE, 
+#      shade = TRUE, 
+#      shade.col = "lightgreen", 
+#      col = "purple", 
+#      residuals = TRUE)
+
+
+AIC_list_gams <- list()
+
+AIC_list_gams["gam_k_5"] <- AIC(big_gam_k_5)
+AIC_list_gams["k_20_select"] <- AIC(big_gam_k_20_self_select)
+AIC_list_gams["k_10_self"] <- AIC(big_gam_k_10_self_select)
+AIC_list_gams["k_5_select"] <- AIC(big_gam_k_5_self_select)
+AIC_list_gams["manual_little"] <- 
+  AIC(big_gam_no_rent_white_health_youth_education_income_old_water_fix_k)
+AIC_list_gams["gam_k_20"] <- AIC(big_gam_k_20_self_select)
+
+
+plot(big_gam_k_5, 
+     pages = 1,
+     trans = plogis,
+     shift = coef(big_gam_k_5)[1],
+     seWithMean = TRUE, 
+     rug = TRUE, 
+     shade = TRUE, 
+     shade.col = "lightgreen", 
+     col = "purple", 
+     residuals = TRUE)
+
+# table for big_gam_5
+
+
+
+
+
+
+# generalized additive models; 
+# plants: explained deviance=77%, 
+# estimated degrees of freedom (edf)=1, 
+# F=94.4, 
+# P<0.001
+
+# report area under the curve
+# report mean and 95% CI
+
+
+predictions_from_gam <- 
+  predict(big_gam_model, 
+          type = "link", 
+          se.fit = TRUE)
+
+# use auto-select
+
+
+
+
+
+
+# Population density
+# % female
+# % age < 18
+# % age > 64 (if this kind of binning is allowed)
+# % white
+# % with a high school education
+# % with no health insurance coverage
+# % renter-occupied households
+# % unemployment
+# Income concentration at the extremes
+# Production well count
+# Land area (km2)
+# Water area (km2)
+
+
+
+
+```
+
+
+```{r little gam models}
+
+pop_dense_gam <- gam(extant_swd_binary ~ 
+        s(pop_dense_hundreds_B01001_001_ALAND, k = 11), 
+          data = ks_analysis_populated, 
+      family = binomial, 
+      method = "REML")
+
+```
+
+
+
+```{r logistic gam rural only}
+
+max_pop_dense_with_wells <- 
   ks_analysis_populated %>% 
-  c("pop_dense_B01001_001_ALAND", 
-    "female_percent_B01001_026_001", 
-    "age_0_to_17_percent_B01001", 
-    "age_65_plus_percent_B01001", 
-    "white_non_hisp_lat_percent_B03002_003_001",
-    "education_high_school_plus_percent_B15003_017_to_025", 
-    "no_health_insurance_percent_B27010_017_033_050_066", 
-    "renter_occupy_percent_B25003_003_001", 
-    "unemployed_percent_B23025_005_003", 
-    "ice_B19001",
-    "prod_count", 
-    "ALAND_KM", 
-    "AWATER_KM")
+  filter(extant_swd_binary == 1) %>% 
+  summarise(max_pop_density = max(pop_dense_hundreds_B01001_001_ALAND)) %>% 
+  pull(max_pop_density)
+
+ks_analysis_populated_check_population_density <- 
+  ks_analysis_populated %>% 
+  filter(pop_dense_hundreds_B01001_001_ALAND > max_pop_dense_with_wells) %>% 
+  nrow()
+
+ks_rural_only <- 
+  ks_analysis_populated %>% 
+  filter(pop_dense_hundreds_B01001_001_ALAND <= 
+           max_pop_dense_with_wells)
+
+
+
+View(ks_rural_only)
+
+big_rural_gam_model <- 
+  gam(extant_swd_binary ~ 
+        s(pop_dense_hundreds_B01001_001_ALAND) + 
+        s(female_true_percent_B01001_026_001) + 
+        s(age_0_to_17_true_percent_B01001) + 
+        s(age_65_plus_true_percent_B01001) + 
+        s(white_non_hisp_lat_true_percent_B03002_003_001) + 
+        s(education_high_school_plus_true_percent_B15003_017_to_025) + 
+        s(no_health_insurance_true_percent_B27010_017_033_050_066) + 
+        s(renter_occupy_percent_B25003_003_001) + 
+        s(unemployed_true_percent_B23025_005_003, k = 50) + 
+        s(income_house_median_ten_thousands_B19013_001) + 
+        s(prod_count, k = 12) + 
+        # s(ALAND_KM_ten) + 
+        s(AWATER_KM), 
+      data = ks_rural_only, 
+      family = binomial, 
+      method = "REML")
+
+gam.check(big_rural_gam_model)
+
+summary(big_rural_gam_model)
+
+concurvity_check <- 
+  concurvity(big_rural_gam_model)
+View(concurvity_check)
+
+plot(big_gam_model, 
+     pages = 4,
+     trans = plogis,
+     shift = coef(big_gam_model)[1],
+     seWithMean = FALSE, 
+     rug = FALSE, 
+     shade = TRUE, 
+     shade.col = "lightgreen", 
+     col = "purple", 
+     residuals = TRUE)
+
+
+# getting confidence intervals
+big_gam_k_5$fit
+
+
+
+```
+
+
+
+
+
+```{r big logistic regressions, eval=FALSE, include=FALSE}
+
+complete_case_dataset <- 
+  ks_analysis_dataset %>% 
+  select(extant_swd_binary, 
+        pop_dense_hundreds_B01001_001_ALAND,  
+        female_true_percent_B01001_026_001, 
+        age_0_to_17_true_percent_B01001,  
+        age_65_plus_true_percent_B01001,  
+        white_non_hisp_lat_true_percent_B03002_003_001,  
+        education_high_school_plus_true_percent_B15003_017_to_025,  
+        no_health_insurance_true_percent_B27010_017_033_050_066,  
+        renter_occupy_percent_B25003_003_001,  
+        unemployed_true_percent_B23025_005_003,  
+        income_house_median_ten_thousands_B19013_001,  
+        prod_count,  
+        ALAND_KM_ten,  
+        AWATER_KM) %>% 
+  drop_na()
 
 logistic_model_revised_data <- 
-  stats::glm(extant_swd_binary ~ 
-               pop_dense_B01001_001_ALAND + 
-               female_percent_B01001_026_001 + 
-               age_0_to_17_percent_B01001 + 
-               age_65_plus_percent_B01001 + 
-               white_non_hisp_lat_percent_B03002_003_001 +
-               education_high_school_plus_percent_B15003_017_to_025 + 
-               no_health_insurance_percent_B27010_017_033_050_066 + 
-               renter_occupy_percent_B25003_003_001 + 
-               unemployed_percent_B23025_005_003 + 
-               ice_B19001 +
-               prod_count + 
-               ALAND_KM +
-               AWATER_KM, 
-             data = ks_analysis_populated, 
-             family = binomial)
+   stats::glm(extant_swd_binary ~ 
+        pop_dense_hundreds_B01001_001_ALAND + 
+        female_true_percent_B01001_026_001 + 
+        age_0_to_17_true_percent_B01001 + 
+        age_65_plus_true_percent_B01001 + 
+        white_non_hisp_lat_true_percent_B03002_003_001 + 
+        education_high_school_plus_true_percent_B15003_017_to_025 + 
+        no_health_insurance_true_percent_B27010_017_033_050_066 + 
+        renter_occupy_percent_B25003_003_001 + 
+        unemployed_true_percent_B23025_005_003 + 
+        income_house_median_ten_thousands_B19013_001 + 
+        prod_count + 
+        AWATER_KM, 
+      data = complete_case_dataset, 
+      family = binomial)
+
 summary(logistic_model_revised_data)
 
 # automated choice of best fit
 logistic_matrix <- 
-  data.matrix(logistic_model_revised_data)
+  data.matrix(logistic_model_revised_data$data)
+
+View(logistic_matrix)
 
 output_variable <- 
-  ks_analysis_populated$extant_swd_binary
+  complete_case_dataset$extant_swd_binary
+View(output_variable)
 
 test_for_automatic_selection <- 
   as.data.frame(cbind(logistic_matrix,output_variable))
@@ -13202,15 +14112,16 @@ write.csv(bestAIC$BestModels,
           file = "bestmodelsAIC.csv")
 
 bestAIC
-bestAIC$BestModels
-bestAIC$BestModel$residuals
-
+bestBIC
 write.csv(bestBIC$BestModels, 
           file = "bestmodelsBIC.csv")
 
 bestBIC
 bestBIC$BestModel
 bestBIC$BestModel$residuals
+
+stats::AIC(big_gam_k_5, logistic_model_revised_data)
+
 
 best_glm_run <- 
   stats::glm(extant_swd_binary ~ 
@@ -13284,6 +14195,331 @@ second_best_glm_run
 # diag(weights) <- 0
 # moran.test(ks_extant_swd_for_moran$lead,mat2listw(w))
 ```
+
+
+## Poissons
+
+```{r histogram for counts}
+range(ks_analysis_populated$extant_swd_count)
+
+ggplot(ks_analysis_populated, 
+       aes(x = extant_swd_count)) + 
+  geom_histogram(breaks = seq(0, 420, by = 1)) + 
+  labs(x = expression(paste("Saltwater Disposal Wells (",
+                            italic("n"),
+                            ")")), 
+       y = expression(paste("Census Block Groups (",
+                            italic("  n"),
+                            ")"))) +
+  theme(text = element_text(family = "Times New Roman"))
+  
+```
+
+
+```{r scatterplots for counts}
+
+ggplot(ks_analysis_populated, 
+       aes(x = extant_swd_count, y =   pop_dense_hundreds_B01001_001_ALAND)) + 
+  geom_point(shape = 1) + 
+  labs(x = expression(paste("Saltwater Disposal Wells (",
+                            italic("n"),
+                            ")")), 
+       y = expression(paste("Population Density (100 persons/km    "^"2",")"))) +
+  theme(text = element_text(family = "Times New Roman")) +
+  scale_y_continuous(trans = "log10")
+
+```
+
+```{r zero-inflated negative binomial}
+
+zinb_function <- 
+  function(dependent_variable) {
+    zeroinfl(extant_swd_count ~ 
+               ks_analysis_populated[[dependent_variable]],
+        data = ks_analysis_populated, 
+        dist = "negbin", 
+        EM = TRUE)}
+
+# run all of the zinbs
+univariable_zinb_models <-
+  lapply(revised_dependent_variable_names, 
+         zinb_function)
+
+pop_tot_zinb <- 
+  zeroinfl(extant_swd_count ~ 
+               ks_analysis_populated[["pop_tot_hundreds_B01001_001"]],
+        data = ks_analysis_populated, 
+        dist = "negbin", 
+        EM = TRUE)
+summary(pop_tot_zinb)
+
+pop_dense_zinb <- 
+  zeroinfl(extant_swd_count ~ 
+               ks_analysis_populated[["pop_dense_hundreds_B01001_001_ALAND"]],
+        data = ks_analysis_populated, 
+        dist = "negbin", 
+        EM = TRUE)
+
+pop_dense_zinb <- 
+  zeroinfl(extant_swd_count ~ 
+               ks_analysis_populated[["pop_dense_hundreds_B01001_001_ALAND"]],
+        data = ks_analysis_populated, 
+        dist = "negbin", 
+        EM = TRUE)
+
+pop_dense_zinb <- 
+  zeroinfl(extant_swd_count ~ 
+               ks_analysis_populated[["pop_dense_hundreds_B01001_001_ALAND"]],
+        data = ks_analysis_populated, 
+        dist = "negbin", 
+        EM = TRUE)
+
+pop_dense_zinb <- 
+  zeroinfl(extant_swd_count ~ 
+               ks_analysis_populated[["pop_dense_hundreds_B01001_001_ALAND"]],
+        data = ks_analysis_populated, 
+        dist = "negbin", 
+        EM = TRUE)
+
+pop_dense_zinb <- 
+  zeroinfl(extant_swd_count ~ 
+               ks_analysis_populated[["pop_dense_hundreds_B01001_001_ALAND"]],
+        data = ks_analysis_populated, 
+        dist = "negbin", 
+        EM = TRUE)
+
+pop_dense_zinb <- 
+  zeroinfl(extant_swd_count ~ 
+               ks_analysis_populated[["pop_dense_hundreds_B01001_001_ALAND"]],
+        data = ks_analysis_populated, 
+        dist = "negbin", 
+        EM = TRUE)
+
+pop_dense_zinb <- 
+  zeroinfl(extant_swd_count ~ 
+               ks_analysis_populated[["pop_dense_hundreds_B01001_001_ALAND"]],
+        data = ks_analysis_populated, 
+        dist = "negbin", 
+        EM = TRUE)
+
+pop_dense_zinb <- 
+  zeroinfl(extant_swd_count ~ 
+               ks_analysis_populated[["pop_dense_hundreds_B01001_001_ALAND"]],
+        data = ks_analysis_populated, 
+        dist = "negbin", 
+        EM = TRUE)
+
+pop_dense_zinb <- 
+  zeroinfl(extant_swd_count ~ 
+               ks_analysis_populated[["pop_dense_hundreds_B01001_001_ALAND"]],
+        data = ks_analysis_populated, 
+        dist = "negbin", 
+        EM = TRUE)
+
+pop_dense_zinb <- 
+  zeroinfl(extant_swd_count ~ 
+               ks_analysis_populated[["pop_dense_hundreds_B01001_001_ALAND"]],
+        data = ks_analysis_populated, 
+        dist = "negbin", 
+        EM = TRUE)
+
+pop_dense_zinb <- 
+  zeroinfl(extant_swd_count ~ 
+               ks_analysis_populated[["pop_dense_hundreds_B01001_001_ALAND"]],
+        data = ks_analysis_populated, 
+        dist = "negbin", 
+        EM = TRUE)
+
+pop_dense_zinb <- 
+  zeroinfl(extant_swd_count ~ 
+               ks_analysis_populated[["pop_dense_hundreds_B01001_001_ALAND"]],
+        data = ks_analysis_populated, 
+        dist = "negbin", 
+        EM = TRUE)
+
+pop_dense_zinb <- 
+  zeroinfl(extant_swd_count ~ 
+               ks_analysis_populated[["pop_dense_hundreds_B01001_001_ALAND"]],
+        data = ks_analysis_populated, 
+        dist = "negbin", 
+        EM = TRUE)
+
+pop_dense_zinb <- 
+  zeroinfl(extant_swd_count ~ 
+               ks_analysis_populated[["pop_dense_hundreds_B01001_001_ALAND"]],
+        data = ks_analysis_populated, 
+        dist = "negbin", 
+        EM = TRUE)
+
+pop_dense_zinb <- 
+  zeroinfl(extant_swd_count ~ 
+               ks_analysis_populated[["pop_dense_hundreds_B01001_001_ALAND"]],
+        data = ks_analysis_populated, 
+        dist = "negbin", 
+        EM = TRUE)
+
+pop_dense_zinb <- 
+  zeroinfl(extant_swd_count ~ 
+               ks_analysis_populated[["pop_dense_hundreds_B01001_001_ALAND"]],
+        data = ks_analysis_populated, 
+        dist = "negbin", 
+        EM = TRUE)
+
+pop_dense_zinb <- 
+  zeroinfl(extant_swd_count ~ 
+               ks_analysis_populated[["pop_dense_hundreds_B01001_001_ALAND"]],
+        data = ks_analysis_populated, 
+        dist = "negbin", 
+        EM = TRUE)
+
+pop_dense_zinb <- 
+  zeroinfl(extant_swd_count ~ 
+               ks_analysis_populated[["pop_dense_hundreds_B01001_001_ALAND"]],
+        data = ks_analysis_populated, 
+        dist = "negbin", 
+        EM = TRUE)
+
+pop_dense_zinb <- 
+  zeroinfl(extant_swd_count ~ 
+               ks_analysis_populated[["pop_dense_hundreds_B01001_001_ALAND"]],
+        data = ks_analysis_populated, 
+        dist = "negbin", 
+        EM = TRUE)
+
+pop_dense_zinb <- 
+  zeroinfl(extant_swd_count ~ 
+               ks_analysis_populated[["pop_dense_hundreds_B01001_001_ALAND"]],
+        data = ks_analysis_populated, 
+        dist = "negbin", 
+        EM = TRUE)
+
+pop_dense_zinb <- 
+  zeroinfl(extant_swd_count ~ 
+               ks_analysis_populated[["pop_dense_hundreds_B01001_001_ALAND"]],
+        data = ks_analysis_populated, 
+        dist = "negbin", 
+        EM = TRUE)
+
+revised_dependent_variable_names <- 
+  c("pop_tot_hundreds_B01001_001", 
+    "pop_dense_hundreds_B01001_001_ALAND", 
+    "female_true_percent_B01001_026_001", 
+    "age_0_to_17_true_percent_B01001", 
+    "age_65_plus_true_percent_B01001",   
+    "aian_true_percent_any_race_B02010_001",   
+    "hisp_lat_true_percent_B03002_012_001", 
+    "black_true_percent_B03002_004_001",
+    "white_non_hisp_lat_true_percent_B03002_003_001",   
+    "education_high_school_plus_true_percent_B15003_017_to_025",   
+    "limited_english_true_percent_C16002_004_007_010_013_001",   
+    "no_health_insurance_true_percent_B27010_017_033_050_066",   
+    "renter_occupy_true_percent_B25003_003_001",   
+    "unemployed_true_percent_B23025_005_003",   
+    "poverty_below_100_true_percent_C17002_002_003_001",     "earnings_median_ten_thousands_B20002_001", 
+    "income_house_median_ten_thousands_B19013_001",   
+    "house_value_median_ten_thousands_B25077_001",  
+    "ice_B19001",  
+    "prod_count",
+    "ALAND_KM",  
+    "AWATER_KM")
+
+names(univariable_zinb_model) <- 
+  revised_dependent_variable_names
+
+```
+
+
+
+
+```{r univariable poissons}
+
+revised_dependent_variable_names <- 
+  c("pop_tot_hundreds_B01001_001", 
+    "pop_dense_hundreds_B01001_001_ALAND", 
+    "female_true_percent_B01001_026_001", 
+    "age_0_to_17_true_percent_B01001", 
+    "age_65_plus_true_percent_B01001",   
+    "aian_true_percent_any_race_B02010_001",   
+    "hisp_lat_true_percent_B03002_012_001", 
+    "black_true_percent_B03002_004_001",
+    "white_non_hisp_lat_true_percent_B03002_003_001",   
+    "education_high_school_plus_true_percent_B15003_017_to_025",   
+    "limited_english_true_percent_C16002_004_007_010_013_001",   
+    "no_health_insurance_true_percent_B27010_017_033_050_066",   
+    "renter_occupy_true_percent_B25003_003_001",   
+    "unemployed_true_percent_B23025_005_003",   
+    "poverty_below_100_true_percent_C17002_002_003_001",     "earnings_median_ten_thousands_B20002_001", 
+    "income_house_median_ten_thousands_B19013_001",   
+    "house_value_median_ten_thousands_B25077_001",  
+    "ice_B19001",  
+    "prod_count",
+    "ALAND_KM_ten",  
+    "AWATER_KM")
+
+# run all the poissons (MWAHAHA) for glm
+univariable_poisson_models_glm <-
+  sapply(revised_dependent_variable_names, 
+         function(x) {
+    glm(substitute(extant_swd_count ~ indy,
+        list(indy = as.name(x))),
+        data = ks_analysis_populated,
+        family = "poisson")})
+
+names(univariable_poisson_models_glm) <- 
+  revised_dependent_variable_names
+
+
+
+```
+
+
+
+```{r poisson regression initial table}
+# makes table of estimate, standard error, statistic, and p-value
+poisson_initial_coefficients <- 
+  plyr::ldply(univariable_poisson_models_glm, 
+              tidy, 
+              .id = "model")
+
+# make tibble
+univariable_poisson_initial_tibble <- 
+  as_tibble(poisson_initial_coefficients)
+
+# add exponentiated estimate
+univariable_poisson_initial_tibble <- 
+  univariable_poisson_initial_tibble %>% 
+  mutate(rate = exp(estimate))
+View(univariable_poisson_initial_tibble)
+
+summary(
+  univariable_poisson_models_glm$pop_dense_hundreds_B01001_001_ALAND)
+
+```
+
+
+```{r make table for thesis}
+
+univariable_poisson_table_tibble <- 
+  univariable_poisson_initial_tibble %>% 
+  select(model, term, rate) %>%   # select relevant columns
+  filter(term != "(Intercept)") %>%   # remove intercept rows
+  mutate(model = as.character(model)) %>%   # make model a character vector
+  select(model, rate)   # get rid of term
+```
+
+
+```{r univariable zero-inflated poisson}
+
+
+```
+
+
+
+```{r univariable zero-inflated binomial}
+
+```
+
+
 
 # ABANDON HOPE ALL YE WHO ENTER HERE, WHERE OLD CODE GOES TO DIE
 
