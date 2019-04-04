@@ -12913,239 +12913,10 @@ write_csv(univariable_logistic_tibble,
 ```
 
 
-```{r big logistic model, eval=FALSE, include=FALSE}
-# pop tot model evaluation
-logistic_pop_tot
-
-summary(logistic_pop_tot)
-
-pop_tot_residuals <- 
-  residuals(logistic_pop_tot, type = "deviance") 
-plot.new()
-plot_pop_tot_residuals <- 
-  ggplot(aes())
-  
-  plot(predict(logistic_pop_tot), 
-       pop_tot_residuals, 
-       col = "slateblue1",
-       xlab="Fitted values", 
-       ylab = "Deviance residuals",
-       ylim = max(abs(pop_tot_residuals)) * c(-1,1), 
-       family = "Times New Roman", 
-       main = "Total Population")
-abline(h = 0, lty = 2)
-dev.off()
-
-
-plot_pop_tot_residuals
-
-# population 
-pop_tot_residuals <- 
-  residuals(logistic_pop_tot, type = "deviance") 
-plot.new()
-plot_pop_tot_residuals <- 
-  plot(predict(logistic_pop_tot), 
-       pop_tot_residuals, 
-       col = "slateblue1",
-       xlab="Fitted values", 
-       ylab = "Deviance residuals",
-       ylim = max(abs(pop_tot_residuals)) * c(-1,1), 
-       family = "Times New Roman", 
-       main = "Total Population")
-abline(h = 0, lty = 2)
-
-
-
-
-univariable_logistic_models_glm
-
-# # individual regressions
-# logistic_pop_tot <- 
-#   glm(extant_swd_binary ~ 
-#         pop_tot_B01001_001, 
-#       data = ks_analysis_all_income, 
-#       family = binomial)
-# 
-# logistic_pop_dense <-
-#   glm(extant_swd_binary ~
-#       pop_dense_B01001_001_ALAND,
-#       data = ks_analysis_all_income,
-#       family = binomial)
-#  
-# logistic_female <-
-#   glm(extant_swd_binary ~
-#         female_percent_B01001_026_001,
-#       data = ks_analysis_all_income,
-#       family = binomial)
-# 
-# logistic_female
-# 
-# logistic_age_0_17 <- 
-#   glm(extant_swd_binary ~ 
-#         age_0_to_17_percent_B01001, 
-#       data = ks_analysis_all_income, 
-#       family = binomial)
-# 
-# logistic_age_65_plus <- 
-#   glm(extant_swd_binary ~ 
-#         age_65_plus_percent_B01001, 
-#       data = ks_analysis_all_income, 
-#       family = binomial)
-# 
-# logistic_aian <- 
-#   glm(extant_swd_binary ~ 
-#         aian_percent_any_race_B02010_001, 
-#       data = ks_analysis_all_income, 
-#       family = binomial)
-# 
-# logistic_hisp_lat <- 
-#   glm(extant_swd_binary ~ 
-#         hisp_lat_percent_B03002_012_001, 
-#       data = ks_analysis_all_income, 
-#       family = binomial)
-# 
-# logistic_white <- 
-#   glm(extant_swd_binary ~ 
-#         white_non_hisp_lat_percent_B03002_003_001, 
-#       data = ks_analysis_all_income, 
-#       family = binomial)
-# 
-# logistic_education <- 
-#   glm(extant_swd_binary ~ 
-#         education_high_school_plus_percent_B15003_017_to_025, 
-#       data = ks_analysis_all_income, 
-#       family = binomial)
-# 
-# logistic_english <- 
-#   glm(extant_swd_binary ~ 
-#         limited_english_percent_C16002_004_007_010_013_001,
-#       data = ks_analysis_all_income, 
-#       family = binomial)
-# 
-# logistic_insurance <- 
-#   glm(extant_swd_binary ~ 
-#         no_health_insurance_percent_B27010_017_033_050_066, 
-#       data = ks_analysis_all_income, 
-#       family = binomial)
-# 
-# logistic_renter_occupy <- 
-#   glm(extant_swd_binary ~ 
-#         renter_occupy_percent_B25003_003_001, 
-#       data = ks_analysis_all_income, 
-#       family = binomial)
-# 
-# logistic_unemploy <- 
-#   glm(extant_swd_binary ~ 
-#         unemployed_percent_B23025_005_003, 
-#       data = ks_analysis_all_income, 
-#       family = binomial)
-# 
-# logistic_poverty <- 
-#   glm(extant_swd_binary ~ 
-#         poverty_below_100_percent_C17002_002_003_001, 
-#       data = ks_analysis_all_income, 
-#       family = binomial)
-# 
-# logistic_earn <- 
-#   glm(extant_swd_binary ~ 
-#         earnings_median_B20002_001, 
-#       data = ks_analysis_all_income, 
-#       family = binomial)
-# 
-# logistic_income <- 
-#   glm(extant_swd_binary ~ 
-#         income_house_median_B19013_001, 
-#       data = ks_analysis_all_income, 
-#       family = binomial)
-# 
-# logistic_home <- 
-#   glm(extant_swd_binary ~ 
-#         house_value_median_B25077_001, 
-#       data = ks_analysis_all_income, 
-#       family = binomial)
-# 
-# logistic_ice <- 
-#   glm(extant_swd_binary ~ 
-#         ice_B19001, 
-#       data = ks_analysis_all_income, 
-#       family = binomial)
-# 
-# logistic_land <- 
-#   glm(extant_swd_binary ~ 
-#         ALAND_KM, 
-#       data = ks_analysis_all_income, 
-#       family = binomial)
-# 
-# logistic_water <- 
-#   glm(extant_swd_binary ~ 
-#         AWATER_KM, 
-#       data = ks_analysis_all_income, 
-#       family = binomial)
-# 
-# logistic_horiz <- 
-#   glm(extant_swd_binary ~ 
-#         horizontal_binary, 
-#       data = ks_analysis_all_income, 
-#       family = binomial)
-# 
-# logistic_shale <- 
-#   glm(extant_swd_binary ~ 
-#         shale_presence, 
-#       data = ks_analysis_all_income, 
-#       family = binomial)
-# 
-# 
-# 
-# # review model summaries
-# summary(logistic_pop_tot)
-# confint.default(logistic_pop_tot)
-# summary(logistic_pop_dense)
-# confint.default(logistic_pop_dense)
-summary(logistic_female)
-exp(confint.default(logistic_female))
-
-# summary(logistic_age_0_17)
-# confint.default(logistic_age_0_17)
-# summary(logistic_age_65_plus)
-# confint.default(logistic_age_65_plus)
-# summary(logistic_aian)
-# confint.default(logistic_aian)
-# summary(logistic_hisp_lat)
-# confint.default(logistic_hisp_lat)
-# summary(logistic_white)
-# confint.default(logistic_white)
-# summary(logistic_education)
-# confint.default(logistic_education)
-# summary(logistic_english)
-# confint.default(logistic_english)
-# summary(logistic_insurance)
-# confint.default(logistic_insurance)
-# summary(logistic_renter_occupy)
-# confint.default(logistic_renter_occupy)
-# summary(logistic_unemploy)
-# confint.default(logistic_unemploy)
-# summary(logistic_poverty)
-# confint.default(logistic_poverty)
-# summary(logistic_earn)
-# confint.default(logistic_earn)
-# summary(logistic_income)
-# confint.default(logistic_income)
-# summary(house_value_median_B25077_001)
-# confint.default(house_value_median_B25077_001)
-# summary(logistic_ice)
-# confint.default(logistic_ice)
-# summary(logistic_land)
-# confint.default(logistic_land)
-# summary(logistic_water)
-# confint.default(logistic_water)
-# summary(logistic_shale)
-# confint.default(logistic_shale)
-# summary(logistic_horiz)
-# confint.default(logistic_horiz)
-```
-
 
 ```{r logistic gam because I AM STUBBORN}
+
+AIC_list_gams <- list()
 
 big_gam_model <- 
   gam(extant_swd_binary ~ 
@@ -13168,7 +12939,9 @@ big_gam_model <-
 
 gam.check(big_gam_model)
 
-summary(big_gam_model)
+hihihi <- summary(big_gam_model)
+write_csv(as_data_frame(hihihi$edf), path = "big_gam_model_edf.csv")
+write_csv(as_data_frame(hihihi$s.pv), path = "big_gam_model_ps.csv")
 
 plot(big_gam_model, 
      pages = 12,
@@ -13180,6 +12953,10 @@ plot(big_gam_model,
      shade.col = "lightgreen", 
      col = "purple", 
      residuals = TRUE)
+
+AIC(big_gam_model)
+
+big_gam_model$min.edf
 
 big_gam_no_rent <- 
  gam(extant_swd_binary ~ 
@@ -13615,7 +13392,7 @@ summary(big_gam_k_10_self_select)
 plot(big_gam_k_10_self_select, 
      pages = 12,
      trans = plogis,
-     shift = coef(big_gam_model)[1],
+     shift = coef(big_gam_k_10_self_select)[1],
      seWithMean = TRUE, 
      rug = TRUE, 
      shade = TRUE, 
@@ -13669,7 +13446,7 @@ plot(big_gam_k_5,
 
 big_gam_k_20_self_select <-   
  gam(extant_swd_binary ~ 
-        s(pop_dense_hundreds_B01001_001_ALAND, k = 20) + 
+        s(pop_dense_hundreds_B01001_001_ALAND, k = 20) +
         s(female_true_percent_B01001_026_001, k = 20) + 
         s(age_0_to_17_true_percent_B01001, k = 20) + 
         s(age_65_plus_true_percent_B01001, k = 20) + 
@@ -13859,6 +13636,78 @@ plot(big_gam_k_5,
      col = "purple", 
      residuals = TRUE)
 
+
+
+big_gam_k_5_ml <-   
+ gam(extant_swd_binary ~ 
+        s(pop_dense_hundreds_B01001_001_ALAND, k = 5) + 
+        s(female_true_percent_B01001_026_001, k = 5) + 
+        s(age_0_to_17_true_percent_B01001, k = 5) + 
+        s(age_65_plus_true_percent_B01001, k = 5) + 
+        s(white_non_hisp_lat_true_percent_B03002_003_001, k = 5) + 
+        s(education_high_school_plus_true_percent_B15003_017_to_025, k = 5) + 
+        s(no_health_insurance_true_percent_B27010_017_033_050_066, k = 5) + 
+        s(renter_occupy_percent_B25003_003_001, k = 5) + 
+        s(unemployed_true_percent_B23025_005_003, k = 5) + 
+        s(income_house_median_ten_thousands_B19013_001, k = 5) + 
+        s(prod_count, k = 5) +
+        # s(ALAND_KM_ten) + 
+        s(AWATER_KM, k = 5)       ,
+      data = ks_analysis_populated, 
+      family = binomial, 
+      method = "ML")
+
+big_gam_k_20_ml <-   
+ gam(extant_swd_binary ~ 
+        s(pop_dense_hundreds_B01001_001_ALAND, k = 20) + 
+        s(female_true_percent_B01001_026_001, k = 20) + 
+        s(age_0_to_17_true_percent_B01001, k = 20) + 
+        s(age_65_plus_true_percent_B01001, k = 20) + 
+        s(white_non_hisp_lat_true_percent_B03002_003_001, k = 20) + 
+        s(education_high_school_plus_true_percent_B15003_017_to_025, k = 20) + 
+        s(no_health_insurance_true_percent_B27010_017_033_050_066, k = 20) + 
+        s(renter_occupy_percent_B25003_003_001, k = 20) + 
+        s(unemployed_true_percent_B23025_005_003, k = 20) + 
+        s(income_house_median_ten_thousands_B19013_001, k = 20) + 
+        s(prod_count, k = 20) +
+        s(AWATER_KM, k = 20)       ,
+      data = ks_analysis_populated, 
+      family = binomial, 
+      method = "ML")
+
+gam.check(big_gam_k_20_ml)
+
+concurvity(big_gam_k_20_ml)
+
+summary(big_gam_k_20_ml)
+
+plot(big_gam_k_20_ml, 
+     pages = 1,
+     trans = plogis,
+     shift = coef(big_gam_k_20_ml)[1],
+     seWithMean = TRUE, 
+     rug = TRUE, 
+     shade = TRUE, 
+     shade.col = "lightgreen", 
+     col = "purple", 
+     residuals = TRUE)
+
+AIC_list_gams["big_gam_k_20_ml"] <- 
+  stats::AIC(big_gam_k_20_ml)
+
+
+# # plot logit does not work
+# plot(big_gam_k_5_ml, 
+#      pages = 1,
+#      shift = coef(big_gam_k_5_ml)[1],
+#      seWithMean = TRUE, 
+#      rug = TRUE, 
+#      shade = TRUE, 
+#      shade.col = "lightgreen", 
+#      col = "purple", 
+#      residuals = TRUE)
+
+
 # big_gam_k_5_fix <-   
 #  gam(extant_swd_binary ~ 
 #         s(pop_dense_hundreds_B01001_001_ALAND, k = 5) + 
@@ -13896,8 +13745,120 @@ plot(big_gam_k_5,
 #      residuals = TRUE)
 
 
-AIC_list_gams <- list()
+# plain linear GAM
+big_gam_linear_reml <-   
+ gam(extant_swd_binary ~ 
+        pop_dense_hundreds_B01001_001_ALAND + 
+        female_true_percent_B01001_026_001 + 
+        age_0_to_17_true_percent_B01001 + 
+        age_65_plus_true_percent_B01001 + 
+        white_non_hisp_lat_true_percent_B03002_003_001 + 
+        education_high_school_plus_true_percent_B15003_017_to_025 + 
+        no_health_insurance_true_percent_B27010_017_033_050_066 + 
+        renter_occupy_percent_B25003_003_001 + 
+        unemployed_true_percent_B23025_005_003 + 
+        income_house_median_ten_thousands_B19013_001 + 
+        prod_count +
+        AWATER_KM,
+      data = ks_analysis_populated, 
+      family = binomial, 
+      method = "REML")
 
+gam.check(big_gam_linear_reml)
+
+concurvity(big_gam_linear_reml)
+
+summary(big_gam_linear_reml)
+
+exp(big_gam_linear_reml$coefficients)
+AIC(big_gam_linear_reml)
+
+plot(big_gam_linear_reml, 
+     pages = 1,
+     trans = plogis,
+     shift = coef(big_gam_linear_reml)[1],
+     seWithMean = TRUE, 
+     rug = TRUE, 
+     shade = TRUE, 
+     shade.col = "lightgreen", 
+     col = "purple", 
+     residuals = TRUE)
+
+big_gam_k_20 <-   
+ gam(extant_swd_binary ~ 
+        s(pop_dense_hundreds_B01001_001_ALAND, k = 20) + 
+        s(female_true_percent_B01001_026_001, k = 20) + 
+        s(age_0_to_17_true_percent_B01001, k = 20) + 
+        s(age_65_plus_true_percent_B01001, k = 20) + 
+        s(white_non_hisp_lat_true_percent_B03002_003_001, k = 20) + 
+        s(education_high_school_plus_true_percent_B15003_017_to_025, k = 20) + 
+        s(no_health_insurance_true_percent_B27010_017_033_050_066, k = 20) + 
+        s(renter_occupy_percent_B25003_003_001, k = 20) + 
+        s(unemployed_true_percent_B23025_005_003, k = 20) + 
+        s(income_house_median_ten_thousands_B19013_001, k = 20) + 
+        s(prod_count, k = 20) +
+        s(AWATER_KM, k = 20),
+      data = ks_analysis_populated, 
+      family = binomial, 
+      method = "REML")
+
+gam.check(big_gam_k_20)
+concurvity(big_gam_k_20)
+summary(big_gam_k_20)
+plot(big_gam_k_20, 
+     pages = 1,
+     trans = plogis,
+     shift = coef(big_gam_k_20)[1],
+     seWithMean = TRUE, 
+     rug = TRUE, 
+     shade = TRUE, 
+     shade.col = "lightgreen", 
+     col = "purple", 
+     residuals = TRUE)
+
+
+big_gam_k_7 <-   
+ gam(extant_swd_binary ~ 
+        s(pop_dense_hundreds_B01001_001_ALAND, k = 7) + 
+        s(female_true_percent_B01001_026_001, k = 7) + 
+        s(age_0_to_17_true_percent_B01001, k = 7) + 
+        s(age_65_plus_true_percent_B01001, k = 7) + 
+        s(white_non_hisp_lat_true_percent_B03002_003_001, k = 7) + 
+        s(education_high_school_plus_true_percent_B15003_017_to_025, k = 7) + 
+        s(no_health_insurance_true_percent_B27010_017_033_050_066, k = 7) + 
+        s(renter_occupy_percent_B25003_003_001, k = 7) + 
+        s(unemployed_true_percent_B23025_005_003, k = 7) + 
+        s(income_house_median_ten_thousands_B19013_001, k = 7) + 
+        s(prod_count, k = 7) +
+        s(AWATER_KM, k = 7),
+      data = ks_analysis_populated, 
+      family = binomial, 
+      method = "REML")
+
+gam.check(big_gam_k_7)
+
+summary(big_gam_k_7)
+
+AIC(big_gam_k_7)
+
+plot(big_gam_k_7, 
+     pages = 12,
+     trans = plogis,
+     shift = coef(big_gam_k_7)[1],
+     seWithMean = TRUE, 
+     rug = TRUE, 
+     shade = TRUE, 
+     shade.col = "lightgreen", 
+     col = "purple", 
+     residuals = TRUE)
+
+
+
+
+
+
+AIC_list_gams <- list()
+AIC_list_gams["big_gam_k_20"] <- AIC(big_gam_k_20)
 AIC_list_gams["gam_k_5"] <- AIC(big_gam_k_5)
 AIC_list_gams["k_20_select"] <- AIC(big_gam_k_20_self_select)
 AIC_list_gams["k_10_self"] <- AIC(big_gam_k_10_self_select)
@@ -13905,18 +13866,9 @@ AIC_list_gams["k_5_select"] <- AIC(big_gam_k_5_self_select)
 AIC_list_gams["manual_little"] <- 
   AIC(big_gam_no_rent_white_health_youth_education_income_old_water_fix_k)
 AIC_list_gams["gam_k_20"] <- AIC(big_gam_k_20_self_select)
+AIC_list_gams["big_gam_k_5_ml"] <- AIC(big_gam_k_5_ml)
 
 
-plot(big_gam_k_5, 
-     pages = 1,
-     trans = plogis,
-     shift = coef(big_gam_k_5)[1],
-     seWithMean = TRUE, 
-     rug = TRUE, 
-     shade = TRUE, 
-     shade.col = "lightgreen", 
-     col = "purple", 
-     residuals = TRUE)
 
 # table for big_gam_5
 
@@ -13961,9 +13913,6 @@ predictions_from_gam <-
 # Land area (km2)
 # Water area (km2)
 
-
-
-
 ```
 
 
@@ -13976,6 +13925,8 @@ pop_dense_gam <- gam(extant_swd_binary ~
       method = "REML")
 
 ```
+
+
 
 
 
@@ -14067,11 +14018,10 @@ complete_case_dataset <-
         unemployed_true_percent_B23025_005_003,  
         income_house_median_ten_thousands_B19013_001,  
         prod_count,  
-        ALAND_KM_ten,  
         AWATER_KM) %>% 
   drop_na()
 
-logistic_model_revised_data <- 
+logistic_model_revised_full <- 
    stats::glm(extant_swd_binary ~ 
         pop_dense_hundreds_B01001_001_ALAND + 
         female_true_percent_B01001_026_001 + 
@@ -14088,25 +14038,40 @@ logistic_model_revised_data <-
       data = complete_case_dataset, 
       family = binomial)
 
-summary(logistic_model_revised_data)
+summary(logistic_model_revised_full)
+
+logistic_model_revised_full_dep_names <- 
+        c("pop_dense_hundreds_B01001_001_ALAND", 
+        "female_true_percent_B01001_026_001", 
+        "age_0_to_17_true_percent_B01001", 
+        "age_65_plus_true_percent_B01001", 
+        "white_non_hisp_lat_true_percent_B03002_003_001", 
+        "education_high_school_plus_true_percent_B15003_017_to_025", 
+        "no_health_insurance_true_percent_B27010_017_033_050_066", 
+        "renter_occupy_percent_B25003_003_001", 
+        "unemployed_true_percent_B23025_005_003", 
+        "income_house_median_ten_thousands_B19013_001", 
+        "prod_count",
+        "AWATER_KM")
+
+logistic_model_extant_swd_binary_at_end <- 
+  complete_case_dataset %>% 
+  select(-extant_swd_binary, 
+         everything())
+
 
 # automated choice of best fit
 logistic_matrix <- 
-  data.matrix(logistic_model_revised_data$data)
-
-View(logistic_matrix)
-
-output_variable <- 
-  complete_case_dataset$extant_swd_binary
-View(output_variable)
+  data.matrix(logistic_model_extant_swd_binary_at_end)
 
 test_for_automatic_selection <- 
-  as.data.frame(cbind(logistic_matrix,output_variable))
+  as.data.frame(logistic_matrix)
 
-bestAIC <- 
-  bestglm(test_for_automatic_selection, IC = "AIC", family = binomial)
-bestBIC <- 
-  bestglm(test_for_automatic_selection, IC = "BIC", family = binomial)
+# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+# bestAIC <- 
+#   bestglm(test_for_automatic_selection, IC = "AIC", family = binomial)
+# bestBIC <- 
+#   bestglm(test_for_automatic_selection, IC = "BIC", family = binomial)
 
 write.csv(bestAIC$BestModels, 
           file = "bestmodelsAIC.csv")
@@ -14120,7 +14085,132 @@ bestBIC
 bestBIC$BestModel
 bestBIC$BestModel$residuals
 
-stats::AIC(big_gam_k_5, logistic_model_revised_data)
+stats::AIC(big_gam_k_5, 
+           logistic_model_revised_full, 
+           bestAIC$BestModel, 
+           bestBIC$BestModel)
+
+stats::BIC(big_gam_k_5, 
+           logistic_model_revised_full, 
+           bestAIC$BestModel, 
+           bestBIC$BestModel)
+```
+
+
+```{r pull logistic data for tables in thesis}
+
+nrow(complete_case_dataset)
+
+# get profile confidence intervals
+big_log_profile_confidence_intervals <- 
+  profilinator(logistic_model_revised_full)
+
+# remove intercept
+big_log_profile_confidence_intervals_no_intercept <-
+  big_log_profile_confidence_intervals[2:13,]
+
+# get and exponentiate estimate
+big_log_estimate_exp <- 
+  exp(logistic_model_revised_full$coefficients)
+
+big_log_tibble_for_thesis <- 
+  names(big_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  cbind(big_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(big_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+write_csv(big_log_tibble_for_thesis, 
+          path = "big_log_tibble_for_thesis.csv")
+
+
+#### AIC tibble ####
+
+# get profile confidence intervals
+aic_log_profile_confidence_intervals <- 
+  profilinator(bestAIC$BestModel)
+
+# remove intercept
+aic_log_profile_confidence_intervals_no_intercept <-
+  aic_log_profile_confidence_intervals[2:5,]
+
+# get and exponentiate estimate
+aic_log_estimate_exp <- 
+  exp(bestAIC$BestModel$coefficients)
+
+aic_log_tibble_for_thesis <- 
+  names(aic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  cbind(aic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(aic_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+write_csv(aic_log_tibble_for_thesis, 
+          path = "aic_log_tibble_for_thesis.csv")
+
+
+#### BIC tibble ####
+
+# get profile confidence intervals
+bic_log_profile_confidence_intervals <- 
+  profilinator(bestBIC$BestModel)
+
+# remove intercept
+bic_log_profile_confidence_intervals_no_intercept <-
+  bic_log_profile_confidence_intervals[2:3,]
+
+# get and exponentiate estimate
+bic_log_estimate_exp <- 
+  exp(bestBIC$BestModel$coefficients)
+
+bic_log_tibble_for_thesis <- 
+  names(bic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  cbind(bic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(bic_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+write_csv(bic_log_tibble_for_thesis, 
+          path = "bic_log_tibble_for_thesis.csv")
+
+  
+  
+  
+stats::BIC(logistic_model_revised_full)
+
+names(big_log_estimate_exp)
+
+big_log_estimate_exp_no_intercept <- 
+  big_log_estimate_exp %>% 
+  filter()
+  
+
+big_logistic_for_thesis <- 
+  cbind(logistic_model_revised_full_dep_names, 
+            big_log_profile_confidence_intervals_no_intercept)
+
+confint_tidy(logistic_model_revised_full, 
+                 conf.level = 0.95, 
+                 func = stats::confint)
+summary(logistic_model_revised_full)
+            
+big_logistic_for_thesis <- 
+  logistic_model_revised_full_dep_names
+
+  
+
+
+
+
+
+
+logistic_model_revised_full$data
 
 
 best_glm_run <- 
@@ -14524,6 +14614,44 @@ univariable_poisson_table_tibble <-
 # ABANDON HOPE ALL YE WHO ENTER HERE, WHERE OLD CODE GOES TO DIE
 
 ```{r dead code, eval=FALSE, include=FALSE}
+
+# # pop tot model evaluation
+# 
+# pop_tot_residuals <- 
+#   residuals(logistic_pop_tot, type = "deviance") 
+# plot.new()
+# plot_pop_tot_residuals <- 
+#   ggplot(aes())
+#   
+#   plot(predict(logistic_pop_tot), 
+#        pop_tot_residuals, 
+#        col = "slateblue1",
+#        xlab="Fitted values", 
+#        ylab = "Deviance residuals",
+#        ylim = max(abs(pop_tot_residuals)) * c(-1,1), 
+#        family = "Times New Roman", 
+#        main = "Total Population")
+# abline(h = 0, lty = 2)
+# dev.off()
+# 
+# 
+# plot_pop_tot_residuals
+# 
+# # population 
+# pop_tot_residuals <- 
+#   residuals(logistic_pop_tot, type = "deviance") 
+# plot.new()
+# plot_pop_tot_residuals <- 
+#   plot(predict(logistic_pop_tot), 
+#        pop_tot_residuals, 
+#        col = "slateblue1",
+#        xlab="Fitted values", 
+#        ylab = "Deviance residuals",
+#        ylim = max(abs(pop_tot_residuals)) * c(-1,1), 
+#        family = "Times New Roman", 
+#        main = "Total Population")
+# abline(h = 0, lty = 2)
+
 
 # G2 <- model1$null.deviance-model1$deviance
 # # deviance (G2)
