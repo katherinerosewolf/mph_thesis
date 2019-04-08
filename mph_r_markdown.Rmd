@@ -176,7 +176,7 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 
 # IMPORT THE RAW DATA
 
-```{r raw data import}
+```{r raw data import, eval=FALSE, include=FALSE}
 # #### raw acs data import ####
 #
 # variable_names <-
@@ -460,7 +460,7 @@ load(file = "acs_2013_2017_shapefiles.rdata")
 ```
 
 
-```{r join ruca to block groups} 
+```{r join ruca to block groups, eval=FALSE, include=FALSE}
 
 # join ruca by tract to block groups
 ruca_block_group <- ks_block_group_tract_concordance %>% 
@@ -470,7 +470,7 @@ ruca_block_group <- ks_block_group_tract_concordance %>%
 ```
 
 
-```{r lime data work}
+```{r lime data work, eval=FALSE, include=FALSE}
 
 # make working dataset
 working_lime_data <-
@@ -496,7 +496,7 @@ working_lime_data <-
 ```
 
 
-```{r horizontal well data work}
+```{r horizontal well data work, eval=FALSE, include=FALSE}
 
 # make working dataset
 horizontal_wells <-   
@@ -576,7 +576,7 @@ write.csv(horizontal_wells_from_2010_exclusions,
 ```
 
 
-```{r uic data work}
+```{r uic data work, eval=FALSE, include=FALSE}
 
 uic_small <-
   ks_uic_2018_09_04[,c("KGS_ID",
@@ -1452,7 +1452,7 @@ write.csv(acs_select_geo, file = "acs_select_geo.csv")
 ```
   
 
-```{r construct ACS variables}
+```{r construct ACS variables, eval=FALSE, include=FALSE}
 
 # load data if necessary
 load(file = "acs_select_geo.rdata")
@@ -1913,17 +1913,15 @@ save(acs_geo_cats,
 write.csv(acs_geo_cats,
           file = "acs_geo_cats.csv")
 
-View(acs_geo_cats)
-
 ```
 
 
-```{r load acs data to avoid that chunk}
+```{r load acs data to avoid that chunk, eval=FALSE, include=FALSE}
 load(file = "acs_geo_cats.rdata")
 ```
 
 
-```{r add population-weighted centroids}
+```{r add population-weighted centroids, eval=FALSE, include=FALSE}
 
 load(file = "block_group_centroids_2010.rdata")
 
@@ -1940,7 +1938,7 @@ save(block_group_centroids_2010_pop_weight_fixed,
 ```
 
 
-```{r well data work}
+```{r well data work, eval=FALSE, include=FALSE}
 
 # # make well data file for cleaning
 # ks_clean <-
@@ -2090,7 +2088,7 @@ save(block_group_centroids_2010_pop_weight_fixed,
 ```
 
 
-```{r production well data work}
+```{r production well data work, eval=FALSE, include=FALSE}
 load(file = "ks_working_with_block_groups.rdata")
 
 # make production dataset (?)
@@ -2162,6 +2160,9 @@ ks_prod_api_lat_long <-
   distinct(LATITUDE, LONGITUDE, 
            .keep_all = TRUE)
 
+ks_prod_wells <- 
+  ks_prod_api_lat_long
+
 # count per block group
 prod_block_group <- 
   ks_prod_api_lat_long %>% 
@@ -2171,13 +2172,15 @@ prod_block_group <-
   filter(!is.na(GEOID)) %>% 
   filter(GEOID != "")
 
+save(ks_prod_wells, 
+     file = "ks_prod_wells.rdata")
 save(prod_block_group, 
      file = "prod_block_group.rdata")
 
 ```
 
 
-```{r assigining saltwater disposal wells}
+```{r assigining saltwater disposal wells, eval=FALSE, include=FALSE}
 # #### investigating rows based on comments ####
 # load file to start from here
 # load(file = "ks_working_with_block_groups.rdata")
@@ -3044,7 +3047,7 @@ write.csv(just_swd, file = "just_swd.csv")
 ```
 
 
-```{r block group counts}
+```{r block group counts, eval=FALSE, include=FALSE}
 #### BEGIN BLOCK GROUP COUNTS ####
 
 # pull KIDs and GEOIDs from master list of wells
@@ -3134,10 +3137,9 @@ horizontal_counts <-
 ```
 
 
-```{r merges to make the big dataset}
-#### merge well counts, fluid counts, horizontal counts, shale presence, and ruca code data ####
+```{r merges to make the big dataset, eval=FALSE, include=FALSE}
 
-# list of dataframes to merge
+#### make the full dataset ####
 merged_tibbles <- 
   list(acs_2013_2017_shapefiles, 
        block_group_centroids_2010_pop_weight_fixed,
@@ -3150,47 +3152,6 @@ merged_tibbles <-
        acs_geo_cats) %>% 
   reduce(full_join, 
          by = "GEOID")
-
-
-lime_and_fluid <-   # merge lime and fluid counts
-  full_join(working_lime_data, 
-            fluid_totals_block_group, 
-            by = "GEOID")
-
-lime_fluid_swd <-   # merge with swd counts
-  full_join(lime_and_fluid, 
-            ks_well_counts, 
-            by = "GEOID")
-
-lime_fluid_swd_horiz <-   # merge with horizontal well counts
-  full_join(lime_fluid_swd, 
-            horizontal_counts, 
-            by = "GEOID")
-
-# merge with ruca data
-lime_fluid_swd_horiz_ruca <-   # merge with ruca data
-  full_join(lime_fluid_swd_horiz, 
-            ruca_block_group, 
-            by = c("GEOID" = "block_group_geoid"))
-
-# merge with production well data
-lime_fluid_swd_horiz_ruca_prod <-   # merge with ruca data
-  full_join(lime_fluid_swd_horiz_ruca, 
-            prod_block_group, 
-            by = c("GEOID"))
-
-# merge with pop-weighted centroids
-lime_fluid_swd_horiz_ruca_prod_cent <- 
-  full_join(lime_fluid_swd_horiz_ruca_prod, 
-            block_group_centroids_2010_pop_weight_fixed, 
-            by = c("GEOID"))
-
-#### make the full dataset ####
-# merge everything with acs!  hey-o!
-merged_tibbles <- merge(lime_fluid_swd_horiz_ruca_prod_cent,
-                                  acs_geo_cats,
-                                  by = "GEOID",
-                                  all = TRUE)
 
 #### replace NAs with 0s ####
 # production
@@ -3249,7 +3210,7 @@ merged_tibbles <-
 ```
 
 
-```{r construct binary variables}
+```{r construct binary variables, eval=FALSE, include=FALSE}
 
 # make the variables
 merged_tibbles$total_fluid_binary <- NA
@@ -3335,7 +3296,7 @@ merged_tibbles <-
 ```
 
 
-```{r construct percent variables}
+```{r construct percent variables, eval=FALSE, include=FALSE}
 
 # make new, cool variables that make more sense for the odds ratios
 merged_tibbles <- 
@@ -3382,13 +3343,16 @@ merged_tibbles <-
     AWATER_KM_ten = 
       AWATER_KM / 10)
 
+ks_full_dataset <- 
+  merged_tibbles
+  
 ```
 
 
-```{r save the above}
+```{r save the above, eval=FALSE, include=FALSE}
 # save/write chunk
-save(merged_tibbles,
-     file = "merged_tibbles.rdata")
+save(ks_full_dataset,
+     file = "ks_full_dataset.rdata")
 write.csv(merged_tibbles,
           file = "merged_tibbles.csv")
 
@@ -3399,7 +3363,7 @@ write.csv(ks_swd_working,
 ```
 
 
-```{r simplify to simple variables}
+```{r simplify to simple variables, eval=FALSE, include=FALSE}
 # simplifying to only the variables that I really, really need
 merged_tibbles_analysis <-
   merged_tibbles[,c(
@@ -3489,12 +3453,13 @@ write.csv(ks_analysis_dataset,
 ```
 
 
-```{r make the little datasets from the big one}
+```{r make the little datasets from the big one, eval=FALSE, include=FALSE}
 # load dataset to start from here
 load(file = "ks_analysis_dataset.rdata")
 
 # make working datset from the full one
-ks_analysis_all <- ks_analysis_dataset
+ks_analysis_all <- 
+  ks_analysis_dataset
 
 # remove block groups with no population 
 # (n = 12, none with any wells or data)
@@ -3502,43 +3467,74 @@ ks_analysis_populated <-   # 2339 rows
   ks_analysis_dataset[which(
     ks_analysis_dataset$pop_tot_B01001_001 != 0),]
 
-# make populated into a tibble
-ks_analysis_populated <- 
-  as_tibble(ks_analysis_populated)
-ks_analysis_all <- 
-  as_tibble(ks_analysis_all)
+# big dataset for mapping
+all_map <- 
+  ks_analysis_all
 
-# save ks analysis populated
-save(ks_analysis_populated, 
-     file = "ks_analysis_populated.rdata")
-write.csv(ks_analysis_populated, 
-          file = "ks_analysis_populated.csv")
+# urban dataset for mapping
+urban_tract_map <- 
+  ks_analysis_all %>% 
+  dplyr::select(GEOID, ruca_prime, ruca_second)
 
-# save ks analysis all
+# make dataset of complete income cases with only main analysis variables
+ks_income_complete_main_vars_only <- 
+  ks_analysis_all %>% 
+  dplyr::select(GEOID, 
+                extant_swd_binary, 
+        pop_dense_hundreds_B01001_001_ALAND,  
+        female_true_percent_B01001_026_001, 
+        age_0_to_17_true_percent_B01001,  
+        age_65_plus_true_percent_B01001,  
+        white_non_hisp_lat_true_percent_B03002_003_001,  
+        education_high_school_plus_true_percent_B15003_017_to_025,  
+        no_health_insurance_true_percent_B27010_017_033_050_066,  
+        renter_occupy_percent_B25003_003_001,  
+        unemployed_true_percent_B23025_005_003,  
+        income_house_median_ten_thousands_B19013_001,  
+        prod_count,  
+        AWATER_KM, 
+        INTPTLAT, 
+        INTPTLON) %>% 
+  drop_na()
+
+# save all of the above
 save(ks_analysis_all, 
      file = "ks_analysis_all.rdata")
 write.csv(ks_analysis_all, 
           file = "ks_analysis_all.csv")
 
-# write big dataset for mapping
-all_map <- 
-  ks_analysis_all
+save(ks_analysis_populated, 
+     file = "ks_analysis_populated.rdata")
+write.csv(ks_analysis_populated, 
+          file = "ks_analysis_populated.csv")
+
+save(all_map, 
+     file = "all_map.rdata")
 write.csv(all_map, 
           file = "all_map.csv")
 
-# write urban dataset for mapping
-urban_tract_map <- 
-  ks_analysis_all %>% 
-  dplyr::select(GEOID, ruca_prime, ruca_second)
-write.csv(urban_tract_map, file = "urban_tract_map.csv")
+save(urban_tract_map, 
+          file = "urban_tract_map.rdata")
+write.csv(urban_tract_map, 
+          file = "urban_tract_map.csv")
 
+save(ks_income_complete_main_vars_only, 
+     file = "ks_income_complete_main_vars_only.rdata")
+write.csv(ks_income_complete_main_vars_only, 
+     file = "ks_income_complete_main_vars_only.csv")
 ```
 
 # ANALYSES BEGIN HERE
 
 ```{r load necessary datasets}
-load(file = "ks_analysis_populated.rdata")
+load(file = "ks_full_dataset.rdata")
 load(file = "ks_analysis_all.rdata")
+load(file = "ks_analysis_populated.rdata")
+load(file = "ks_income_complete_main_vars_only.rdata")
+load(file = "all_map.rdata")
+load(file = "urban_tract_map.rdata")
+load(file = "ks_swd_working.rdata")
+load(file = "ks_prod_wells.rdata")
 ```
 
 
@@ -14099,26 +14095,6 @@ big_gam_k_5$fit
 
 ```{r big logistic regressions, eval=FALSE, include=FALSE}
 
-complete_case_dataset <- 
-  ks_analysis_dataset %>% 
-  dplyr::select(GEOID, 
-                extant_swd_binary, 
-        pop_dense_hundreds_B01001_001_ALAND,  
-        female_true_percent_B01001_026_001, 
-        age_0_to_17_true_percent_B01001,  
-        age_65_plus_true_percent_B01001,  
-        white_non_hisp_lat_true_percent_B03002_003_001,  
-        education_high_school_plus_true_percent_B15003_017_to_025,  
-        no_health_insurance_true_percent_B27010_017_033_050_066,  
-        renter_occupy_percent_B25003_003_001,  
-        unemployed_true_percent_B23025_005_003,  
-        income_house_median_ten_thousands_B19013_001,  
-        prod_count,  
-        AWATER_KM, 
-        INTPTLAT, 
-        INTPTLON) %>% 
-  drop_na()
-
 logistic_model_revised_full <- 
    stats::glm(extant_swd_binary ~ 
         pop_dense_hundreds_B01001_001_ALAND + 
@@ -14133,7 +14109,7 @@ logistic_model_revised_full <-
         income_house_median_ten_thousands_B19013_001 + 
         prod_count + 
         AWATER_KM, 
-      data = complete_case_dataset, 
+      data = ks_income_complete_main_vars_only, 
       family = binomial)
 
 summary(logistic_model_revised_full)
@@ -14153,7 +14129,7 @@ logistic_model_revised_full_dep_names <-
         "AWATER_KM")
 
 logistic_model_extant_swd_binary_at_end <- 
-  complete_case_dataset %>% 
+  ks_income_complete_main_vars_only %>% 
   dplyr::select(-extant_swd_binary, 
          everything())
 
@@ -14200,7 +14176,7 @@ logistic_model_revised_best_AIC <-
         female_true_percent_B01001_026_001 + 
         unemployed_true_percent_B23025_005_003 + 
         prod_count, 
-      data = complete_case_dataset, 
+      data = ks_income_complete_main_vars_only, 
       family = binomial)
 
 summary(logistic_model_revised_best_AIC)
@@ -14211,10 +14187,10 @@ residual_best_aic <-
   rstandard(logistic_model_revised_best_AIC)
 
 spatial_residuals <- 
-  tibble(GEOID = complete_case_dataset$GEOID, 
+  tibble(GEOID = ks_income_complete_main_vars_only$GEOID, 
     residuals = residual_best_aic, 
-            longitude = complete_case_dataset$INTPTLON, 
-            latitude = complete_case_dataset$INTPTLAT)
+            longitude = ks_income_complete_main_vars_only$INTPTLON, 
+            latitude = ks_income_complete_main_vars_only$INTPTLAT)
 
 spatial_residuals
 
@@ -14243,7 +14219,7 @@ logistic_model_revised_full_dep_names <-
 
 ```{r pull logistic data for tables in thesis}
 
-nrow(complete_case_dataset)
+nrow(ks_income_complete_main_vars_only)
 
 # get profile confidence intervals
 big_log_profile_confidence_intervals <- 
