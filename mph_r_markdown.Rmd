@@ -59,6 +59,12 @@ library(tidyverse)
 library(pscl)
 library(boot)
 library(mgcv)
+library(mpath)
+library(sf)
+library(raster)
+library(spData)
+library(spDataLarge)
+library(tidycensus)
 
 
 
@@ -72,6 +78,9 @@ library(mgcv)
 options(scipen = 999)
 
 
+#### census api key ####
+census_api_key("eae31d12c8d9c2c9ee288e096e0c03830744aaef", install = TRUE)
+readRenviron("~/.Renviron")
 
 #### create necessary functions ####
 
@@ -261,8 +270,19 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 #
 #
 #
-
-
+# 
+# 
+# #### block group centroid data import
+# 
+# block_group_centroids_2010 <- 
+#   read_csv(file = "CenPop2010_Mean_BG20.txt", 
+#            col_types = cols(.default = "c"))   # read them all as character
+# save(block_group_centroids_2010, 
+#      file = "block_group_centroids_2010.rdata")
+# 
+# 
+# 
+#
 # #### raw well data import ####
 #
 # # import raw data
@@ -341,7 +361,7 @@ ruca_codes <-
 
 # pull only tract_ID and ruca codes and name columns
 only_ruca <- ruca_codes %>%
-  select(c(2, 4, 5, 6))
+  dplyr::select(c(2, 4, 5, 6))
 
 colnames(only_ruca) <-
   c("state",
@@ -375,7 +395,7 @@ ks_block_group_tract_concordance <-
   block_groups_to_tracts %>%
   dplyr::rename(block_group_geoid = GEOID, # fix column names
          tract_geoid = GEOID_1) %>%
-  select(block_group_geoid, tract_geoid) # select the columns
+  dplyr::select(block_group_geoid, tract_geoid) # select the columns
 
 # write .csv and .rdata files
 write_excel_csv(
@@ -384,6 +404,23 @@ write_excel_csv(
 save(
   ks_block_group_tract_concordance,
   file = "ks_block_group_tract_concordance.rdata")
+
+
+
+# #### get geography files for analysis ####
+# acs_2013_2017_shapefiles <-
+#   tidycensus::get_acs(state = "KS", 
+#           geography = "block group", 
+#           variables = "B19013_001",
+#           geometry = TRUE)
+# 
+# acs_2013_2017_shapefiles <- 
+#   acs_2013_2017_shapefiles %>% 
+#   dplyr::select(-variable, -estimate, -moe)
+# 
+# save(acs_2013_2017_shapefiles, 
+#      file = "acs_2013_2017_shapefiles.rdata")
+
 
 ```
 
@@ -412,8 +449,14 @@ load(file = "lime_data_import.rdata")
 # load ruca data
 load(file = "kansas_ruca.rdata")
 
+# load pop-weighted centroids
+load(file = "block_group_centroids_2010.rdata")
+
 # load block group and tract concordances
 load(file = "ks_block_group_tract_concordance.rdata")
+
+# load geography
+load(file = "acs_2013_2017_shapefiles.rdata")
 ```
 
 
@@ -421,7 +464,9 @@ load(file = "ks_block_group_tract_concordance.rdata")
 
 # join ruca by tract to block groups
 ruca_block_group <- ks_block_group_tract_concordance %>% 
-  left_join(kansas_ruca, by = "tract_geoid")
+  left_join(kansas_ruca, by = "tract_geoid") %>% 
+  mutate("GEOID" = block_group_geoid)
+
 ```
 
 
@@ -1868,11 +1913,30 @@ save(acs_geo_cats,
 write.csv(acs_geo_cats,
           file = "acs_geo_cats.csv")
 
+View(acs_geo_cats)
+
 ```
 
 
 ```{r load acs data to avoid that chunk}
 load(file = "acs_geo_cats.rdata")
+```
+
+
+```{r add population-weighted centroids}
+
+load(file = "block_group_centroids_2010.rdata")
+
+block_group_centroids_2010_pop_weight_fixed <- 
+  block_group_centroids_2010 %>% 
+  mutate(GEOID = paste0(STATEFP, COUNTYFP, TRACTCE, BLKGRPCE), 
+         pop_cent_lat = LATITUDE, 
+         pop_cent_long = LONGITUDE) %>% 
+  dplyr::select(GEOID, pop_cent_lat, pop_cent_long)
+
+save(block_group_centroids_2010_pop_weight_fixed, 
+     file = "block_group_centroids_2010_pop_weight_fixed.rdata")
+
 ```
 
 
@@ -2035,13 +2099,13 @@ ks_production <-
 
 unique_statii <- 
   ks_production %>% 
-  select(STATUS) %>% 
+  dplyr::select(STATUS) %>% 
   unique() %>% 
   arrange(STATUS)
 
 unique_statii_two <- 
   ks_production %>% 
-  select(STATUS2) %>% 
+  dplyr::select(STATUS2) %>% 
   unique() %>% 
   arrange(STATUS2)
 
@@ -2056,19 +2120,19 @@ unique_statii_assigned <-
 # list statii assigned to production
 production_statii <- 
   unique_statii_assigned %>% 
-  select(STATUS, PRODUCTION) %>% 
+  dplyr::select(STATUS, PRODUCTION) %>% 
   filter(PRODUCTION == "P") %>% 
   pull(STATUS)
 
 question_production_statii <-
   unique_statii_assigned %>% 
-  select(STATUS, PRODUCTION) %>% 
+  dplyr::select(STATUS, PRODUCTION) %>% 
   filter(PRODUCTION == "M") %>% 
   pull(STATUS)
 
 not_production_statii <-
   unique_statii_assigned %>% 
-  select(STATUS, PRODUCTION) %>% 
+  dplyr::select(STATUS, PRODUCTION) %>% 
   filter(PRODUCTION == "N") %>% 
   pull(STATUS)
 
@@ -3061,7 +3125,6 @@ horizontal_counts <-
     horizontal_counts$GEOID != ""
   ),]
 
-
 #### shale data sums ####
 # already summed, just don't forget it
 
@@ -3073,6 +3136,22 @@ horizontal_counts <-
 
 ```{r merges to make the big dataset}
 #### merge well counts, fluid counts, horizontal counts, shale presence, and ruca code data ####
+
+# list of dataframes to merge
+merged_tibbles <- 
+  list(acs_2013_2017_shapefiles, 
+       block_group_centroids_2010_pop_weight_fixed,
+       working_lime_data, 
+       fluid_totals_block_group, 
+       ks_well_counts, 
+       horizontal_counts, 
+       ruca_block_group, 
+       prod_block_group, 
+       acs_geo_cats) %>% 
+  reduce(full_join, 
+         by = "GEOID")
+
+
 lime_and_fluid <-   # merge lime and fluid counts
   full_join(working_lime_data, 
             fluid_totals_block_group, 
@@ -3100,153 +3179,158 @@ lime_fluid_swd_horiz_ruca_prod <-   # merge with ruca data
             prod_block_group, 
             by = c("GEOID"))
 
+# merge with pop-weighted centroids
+lime_fluid_swd_horiz_ruca_prod_cent <- 
+  full_join(lime_fluid_swd_horiz_ruca_prod, 
+            block_group_centroids_2010_pop_weight_fixed, 
+            by = c("GEOID"))
+
 #### make the full dataset ####
 # merge everything with acs!  hey-o!
-lime_fluid_swd_horiz_ruca_prod_acs <- merge(lime_fluid_swd_horiz_ruca_prod,
+merged_tibbles <- merge(lime_fluid_swd_horiz_ruca_prod_cent,
                                   acs_geo_cats,
                                   by = "GEOID",
                                   all = TRUE)
 
-
 #### replace NAs with 0s ####
 # production
-lime_fluid_swd_horiz_ruca_prod_acs <-
-  within(lime_fluid_swd_horiz_ruca_prod_acs,
+merged_tibbles <-
+  within(merged_tibbles,
          prod_count[is.na(
-           lime_fluid_swd_horiz_ruca_prod_acs$prod_count)] <- 0)
+           merged_tibbles$prod_count)] <- 0)
 
 # shale presence
-lime_fluid_swd_horiz_ruca_prod_acs <-
-  within(lime_fluid_swd_horiz_ruca_prod_acs,
+merged_tibbles <-
+  within(merged_tibbles,
          shale_presence[is.na(
-           lime_fluid_swd_horiz_ruca_prod_acs$shale_presence)] <- 0)
+           merged_tibbles$shale_presence)] <- 0)
 
 # total lifetime fluid injected
-lime_fluid_swd_horiz_ruca_prod_acs <-
-  within(lime_fluid_swd_horiz_ruca_prod_acs,
+merged_tibbles <-
+  within(merged_tibbles,
          total_fluid[is.na(
-           lime_fluid_swd_horiz_ruca_prod_acs$total_fluid)] <- 0)
+           merged_tibbles$total_fluid)] <- 0)
 
 # from 2010 fluid injected
-lime_fluid_swd_horiz_ruca_prod_acs <-
-  within(lime_fluid_swd_horiz_ruca_prod_acs,
+merged_tibbles <-
+  within(merged_tibbles,
          from_2010_fluid[is.na(
-           lime_fluid_swd_horiz_ruca_prod_acs$from_2010_fluid)] <- 0)
+           merged_tibbles$from_2010_fluid)] <- 0)
 
 # all swd well count
-lime_fluid_swd_horiz_ruca_prod_acs <-
-  within(lime_fluid_swd_horiz_ruca_prod_acs,
+merged_tibbles <-
+  within(merged_tibbles,
          all_swd_count[is.na(
-           lime_fluid_swd_horiz_ruca_prod_acs$all_swd_count)] <- 0)
+           merged_tibbles$all_swd_count)] <- 0)
 
 # extant swd well count
-lime_fluid_swd_horiz_ruca_prod_acs <-
-  within(lime_fluid_swd_horiz_ruca_prod_acs,
+merged_tibbles <-
+  within(merged_tibbles,
          extant_swd_count[is.na(
-           lime_fluid_swd_horiz_ruca_prod_acs$extant_swd_count)] <- 0)
+           merged_tibbles$extant_swd_count)] <- 0)
 
 # all swd wells from 2010 count
-lime_fluid_swd_horiz_ruca_prod_acs <-
-  within(lime_fluid_swd_horiz_ruca_prod_acs,
+merged_tibbles <-
+  within(merged_tibbles,
          all_swd_from_2010_count[is.na(
-           lime_fluid_swd_horiz_ruca_prod_acs$all_swd_from_2010_count)] <- 0)
+           merged_tibbles$all_swd_from_2010_count)] <- 0)
 
 # extant swd wells from 2010 count
-lime_fluid_swd_horiz_ruca_prod_acs <-
-  within(lime_fluid_swd_horiz_ruca_prod_acs,
+merged_tibbles <-
+  within(merged_tibbles,
          extant_swd_from_2010_count[is.na(
-           lime_fluid_swd_horiz_ruca_prod_acs$extant_swd_from_2010_count)] <- 0)
+           merged_tibbles$extant_swd_from_2010_count)] <- 0)
 
 # horizontal well count
-lime_fluid_swd_horiz_ruca_prod_acs <-
-  within(lime_fluid_swd_horiz_ruca_prod_acs,
+merged_tibbles <-
+  within(merged_tibbles,
          horizontal_count[is.na(
-           lime_fluid_swd_horiz_ruca_prod_acs$horizontal_count)] <- 0)
+           merged_tibbles$horizontal_count)] <- 0)
 ```
 
 
 ```{r construct binary variables}
 
 # make the variables
-lime_fluid_swd_horiz_ruca_prod_acs$total_fluid_binary <- NA
-lime_fluid_swd_horiz_ruca_prod_acs$from_2010_fluid_binary <- NA
-lime_fluid_swd_horiz_ruca_prod_acs$horizontal_binary <- NA
-lime_fluid_swd_horiz_ruca_prod_acs$all_swd_binary <- NA
-lime_fluid_swd_horiz_ruca_prod_acs$extant_swd_binary <- NA
-lime_fluid_swd_horiz_ruca_prod_acs$all_swd_from_2010_binary <- NA
-lime_fluid_swd_horiz_ruca_prod_acs$extant_swd_from_2010_binary <- NA
-lime_fluid_swd_horiz_ruca_prod_acs$prod_binary <- NA
+merged_tibbles$total_fluid_binary <- NA
+merged_tibbles$from_2010_fluid_binary <- NA
+merged_tibbles$horizontal_binary <- NA
+merged_tibbles$all_swd_binary <- NA
+merged_tibbles$extant_swd_binary <- NA
+merged_tibbles$all_swd_from_2010_binary <- NA
+merged_tibbles$extant_swd_from_2010_binary <- NA
+merged_tibbles$prod_binary <- NA
 
 # production binary 
-lime_fluid_swd_horiz_ruca_prod_acs <-
-  within(lime_fluid_swd_horiz_ruca_prod_acs,
+merged_tibbles <-
+  within(merged_tibbles,
          prod_binary[prod_count == 0] <- 0)
-lime_fluid_swd_horiz_ruca_prod_acs <-
-  within(lime_fluid_swd_horiz_ruca_prod_acs,
+merged_tibbles <-
+  within(merged_tibbles,
          prod_binary[prod_count > 0] <- 1)
 
 # total fluid binary
-lime_fluid_swd_horiz_ruca_prod_acs <-
-  within(lime_fluid_swd_horiz_ruca_prod_acs,
+merged_tibbles <-
+  within(merged_tibbles,
          total_fluid_binary[total_fluid == 0] <- 0)
-lime_fluid_swd_horiz_ruca_prod_acs <-
-  within(lime_fluid_swd_horiz_ruca_prod_acs,
+merged_tibbles <-
+  within(merged_tibbles,
          total_fluid_binary[total_fluid > 0] <- 1)
 
 # from 2010 fluid binary
-lime_fluid_swd_horiz_ruca_prod_acs <-
-  within(lime_fluid_swd_horiz_ruca_prod_acs,
+merged_tibbles <-
+  within(merged_tibbles,
          from_2010_fluid_binary[from_2010_fluid == 0] <- 0)
-lime_fluid_swd_horiz_ruca_prod_acs <-
-  within(lime_fluid_swd_horiz_ruca_prod_acs,
+merged_tibbles <-
+  within(merged_tibbles,
          from_2010_fluid_binary[from_2010_fluid > 0] <- 1)
 
 # production binary
-lime_fluid_swd_horiz_ruca_prod_acs <-
-  within(lime_fluid_swd_horiz_ruca_prod_acs,
+merged_tibbles <-
+  within(merged_tibbles,
          from_2010_fluid_binary[from_2010_fluid == 0] <- 0)
-lime_fluid_swd_horiz_ruca_prod_acs <-
-  within(lime_fluid_swd_horiz_ruca_prod_acs,
+merged_tibbles <-
+  within(merged_tibbles,
          from_2010_fluid_binary[from_2010_fluid > 0] <- 1)
 
 # horizontal binary
-lime_fluid_swd_horiz_ruca_prod_acs <-
-  within(lime_fluid_swd_horiz_ruca_prod_acs,
+merged_tibbles <-
+  within(merged_tibbles,
          horizontal_binary[horizontal_count == 0] <- 0)
-lime_fluid_swd_horiz_ruca_prod_acs <-
-  within(lime_fluid_swd_horiz_ruca_prod_acs,
+merged_tibbles <-
+  within(merged_tibbles,
          horizontal_binary[horizontal_count > 0] <- 1)
 
 # all swd binary
-lime_fluid_swd_horiz_ruca_prod_acs <-
-  within(lime_fluid_swd_horiz_ruca_prod_acs,
+merged_tibbles <-
+  within(merged_tibbles,
          all_swd_binary[all_swd_count == 0] <- 0)
-lime_fluid_swd_horiz_ruca_prod_acs <-
-  within(lime_fluid_swd_horiz_ruca_prod_acs,
+merged_tibbles <-
+  within(merged_tibbles,
          all_swd_binary[all_swd_count > 0] <- 1)
 
 # all swd from 2010 binary
-lime_fluid_swd_horiz_ruca_prod_acs <-
-  within(lime_fluid_swd_horiz_ruca_prod_acs,
+merged_tibbles <-
+  within(merged_tibbles,
          all_swd_from_2010_binary[all_swd_from_2010_count == 0] <- 0)
-lime_fluid_swd_horiz_ruca_prod_acs <-
-  within(lime_fluid_swd_horiz_ruca_prod_acs,
+merged_tibbles <-
+  within(merged_tibbles,
          all_swd_from_2010_binary[all_swd_from_2010_count > 0] <- 1)
 
 # extant swd binary
-lime_fluid_swd_horiz_ruca_prod_acs <-
-  within(lime_fluid_swd_horiz_ruca_prod_acs,
+merged_tibbles <-
+  within(merged_tibbles,
          extant_swd_binary[extant_swd_count == 0] <- 0)
-lime_fluid_swd_horiz_ruca_prod_acs <-
-  within(lime_fluid_swd_horiz_ruca_prod_acs,
+merged_tibbles <-
+  within(merged_tibbles,
          extant_swd_binary[extant_swd_count > 0] <- 1)
 
 # extant swd from 2010 binary
-lime_fluid_swd_horiz_ruca_prod_acs <-
-  within(lime_fluid_swd_horiz_ruca_prod_acs,
+merged_tibbles <-
+  within(merged_tibbles,
          extant_swd_from_2010_binary[extant_swd_from_2010_count == 0] <- 0)
-lime_fluid_swd_horiz_ruca_prod_acs <-
-  within(lime_fluid_swd_horiz_ruca_prod_acs,
+merged_tibbles <-
+  within(merged_tibbles,
          extant_swd_from_2010_binary[extant_swd_from_2010_count > 0] <- 1)
 ```
 
@@ -3254,8 +3338,8 @@ lime_fluid_swd_horiz_ruca_prod_acs <-
 ```{r construct percent variables}
 
 # make new, cool variables that make more sense for the odds ratios
-lime_fluid_swd_horiz_ruca_prod_acs <- 
-  lime_fluid_swd_horiz_ruca_prod_acs %>% 
+merged_tibbles <- 
+  merged_tibbles %>% 
   mutate(
     pop_tot_hundreds_B01001_001 = 
       pop_tot_B01001_001 / 100,
@@ -3303,10 +3387,10 @@ lime_fluid_swd_horiz_ruca_prod_acs <-
 
 ```{r save the above}
 # save/write chunk
-save(lime_fluid_swd_horiz_ruca_prod_acs,
-     file = "lime_fluid_swd_horiz_ruca_prod_acs.rdata")
-write.csv(lime_fluid_swd_horiz_ruca_prod_acs,
-          file = "lime_fluid_swd_horiz_ruca_prod_acs.csv")
+save(merged_tibbles,
+     file = "merged_tibbles.rdata")
+write.csv(merged_tibbles,
+          file = "merged_tibbles.csv")
 
 save(ks_swd_working, 
      file = "ks_swd_working.rdata")
@@ -3317,9 +3401,13 @@ write.csv(ks_swd_working,
 
 ```{r simplify to simple variables}
 # simplifying to only the variables that I really, really need
-lime_fluid_swd_horiz_ruca_prod_acs_analysis <-
-  lime_fluid_swd_horiz_ruca_prod_acs[,c(
-    "GEOID",
+merged_tibbles_analysis <-
+  merged_tibbles[,c(
+    "GEOID", 
+    "INTPTLAT", 
+    "INTPTLON", 
+    "pop_cent_lat", 
+    "pop_cent_long", 
     "all_swd_count",
     "extant_swd_count",
     "all_swd_from_2010_count",
@@ -3384,14 +3472,14 @@ lime_fluid_swd_horiz_ruca_prod_acs_analysis <-
     )]
 
 # save/write/load chunk
-save(lime_fluid_swd_horiz_ruca_prod_acs_analysis,
-     file = "lime_fluid_swd_horiz_ruca_prod_acs_analysis.rdata")
-write.csv(lime_fluid_swd_horiz_ruca_prod_acs_analysis,
-          file = "lime_fluid_swd_horiz_ruca_prod_acs_analysis.csv")
+save(merged_tibbles_analysis,
+     file = "merged_tibbles_analysis.rdata")
+write.csv(merged_tibbles_analysis,
+          file = "merged_tibbles_analysis.csv")
 
 # make working dataset
 ks_analysis_dataset <-   
-  lime_fluid_swd_horiz_ruca_prod_acs_analysis
+  merged_tibbles_analysis
 
 # save write load block
 save(ks_analysis_dataset, 
@@ -3414,6 +3502,12 @@ ks_analysis_populated <-   # 2339 rows
   ks_analysis_dataset[which(
     ks_analysis_dataset$pop_tot_B01001_001 != 0),]
 
+# make populated into a tibble
+ks_analysis_populated <- 
+  as_tibble(ks_analysis_populated)
+ks_analysis_all <- 
+  as_tibble(ks_analysis_all)
+
 # save ks analysis populated
 save(ks_analysis_populated, 
      file = "ks_analysis_populated.rdata")
@@ -3435,7 +3529,7 @@ write.csv(all_map,
 # write urban dataset for mapping
 urban_tract_map <- 
   ks_analysis_all %>% 
-  select(GEOID, ruca_prime, ruca_second)
+  dplyr::select(GEOID, ruca_prime, ruca_second)
 write.csv(urban_tract_map, file = "urban_tract_map.csv")
 
 ```
@@ -3446,6 +3540,9 @@ write.csv(urban_tract_map, file = "urban_tract_map.csv")
 load(file = "ks_analysis_populated.rdata")
 load(file = "ks_analysis_all.rdata")
 ```
+
+
+## exploratory data analyses
 
 
 ```{r count missing values}
@@ -3721,7 +3818,7 @@ ggheatmap +
 
 ks_analysis_pop_indep <- 
   subset(ks_analysis_populated, 
-         select = -c(
+         dplyr::select = -c(
            ALAND_KM, 
            hisp_lat_percent_B03002_012_001, 
            earnings_median_B20002_001, 
@@ -3759,11 +3856,6 @@ nrow(ks_analysis_dataset)
 ks_analysis_all_income <- 
   ks_analysis_populated_complete
 
-# number of rows with and without disposal wells
-length(ks_analysis_all_income$horizontal_count[  # n = 1807
-  which(ks_analysis_all_income$extant_swd_binary == 0)])
-length(ks_analysis_all_income$horizontal_count[   # n = 486
-  which(ks_analysis_all_income$extant_swd_binary == 1)])
 ```
 
 
@@ -9964,6 +10056,9 @@ multiplot(pop_boxplot,
 ```
 
 
+## bivariate analyses
+
+
 ```{r levene tests block groups with income, eval=FALSE, include=FALSE}
 # levene's test homogenous variances
 pop_levene <- 
@@ -10854,7 +10949,7 @@ write.csv(ks_stats_with_wells_populated_ordered,
 # calculate basic summary statistics   # select variables to summarise
 summary_statistics_income_only <- 
   ks_analysis_all_income %>% 
-  select("ALAND_KM",
+  dplyr::select("ALAND_KM",
          "AWATER_KM",
          "pop_tot_B01001_001",
          "pop_dense_B01001_001_ALAND", 
@@ -10890,7 +10985,7 @@ ks_stats_tidy_income_only <-
   gather(stat, val) %>%
   separate(stat, into = c("var", "stat"), sep = "ooo") %>%
   spread(stat, val) %>%
-  select(var, o_min, o_q25, o_median, o_q75, o_max, o_mean, o_sd)
+  dplyr::select(var, o_min, o_q25, o_median, o_q75, o_max, o_mean, o_sd)
 
 write.csv(ks_stats_tidy_income_only, 
           file = "ks_stats_tidy_income_only.csv")
@@ -10899,7 +10994,7 @@ write.csv(ks_stats_tidy_income_only,
 
 summary_statistics_no_wells_income_only <- 
   ks_analysis_all_income %>% 
-  select("ALAND_KM",
+  dplyr::select("ALAND_KM",
          "AWATER_KM",
          "pop_tot_B01001_001",
          "pop_dense_B01001_001_ALAND", 
@@ -10936,7 +11031,7 @@ ks_stats_no_wells_income_only <-
   summary_statistics_no_wells_income_only %>% gather(stat, val) %>%
   separate(stat, into = c("var", "stat"), sep = "ooo") %>%
   spread(stat, val) %>%
-  select(var, o_min, o_q25, o_median, o_q75, o_max, o_mean, o_sd)
+  dplyr::select(var, o_min, o_q25, o_median, o_q75, o_max, o_mean, o_sd)
 
 write.csv(ks_stats_no_wells_income_only, 
           file = "ks_stats_no_wells_income_only.csv")
@@ -10944,7 +11039,7 @@ write.csv(ks_stats_no_wells_income_only,
 # summary statistics with wells
 summary_statistics_with_wells_income_only <- 
   ks_analysis_all_income %>% 
-  select("ALAND_KM",
+  dplyr::select("ALAND_KM",
          "AWATER_KM",
          "pop_tot_B01001_001",
          "pop_dense_B01001_001_ALAND", 
@@ -10982,7 +11077,7 @@ ks_stats_with_wells_income_only <-
   gather(stat, val) %>%
   separate(stat, into = c("var", "stat"), sep = "ooo") %>%
   spread(stat, val) %>%
-  select(var, o_min, o_q25, o_median, o_q75, o_max, o_mean, o_sd)
+  dplyr::select(var, o_min, o_q25, o_median, o_q75, o_max, o_mean, o_sd)
 
 write.csv(ks_stats_with_wells_income_only, 
           file = "ks_stats_with_wells_income_only.csv")
@@ -10994,7 +11089,7 @@ write.csv(ks_stats_with_wells_income_only,
 # select variables to summarise
 summary_statistics_no_urban <- 
   ks_analysis_populated_no_urban %>% 
-  select("ALAND_KM",
+  dplyr::select("ALAND_KM",
          "AWATER_KM",
          "pop_tot_B01001_001",
          "pop_dense_B01001_001_ALAND", 
@@ -11028,7 +11123,7 @@ summary_statistics_no_urban <-
 ks_stats_tidy_no_urban <- summary_statistics_no_urban %>% gather(stat, val) %>%
   separate(stat, into = c("var", "stat"), sep = "ooo") %>%
   spread(stat, val) %>%
-  select(var, o_min, o_q25, o_median, o_q75, o_max, o_mean, o_sd)
+  dplyr::select(var, o_min, o_q25, o_median, o_q75, o_max, o_mean, o_sd)
 
 write.csv(ks_stats_tidy_no_urban, 
           file = "ks_stats_tidy_no_urban.csv")
@@ -11038,7 +11133,7 @@ write.csv(ks_stats_tidy_no_urban,
 # summary statistics for individual groups
 summary_statistics_no_wells_no_urban <- 
   ks_analysis_populated_no_urban %>% 
-  select("ALAND_KM",
+  dplyr::select("ALAND_KM",
          "AWATER_KM",
          "pop_tot_B01001_001",
          "pop_dense_B01001_001_ALAND", 
@@ -11074,7 +11169,7 @@ summary_statistics_no_wells_no_urban <-
 ks_stats_no_wells_no_urban <- summary_statistics_no_wells_no_urban %>% gather(stat, val) %>%
   separate(stat, into = c("var", "stat"), sep = "ooo") %>%
   spread(stat, val) %>%
-  select(var, o_min, o_q25, o_median, o_q75, o_max, o_mean, o_sd)
+  dplyr::select(var, o_min, o_q25, o_median, o_q75, o_max, o_mean, o_sd)
 
 write.csv(ks_stats_no_wells_no_urban, 
           file = "ks_stats_no_wells.csv")
@@ -11085,7 +11180,7 @@ write.csv(ks_stats_no_wells_no_urban,
 # summary statistics with wells
 summary_statistics_with_wells_no_urban <- 
   ks_analysis_populated_no_urban %>% 
-  select("ALAND_KM",
+  dplyr::select("ALAND_KM",
          "AWATER_KM",
          "pop_tot_B01001_001",
          "pop_dense_B01001_001_ALAND", 
@@ -11122,7 +11217,7 @@ ks_stats_with_wells_no_urban <-
   summary_statistics_with_wells_no_urban %>% gather(stat, val) %>%
   separate(stat, into = c("var", "stat"), sep = "ooo") %>%
   spread(stat, val) %>%
-  select(var, o_min, o_q25, o_median, o_q75, o_max, o_mean, o_sd)
+  dplyr::select(var, o_min, o_q25, o_median, o_q75, o_max, o_mean, o_sd)
 
 write.csv(ks_stats_with_wells_no_urban, 
           file = "ks_stats_with_wells_no_urban.csv")
@@ -11193,7 +11288,7 @@ write.csv(p_values_corrections_t_tests_no_urban,
           file = "p_values_t_tests_no_urban.csv")
 ```
 
-## bivariate analyses
+
 
 ```{r bivariate analyses data setup}
 
@@ -12029,10 +12124,10 @@ univariable_initial_tibble <-
 
 univariable_logistic_table_tibble <- 
   univariable_initial_tibble %>% 
-  select(model, term, odds_ratio) %>%   # select relevant columns
+  dplyr::select(model, term, odds_ratio) %>%   # select relevant columns
   filter(term != "(Intercept)") %>%   # remove intercept rows
   mutate(model = as.character(model)) %>%   # make model a character vector
-  select(model, odds_ratio)   # get rid of term
+  dplyr::select(model, odds_ratio)   # get rid of term
 
 ```
 
@@ -12127,7 +12222,7 @@ univariable_profile_ci_tibble <-
 univariable_profile_ci_tibble_for_thesis <- 
   univariable_profile_ci_tibble %>% 
   filter(term != "(Intercept)") %>% 
-  select(-term)
+  dplyr::select(-term)
 
 # merge with prior table
 univariable_logistic_table_tibble <- 
@@ -12914,7 +13009,7 @@ write_csv(univariable_logistic_tibble,
 
 
 
-```{r logistic gam because I AM STUBBORN}
+```{r logistic gam because I AM STUBBORN, eval=FALSE, include=FALSE}
 
 AIC_list_gams <- list()
 
@@ -13343,7 +13438,7 @@ big_gam_k_5_self_select <-
       data = ks_analysis_populated, 
       family = binomial, 
       method = "REML", 
-     select = TRUE)
+      select = TRUE)
 
 gam.check(big_gam_k_5_self_select)
 
@@ -14006,7 +14101,8 @@ big_gam_k_5$fit
 
 complete_case_dataset <- 
   ks_analysis_dataset %>% 
-  select(extant_swd_binary, 
+  dplyr::select(GEOID, 
+                extant_swd_binary, 
         pop_dense_hundreds_B01001_001_ALAND,  
         female_true_percent_B01001_026_001, 
         age_0_to_17_true_percent_B01001,  
@@ -14018,7 +14114,9 @@ complete_case_dataset <-
         unemployed_true_percent_B23025_005_003,  
         income_house_median_ten_thousands_B19013_001,  
         prod_count,  
-        AWATER_KM) %>% 
+        AWATER_KM, 
+        INTPTLAT, 
+        INTPTLON) %>% 
   drop_na()
 
 logistic_model_revised_full <- 
@@ -14056,7 +14154,7 @@ logistic_model_revised_full_dep_names <-
 
 logistic_model_extant_swd_binary_at_end <- 
   complete_case_dataset %>% 
-  select(-extant_swd_binary, 
+  dplyr::select(-extant_swd_binary, 
          everything())
 
 
@@ -14094,6 +14192,52 @@ stats::BIC(big_gam_k_5,
            logistic_model_revised_full, 
            bestAIC$BestModel, 
            bestBIC$BestModel)
+
+# logistic model with best AIC
+logistic_model_revised_best_AIC <- 
+   stats::glm(extant_swd_binary ~ 
+        pop_dense_hundreds_B01001_001_ALAND + 
+        female_true_percent_B01001_026_001 + 
+        unemployed_true_percent_B23025_005_003 + 
+        prod_count, 
+      data = complete_case_dataset, 
+      family = binomial)
+
+summary(logistic_model_revised_best_AIC)
+
+plot(logistic_model_revised_best_AIC)
+
+residual_best_aic <- 
+  rstandard(logistic_model_revised_best_AIC)
+
+spatial_residuals <- 
+  tibble(GEOID = complete_case_dataset$GEOID, 
+    residuals = residual_best_aic, 
+            longitude = complete_case_dataset$INTPTLON, 
+            latitude = complete_case_dataset$INTPTLAT)
+
+spatial_residuals
+
+# project spatial data into North_America_Albers_Equal_Area_Conic (EPSG:102008)
+
+spatial_residuals = st_read(spatial_residuals, 
+                            options = c("X_POSSIBLE_NAMES = longitude",
+                                        "Y_POSSIBLE_NAMES= latitude"), 
+                            4269)
+
+
+
+
+
+logistic_model_revised_full_dep_names <- 
+        c("pop_dense_hundreds_B01001_001_ALAND", 
+        "female_true_percent_B01001_026_001", 
+        "unemployed_true_percent_B23025_005_003",
+        "prod_count")
+
+
+
+
 ```
 
 
@@ -14320,7 +14464,17 @@ ggplot(ks_analysis_populated,
 
 ```
 
+
 ```{r zero-inflated negative binomial}
+
+revised_dependent_variable_names
+
+little_dependent_variable_names <- 
+  c("pop_tot_hundreds_B01001_001", 
+    "pop_dense_hundreds_B01001_001_ALAND", 
+    "female_true_percent_B01001_026_001", 
+    "age_0_to_17_true_percent_B01001", 
+    "age_65_plus_true_percent_B01001")
 
 zinb_function <- 
   function(dependent_variable) {
@@ -14330,10 +14484,15 @@ zinb_function <-
         dist = "negbin", 
         EM = TRUE)}
 
+zinb_safe <- safely(zinb_function)
+
 # run all of the zinbs
 univariable_zinb_models <-
-  lapply(revised_dependent_variable_names, 
-         zinb_function)
+  map(little_dependent_variable_names, 
+         zinb_safe)
+
+
+
 
 pop_tot_zinb <- 
   zeroinfl(extant_swd_count ~ 
@@ -14510,14 +14669,240 @@ revised_dependent_variable_names <-
     "house_value_median_ten_thousands_B25077_001",  
     "ice_B19001",  
     "prod_count",
-    "ALAND_KM",  
-    "AWATER_KM")
+    "ALAND_KM_ten")
 
 names(univariable_zinb_model) <- 
   revised_dependent_variable_names
 
 ```
 
+
+```{r big zinb}
+
+zinb_primary_dataset <- 
+  ks_analysis_populated %>% 
+  dplyr::select(extant_swd_count, 
+        pop_dense_hundreds_B01001_001_ALAND,  
+        female_true_percent_B01001_026_001, 
+        age_0_to_17_true_percent_B01001,  
+        age_65_plus_true_percent_B01001,  
+        white_non_hisp_lat_true_percent_B03002_003_001,  
+        education_high_school_plus_true_percent_B15003_017_to_025,  
+        no_health_insurance_true_percent_B27010_017_033_050_066,  
+        renter_occupy_percent_B25003_003_001,  
+        unemployed_true_percent_B23025_005_003,  
+        income_house_median_ten_thousands_B19013_001,  
+        prod_count,  
+        AWATER_KM) %>% 
+  drop_na()
+
+
+big_zinb <- 
+  zeroinfl(extant_swd_count ~ 
+             pop_dense_hundreds_B01001_001_ALAND + 
+             female_true_percent_B01001_026_001 + 
+             age_0_to_17_true_percent_B01001 +  
+             age_65_plus_true_percent_B01001 +  
+             white_non_hisp_lat_true_percent_B03002_003_001 +  
+             education_high_school_plus_true_percent_B15003_017_to_025 +
+             no_health_insurance_true_percent_B27010_017_033_050_066 +  
+             renter_occupy_percent_B25003_003_001 +  
+             unemployed_true_percent_B23025_005_003 +  
+             income_house_median_ten_thousands_B19013_001 +  
+             prod_count +  
+             AWATER_KM, 
+           data = zinb_primary_dataset, 
+           dist = "negbin",
+           EM = TRUE)
+
+x <- model.matrix( ~ -1 + ., zinb_primary_dataset)
+
+big_zinb_try_two <- 
+  zipath(extant_swd_count ~ 
+             pop_dense_hundreds_B01001_001_ALAND + 
+              age_0_to_17_true_percent_B01001 +  
+             age_65_plus_true_percent_B01001, 
+         family = "negbin",
+           data = zinb_primary_dataset, 
+           nlambda = 20, 
+         standardize = TRUE, penalty = "enet")
+
+big_poisson_try_two <- 
+  zipath(extant_swd_count ~ 
+             pop_dense_hundreds_B01001_001_ALAND + 
+              age_0_to_17_true_percent_B01001 +  
+             age_65_plus_true_percent_B01001 + 
+           white_non_hisp_lat_true_percent_B03002_003_001 +  
+             education_high_school_plus_true_percent_B15003_017_to_025, 
+         family = "poisson",
+           data = zinb_primary_dataset, 
+           nlambda = 100, lambda.zero.min.ratio = 0.001, maxit.em = 300,
+         standardize = TRUE, penalty = "enet")
+
+big_poisson_try_two$coefficients
+coef(big_poisson_try_two, minBic)
+
+minBic <- which.min(BIC(big_poisson_try_two))
+minBic
+
+big_nb_no_selection <- 
+  zeroinfl(extant_swd_count ~ 
+             pop_dense_hundreds_B01001_001_ALAND +  
+        female_true_percent_B01001_026_001 + 
+        age_0_to_17_true_percent_B01001 +  
+        age_65_plus_true_percent_B01001 +  
+        white_non_hisp_lat_true_percent_B03002_003_001 +  
+        education_high_school_plus_true_percent_B15003_017_to_025 +
+        no_health_insurance_true_percent_B27010_017_033_050_066 +  
+        renter_occupy_percent_B25003_003_001 +  
+        unemployed_true_percent_B23025_005_003 +  
+        income_house_median_ten_thousands_B19013_001 +  
+        prod_count +  
+        AWATER_KM, 
+                           data = zinb_primary_dataset, 
+                           dist = "negbin")
+summary(big_nb_no_selection)
+AIC(big_nb_no_selection)
+
+
+
+
+
+big_nb <- 
+  zipath(extant_swd_count ~ 
+             pop_dense_hundreds_B01001_001_ALAND +  
+        female_true_percent_B01001_026_001 + 
+        age_0_to_17_true_percent_B01001 +  
+        age_65_plus_true_percent_B01001 +  
+        white_non_hisp_lat_true_percent_B03002_003_001 +  
+        education_high_school_plus_true_percent_B15003_017_to_025 +
+        no_health_insurance_true_percent_B27010_017_033_050_066 +  
+        renter_occupy_percent_B25003_003_001 +  
+        unemployed_true_percent_B23025_005_003 +  
+        income_house_median_ten_thousands_B19013_001 +  
+        # prod_count +  
+        AWATER_KM, 
+         family = "negbin", 
+         data = zinb_primary_dataset, 
+         nlambda = 100, 
+         lambda.zero.min.ratio = 0.001, 
+         maxit.em = 300, 
+         maxit.theta = 25, 
+         theta.fixed = FALSE, 
+         trace = FALSE, 
+         rescale = FALSE,
+         penalty = "enet")
+
+minBic <- 
+  which.min(BIC(big_nb))
+coef(big_nb, minBic)
+
+minAIC <- 
+  which.min(AIC(big_nb))
+coef(big_nb, minAIC)
+
+
+
+
+summary(big_poisson_try_two)
+
+summary(big_zinb_try_two)
+
+big_zinb_try_two$coefficients
+
+ fit.lasso <- zipath(docvisits ~ . | ., data = dat, family = "negbin",
+nlambda = 100, lambda.zero.min.ratio = 0.001, maxit.em = 300,
+maxit.theta = 25, theta.fixed = FALSE, trace = FALSE,
+penalty = "enet", rescale = FALSE)
+
+
+```
+
+
+```{r individual zinbs}
+
+little_zinb_list <- list()
+
+pop_dense_zinb <- zeroinfl(extant_swd_count ~ 
+                             pop_dense_hundreds_B01001_001_ALAND, 
+                           data = zinb_primary_dataset, 
+                           dist = "negbin")
+
+little_zinb_list["pop_dense"] <- pop_dense_zinb
+
+female_zinb <- zeroinfl(extant_swd_count ~ 
+                           female_true_percent_B01001_026_001, 
+                           data = zinb_primary_dataset, 
+                           dist = "negbin")
+
+little_zinb_list["female"] <- female_zinb
+
+young_zinb <- zeroinfl(extant_swd_count ~ 
+                             age_0_to_17_true_percent_B01001, 
+                           data = zinb_primary_dataset, 
+                           dist = "negbin")
+
+little_zinb_list["young"] <- young_zinb
+
+old_zinb <- zeroinfl(extant_swd_count ~ 
+                             age_65_plus_true_percent_B01001, 
+                           data = zinb_primary_dataset, 
+                           dist = "negbin")
+
+little_zinb_list["young"] <- young_zinb
+
+white_zinb <- zeroinfl(extant_swd_count ~ 
+                             white_non_hisp_lat_true_percent_B03002_003_001, 
+                           data = zinb_primary_dataset, 
+                           dist = "negbin")
+
+little_zinb_list["young"] <- young_zinb
+
+education_zinb <- 
+  zeroinfl(extant_swd_count ~ 
+             education_high_school_plus_true_percent_B15003_017_to_025, 
+                           data = zinb_primary_dataset, 
+                           dist = "negbin")
+little_zinb_list["young"] <- young_zinb
+
+insurance_zinb <- zeroinfl(extant_swd_count ~ 
+                             no_health_insurance_true_percent_B27010_017_033_050_066, 
+                           data = zinb_primary_dataset, 
+                           dist = "negbin")
+little_zinb_list["young"] <- young_zinb
+
+rent_zinb <- zeroinfl(extant_swd_count ~ 
+                             renter_occupy_percent_B25003_003_001, 
+                           data = zinb_primary_dataset, 
+                           dist = "negbin")
+little_zinb_list["young"] <- young_zinb
+
+unemploy_zinb <- zeroinfl(extant_swd_count ~ 
+                             unemployed_true_percent_B23025_005_003, 
+                           data = zinb_primary_dataset, 
+                           dist = "negbin")
+little_zinb_list["young"] <- young_zinb
+
+income_zinb <- zeroinfl(extant_swd_count ~ 
+                             income_house_median_ten_thousands_B19013_001, 
+                           data = zinb_primary_dataset, 
+                           dist = "negbin")
+little_zinb_list["young"] <- young_zinb
+
+prod_count_zinb <- zeroinfl(extant_swd_count ~ 
+                             prod_count, 
+                           data = zinb_primary_dataset, 
+                           dist = "negbin")
+little_zinb_list["young"] <- young_zinb
+
+```
+
+
+```{r adaptive zinbs}
+
+
+
+```
 
 
 
@@ -14591,10 +14976,10 @@ summary(
 
 univariable_poisson_table_tibble <- 
   univariable_poisson_initial_tibble %>% 
-  select(model, term, rate) %>%   # select relevant columns
+  dplyr::select(model, term, rate) %>%   # select relevant columns
   filter(term != "(Intercept)") %>%   # remove intercept rows
   mutate(model = as.character(model)) %>%   # make model a character vector
-  select(model, rate)   # get rid of term
+  dplyr::select(model, rate)   # get rid of term
 ```
 
 
@@ -14615,6 +15000,12 @@ univariable_poisson_table_tibble <-
 
 ```{r dead code, eval=FALSE, include=FALSE}
 
+
+# # number of rows with and without disposal wells for income only
+# length(ks_analysis_all_income$horizontal_count[  # n = 1807
+#   which(ks_analysis_all_income$extant_swd_binary == 0)])
+# length(ks_analysis_all_income$horizontal_count[   # n = 486
+#   which(ks_analysis_all_income$extant_swd_binary == 1)])
 # # pop tot model evaluation
 # 
 # pop_tot_residuals <- 
