@@ -467,6 +467,9 @@ ruca_block_group <- ks_block_group_tract_concordance %>%
   left_join(kansas_ruca, by = "tract_geoid") %>% 
   mutate("GEOID" = block_group_geoid)
 
+save(ruca_block_group, 
+     file = "ruca_block_group.rdata")
+
 ```
 
 
@@ -493,6 +496,9 @@ working_lime_data$SHAPE_Area <- NULL
 working_lime_data <-
   within(working_lime_data,
          shale_presence[is.na(shale_presence)] <- 0)
+
+save(working_lime_data, 
+     file = "working_lime_data.rdata")
 ```
 
 
@@ -566,6 +572,11 @@ horizontal_wells_for_map <-
                                           "LATITUDE",
                                           "LONGITUDE",
                                           "STATUS")]
+
+save(horizontal_wells_for_map,
+          file = "horizontal_wells_for_map.rdata")
+save(horizontal_wells_from_2010_exclusions,
+          file = "horizontal_wells_from_2010_exclusions.rdata")
 
 write.csv(horizontal_wells_for_map,
           file = "horizontal_wells_for_map.csv")
@@ -706,6 +717,8 @@ swd_fluid_totals_by_well <-
   ),]
 
 # make dataset for ArcGIS
+save(swd_fluid_totals_by_well,
+          file = "swd_fluid_totals_by_well.rdata")
 write.csv(swd_fluid_totals_by_well,
           file = "swd_fluid_totals_by_well.csv")
 ```
@@ -2088,98 +2101,6 @@ save(block_group_centroids_2010_pop_weight_fixed,
 ```
 
 
-```{r production well data work, eval=FALSE, include=FALSE}
-load(file = "ks_working_with_block_groups.rdata")
-
-# make production dataset (?)
-ks_production <- 
-  ks_working_with_block_groups
-
-unique_statii <- 
-  ks_production %>% 
-  dplyr::select(STATUS) %>% 
-  unique() %>% 
-  arrange(STATUS)
-
-unique_statii_two <- 
-  ks_production %>% 
-  dplyr::select(STATUS2) %>% 
-  unique() %>% 
-  arrange(STATUS2)
-
-# write.csv(unique_statii, 
-#           file = "unique_statii.csv")
-
-# I assigned the statuses manually outside of R, so
-# this reads them back into R
-unique_statii_assigned <- 
-  read_csv(file = "unique_statii_assigned.csv")
-
-# list statii assigned to production
-production_statii <- 
-  unique_statii_assigned %>% 
-  dplyr::select(STATUS, PRODUCTION) %>% 
-  filter(PRODUCTION == "P") %>% 
-  pull(STATUS)
-
-question_production_statii <-
-  unique_statii_assigned %>% 
-  dplyr::select(STATUS, PRODUCTION) %>% 
-  filter(PRODUCTION == "M") %>% 
-  pull(STATUS)
-
-not_production_statii <-
-  unique_statii_assigned %>% 
-  dplyr::select(STATUS, PRODUCTION) %>% 
-  filter(PRODUCTION == "N") %>% 
-  pull(STATUS)
-
-# filter according to production statii
-ks_production_only <- 
-  ks_production %>% 
-  filter(STATUS %in% 
-           production_statii)
-
-# nrow(ks_production_only)
-
-# limit to those with APIs
-ks_prod_api <- 
-  ks_production_only %>% 
-  filter(!is.na(API_NUMBER))
-
-# limit to those with unique apis
-ks_prod_unique_api <- 
-  ks_prod_api %>% 
-  arrange(desc(API_NUMBER)) %>% 
-  distinct(API_NUMBER_SIMPLE, 
-           .keep_all = TRUE)
-
-# limit to those with unique lat/longs
-ks_prod_api_lat_long <- 
-  ks_prod_unique_api %>% 
-  distinct(LATITUDE, LONGITUDE, 
-           .keep_all = TRUE)
-
-ks_prod_wells <- 
-  ks_prod_api_lat_long
-
-# count per block group
-prod_block_group <- 
-  ks_prod_api_lat_long %>% 
-  group_by(GEOID) %>% 
-  count() %>%
-  dplyr::rename(prod_count = n) %>% 
-  filter(!is.na(GEOID)) %>% 
-  filter(GEOID != "")
-
-save(ks_prod_wells, 
-     file = "ks_prod_wells.rdata")
-save(prod_block_group, 
-     file = "prod_block_group.rdata")
-
-```
-
-
 ```{r assigining saltwater disposal wells, eval=FALSE, include=FALSE}
 # #### investigating rows based on comments ####
 # load file to start from here
@@ -3038,12 +2959,22 @@ ks_excludeds_abandoned <-
 simple_ks_swd_working <- 
   ks_swd_working[,c("GEOID","LATITUDE","LONGITUDE", "extant_swd")]
 
-just_swd <- 
-  simple_ks_swd_working[which(simple_ks_swd_working$extant_swd == "1"),]
+ks_just_swd <- 
+  ks_swd_working[which(simple_ks_swd_working$extant_swd == "1"),]
+
+# make ks_swd_working and ks_just_swd into tibbles
+ks_swd_working <- 
+  as_tibble(ks_swd_working)
+
+ks_just_swd <- 
+  as_tibble(ks_just_swd)
 
 # save ks_swd_working to file
+save(ks_swd_working, file = "ks_swd_working.rdata")
+save(ks_just_swd, file = "ks_just_swd.rdata")
+
 write.csv(ks_swd_working, file = "ks_swd_working.csv")
-write.csv(just_swd, file = "just_swd.csv")
+write.csv(ks_just_swd, file = "ks_just_swd.csv")
 ```
 
 
@@ -3053,7 +2984,6 @@ write.csv(just_swd, file = "just_swd.csv")
 # pull KIDs and GEOIDs from master list of wells
 kids_and_geoids <-
   ks_working_with_block_groups[,c("KID", "GEOID")]
-
 
 #### counting fluid by block group ####
 ks_working_with_block_groups$GEOID <-
@@ -3076,6 +3006,8 @@ fluid_totals_block_group$GEOID <-   # convert GEOID to character
 colnames(fluid_totals_block_group) <- c("GEOID",
                                         "total_fluid",
                                         "from_2010_fluid")
+save(fluid_totals_block_group, 
+     file = "fluid_totals_block_group.rdata")
 
 
 
@@ -3098,6 +3030,10 @@ colnames(ks_well_counts) <- c("GEOID",
                               "extant_swd_count",
                               "all_swd_from_2010_count",
                               "extant_swd_from_2010_count")
+
+# save .rdata file
+save(ks_well_counts, 
+     file = "ks_well_counts.rdata")
 
 
 
@@ -3128,16 +3064,157 @@ horizontal_counts <-
     horizontal_counts$GEOID != ""
   ),]
 
-#### shale data sums ####
-# already summed, just don't forget it
+save(horizontal_counts, 
+     file = "horizontal_counts.rdata")
+
+```
 
 
-#### production data sums ####
-# already summed, just don't forget it
+```{r production well data work, eval=FALSE, include=FALSE}
+load(file = "ks_working_with_block_groups.rdata")
+
+# make production dataset (?)
+ks_production <- 
+  as_tibble(ks_working_with_block_groups)
+
+unique_statii <- 
+  ks_production %>% 
+  dplyr::select(STATUS) %>% 
+  unique() %>% 
+  arrange(STATUS)
+
+unique_statii_two <- 
+  ks_production %>% 
+  dplyr::select(STATUS2) %>% 
+  unique() %>% 
+  arrange(STATUS2)
+
+# write.csv(unique_statii, 
+#           file = "unique_statii.csv")
+
+# I assigned the statuses manually outside of R, so
+# this reads them back into R
+unique_statii_assigned <- 
+  read_csv(file = "unique_statii_assigned.csv")
+
+# list statii assigned to production
+production_statii <- 
+  unique_statii_assigned %>% 
+  dplyr::select(STATUS, PRODUCTION) %>% 
+  filter(PRODUCTION == "P") %>% 
+  pull(STATUS)
+
+question_production_statii <-
+  unique_statii_assigned %>% 
+  dplyr::select(STATUS, PRODUCTION) %>% 
+  filter(PRODUCTION == "M") %>% 
+  pull(STATUS)
+
+not_production_statii <-
+  unique_statii_assigned %>% 
+  dplyr::select(STATUS, PRODUCTION) %>% 
+  filter(PRODUCTION == "N") %>% 
+  pull(STATUS)
+
+# filter according to production statii
+ks_production_only <- 
+  ks_production %>% 
+  filter(STATUS %in% 
+           production_statii)
+
+# nrow(ks_production_only)
+
+# limit to those with APIs
+ks_prod_api <- 
+  ks_production_only %>% 
+  filter(!is.na(API_NUMBER))
+
+# limit to those with unique apis
+ks_prod_unique_api <- 
+  ks_prod_api %>% 
+  arrange(desc(API_NUMBER)) %>% 
+  distinct(API_NUMBER_SIMPLE, 
+           .keep_all = TRUE)
+
+# limit to those with unique lat/longs
+ks_prod_api_lat_long <- 
+  ks_prod_unique_api %>% 
+  distinct(LATITUDE, LONGITUDE, 
+           .keep_all = TRUE)
+
+ks_prod_wells <- 
+  ks_prod_api_lat_long
+
+# count per block group
+prod_block_group <- 
+  ks_prod_api_lat_long %>% 
+  group_by(GEOID) %>% 
+  count() %>%
+  dplyr::rename(prod_count = n) %>% 
+  filter(!is.na(GEOID)) %>% 
+  filter(GEOID != "")
+
+save(ks_prod_wells, 
+     file = "ks_prod_wells.rdata")
+save(prod_block_group, 
+     file = "prod_block_group.rdata")
+
+```
+
+
+```{r compare production and swd wells}
+
+load(file = "ks_just_swd.rdata")
+load(file = "ks_prod_wells.rdata")
+
+ks_swd_well_apis <- 
+  ks_just_swd %>% 
+  pull(API_NUMBER_SIMPLE)
+
+prod_well_apis <-   # 246,249 rows
+  ks_prod_wells %>% 
+  pull(API_NUMBER_SIMPLE)
+
+# get intersection
+prod_swd_apis <-   # 4,008 rows!  Crap!
+  intersect(ks_swd_well_apis,prod_well_apis)
+
+# remove intersecting wells from the production category
+ks_prod_wells_no_swd <-   # 242,241 rows
+  ks_prod_wells %>% 
+  filter(API_NUMBER_SIMPLE %notin% 
+           prod_swd_apis)
+
+save(ks_prod_wells_no_swd, 
+     file = "ks_prod_wells_no_swd.rdata")
+
+ks_prod_no_swd_block_group <- 
+  ks_prod_wells_no_swd %>% 
+  group_by(GEOID) %>% 
+  count() %>%
+  dplyr::rename(prod_count = n) %>% 
+  filter(!is.na(GEOID)) %>% 
+  filter(GEOID != "")
+
+save(ks_prod_no_swd_block_group, 
+     file = "ks_prod_no_swd_block_group.rdata")
+
 ```
 
 
 ```{r merges to make the big dataset, eval=FALSE, include=FALSE}
+
+# load constituent files
+load(file = "acs_2013_2017_shapefiles.rdata")
+load(file = "block_group_centroids_2010_pop_weight_fixed.rdata")
+load(file = "working_lime_data.rdata") 
+load(file = "fluid_totals_block_group.rdata") 
+load(file = "ks_well_counts.rdata") 
+load(file = "horizontal_counts.rdata") 
+load(file = "ruca_block_group.rdata") 
+load(file = "ks_prod_no_swd_block_group.rdata") 
+load(file = "acs_geo_cats.rdata")
+
 
 #### make the full dataset ####
 merged_tibbles <- 
@@ -3148,7 +3225,7 @@ merged_tibbles <-
        ks_well_counts, 
        horizontal_counts, 
        ruca_block_group, 
-       prod_block_group, 
+       ks_prod_no_swd_block_group, 
        acs_geo_cats) %>% 
   reduce(full_join, 
          by = "GEOID")
@@ -3463,9 +3540,14 @@ ks_analysis_all <-
 
 # remove block groups with no population 
 # (n = 12, none with any wells or data)
-ks_analysis_populated <-   # 2339 rows
+ks_analysis_populated_geo <-   # 2339 rows
   ks_analysis_dataset[which(
     ks_analysis_dataset$pop_tot_B01001_001 != 0),]
+
+# remove geometry because it makes everything a nightmare
+ks_analysis_populated <- 
+  ks_analysis_populated_geo %>% 
+  st_drop_geometry()
 
 # big dataset for mapping
 all_map <- 
@@ -3477,7 +3559,7 @@ urban_tract_map <-
   dplyr::select(GEOID, ruca_prime, ruca_second)
 
 # make dataset of complete income cases with only main analysis variables
-ks_income_complete_main_vars_only <- 
+ks_income_specific <- 
   ks_analysis_all %>% 
   dplyr::select(GEOID, 
                 extant_swd_binary, 
@@ -3494,14 +3576,116 @@ ks_income_complete_main_vars_only <-
         prod_count,  
         AWATER_KM, 
         INTPTLAT, 
-        INTPTLON) %>% 
+        INTPTLON, 
+        pop_cent_lat, 
+        pop_cent_long) %>% 
   drop_na()
+
+# ICE-based dataset of complete cases with only main analysis variables minus income
+ks_ice_specific <- 
+  ks_analysis_all %>% 
+  dplyr::select(GEOID, 
+                extant_swd_binary, 
+        pop_dense_hundreds_B01001_001_ALAND,  
+        female_true_percent_B01001_026_001, 
+        age_0_to_17_true_percent_B01001,  
+        age_65_plus_true_percent_B01001,  
+        white_non_hisp_lat_true_percent_B03002_003_001,  
+        education_high_school_plus_true_percent_B15003_017_to_025,  
+        no_health_insurance_true_percent_B27010_017_033_050_066,  
+        renter_occupy_percent_B25003_003_001,  
+        unemployed_true_percent_B23025_005_003,  
+        ice_B19001,  
+        prod_count,  
+        AWATER_KM, 
+        INTPTLAT, 
+        INTPTLON, 
+        pop_cent_lat, 
+        pop_cent_long) %>% 
+  drop_na()
+
+
+# poverty-based dataset of complete cases with only main analysis variables minus income
+ks_poverty_specific <- 
+  ks_analysis_all %>% 
+  dplyr::select(GEOID, 
+                extant_swd_binary, 
+        pop_dense_hundreds_B01001_001_ALAND,  
+        female_true_percent_B01001_026_001, 
+        age_0_to_17_true_percent_B01001,  
+        age_65_plus_true_percent_B01001,  
+        white_non_hisp_lat_true_percent_B03002_003_001,  
+        education_high_school_plus_true_percent_B15003_017_to_025,  
+        no_health_insurance_true_percent_B27010_017_033_050_066,  
+        renter_occupy_percent_B25003_003_001,  
+        unemployed_true_percent_B23025_005_003,  
+        poverty_below_100_true_percent_C17002_002_003_001,  
+        prod_count,  
+        AWATER_KM, 
+        INTPTLAT, 
+        INTPTLON, 
+        pop_cent_lat, 
+        pop_cent_long) %>% 
+  drop_na()
+
+# household value dataset of complete cases with only main analysis variables minus income
+ks_house_specific <- 
+  ks_analysis_all %>% 
+  dplyr::select(GEOID, 
+                extant_swd_binary, 
+        pop_dense_hundreds_B01001_001_ALAND,  
+        female_true_percent_B01001_026_001, 
+        age_0_to_17_true_percent_B01001,  
+        age_65_plus_true_percent_B01001,  
+        white_non_hisp_lat_true_percent_B03002_003_001,  
+        education_high_school_plus_true_percent_B15003_017_to_025,  
+        no_health_insurance_true_percent_B27010_017_033_050_066,  
+        renter_occupy_percent_B25003_003_001,  
+        unemployed_true_percent_B23025_005_003,  
+        house_value_median_ten_thousands_B25077_001,  
+        prod_count,  
+        AWATER_KM, 
+        INTPTLAT, 
+        INTPTLON, 
+        pop_cent_lat, 
+        pop_cent_long) %>% 
+  drop_na()
+
+# earnings dataset of complete cases with only main analysis variables minus income
+ks_earnings_specific <- 
+  ks_analysis_all %>% 
+  dplyr::select(GEOID, 
+                extant_swd_binary, 
+        pop_dense_hundreds_B01001_001_ALAND,  
+        female_true_percent_B01001_026_001, 
+        age_0_to_17_true_percent_B01001,  
+        age_65_plus_true_percent_B01001,  
+        white_non_hisp_lat_true_percent_B03002_003_001,  
+        education_high_school_plus_true_percent_B15003_017_to_025,  
+        no_health_insurance_true_percent_B27010_017_033_050_066,  
+        renter_occupy_percent_B25003_003_001,  
+        unemployed_true_percent_B23025_005_003,  
+        earnings_median_ten_thousands_B20002_001,  
+        prod_count,  
+        AWATER_KM, 
+        INTPTLAT, 
+        INTPTLON, 
+        pop_cent_lat, 
+        pop_cent_long) %>% 
+  drop_na()
+
+
 
 # save all of the above
 save(ks_analysis_all, 
      file = "ks_analysis_all.rdata")
 write.csv(ks_analysis_all, 
           file = "ks_analysis_all.csv")
+
+save(ks_analysis_populated_geo, 
+     file = "ks_analysis_populated_geo.rdata")
+write.csv(ks_analysis_populated_geo, 
+          file = "ks_analysis_populated_geo.csv")
 
 save(ks_analysis_populated, 
      file = "ks_analysis_populated.rdata")
@@ -3518,10 +3702,32 @@ save(urban_tract_map,
 write.csv(urban_tract_map, 
           file = "urban_tract_map.csv")
 
-save(ks_income_complete_main_vars_only, 
-     file = "ks_income_complete_main_vars_only.rdata")
-write.csv(ks_income_complete_main_vars_only, 
-     file = "ks_income_complete_main_vars_only.csv")
+save(ks_income_specific, 
+     file = "ks_income_specific.rdata")
+write.csv(ks_income_specific, 
+     file = "ks_income_specific.csv")
+
+save(ks_ice_specific, 
+     file = "ks_ice_specific.rdata")
+write.csv(ks_ice_specific, 
+     file = "ks_ice_specific.csv")
+
+save(ks_house_specific, 
+     file = "ks_house_specific.rdata")
+write.csv(ks_house_specific, 
+     file = "ks_house_specific.csv")
+
+save(ks_poverty_specific, 
+     file = "ks_poverty_specific.rdata")
+write.csv(ks_poverty_specific, 
+     file = "ks_poverty_specific.csv")
+
+save(ks_earnings_specific, 
+     file = "ks_earnings_specific.rdata")
+write.csv(ks_earnings_specific, 
+     file = "ks_earnings_specific.csv")
+
+
 ```
 
 # ANALYSES BEGIN HERE
@@ -3529,19 +3735,28 @@ write.csv(ks_income_complete_main_vars_only,
 ```{r load necessary datasets}
 load(file = "ks_full_dataset.rdata")
 load(file = "ks_analysis_all.rdata")
+load(file = "ks_analysis_populated_geo.rdata")
 load(file = "ks_analysis_populated.rdata")
-load(file = "ks_income_complete_main_vars_only.rdata")
+load(file = "ks_income_specific.rdata")
+load(file = "ks_swd_working.rdata")
+load(file = "ks_just_swd.rdata")
 load(file = "all_map.rdata")
 load(file = "urban_tract_map.rdata")
 load(file = "ks_swd_working.rdata")
-load(file = "ks_prod_wells.rdata")
+load(file = "ks_prod_wells_no_swd.rdata")
+load(file = "ks_income_specific.rdata")
+load(file = "ks_ice_specific.rdata")
+load(file = "ks_house_specific.rdata")
+load(file = "ks_poverty_specific.rdata")
+load(file = "ks_earnings_specific.rdata")
+
 ```
 
 
 ## exploratory data analyses
 
 
-```{r count missing values}
+```{r count missing values, eval=FALSE, include=FALSE}
 
 # count NAs in ks_analysis_populated to total the missing values
 missing_value_totals <- 
@@ -3585,6 +3800,11 @@ save(missing_value_total_no_swd_groups,
      file = "missing_value_total_no_swd_groups.rdata")
 write.csv(missing_value_total_no_swd_groups, 
           file = "missing_value_total_no_swd_groups.csv")
+
+ks_analysis_all %>% 
+  dplyr::select(prod_count) %>% 
+  pull(prod_count) %>% 
+  sum()
 ```
 
 
@@ -3667,6 +3887,7 @@ correlation_matrix_data <-
                             "Female", 
                             "Population density",
                             "Total population")]
+
 
 # make dataframe of rows with NAs in them
 na_rows_correlation_matrix_data <- 
@@ -3806,52 +4027,6 @@ ggheatmap +
     text = element_text(family = "Times New Roman")) +
   guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
                                title.position = "top", title.hjust = 0.5))
-```
-
-
-```{r make complete cases based on income}
-#### make post-correlation dataset excluding land area, % Hisp/Lat, median earnings, % in poverty, and household value
-
-ks_analysis_pop_indep <- 
-  subset(ks_analysis_populated, 
-         dplyr::select = -c(
-           ALAND_KM, 
-           hisp_lat_percent_B03002_012_001, 
-           earnings_median_B20002_001, 
-           house_value_median_B25077_001, 
-           poverty_below_100_percent_C17002_002_003_001))
-
-# check for NAs
-# count NAs in ks_analysis_populated to total the missing values
-missing_value_totals_indep <- 
-  colSums(is.na(ks_analysis_pop_indep))
-
-# make dataframe of rows with NAs in them (n = 46, all due to missing income)
-na_rows_ks_analysis_pop_indep <- 
-  ks_analysis_pop_indep[
-    !complete.cases(ks_analysis_pop_indep), ]
-
-# only complete cases for regression
-ks_analysis_only_complete <- 
-  ks_analysis_pop_indep[
-    complete.cases(ks_analysis_pop_indep),]
-
-# make dataframe even with excluded variables but with non-complete rows deleted
-ks_analysis_populated_complete <- 
-  ks_analysis_populated[which(
-    ks_analysis_populated$GEOID %in% 
-      ks_analysis_only_complete$GEOID
-  ),]
-
-# save write chunk
-write.csv(ks_analysis_populated_complete, 
-          file = "ks_analysis_populated_complete.csv")
-save(ks_analysis_populated_complete, 
-     file = "ks_analysis_populated_complete.rdata")
-nrow(ks_analysis_dataset)
-ks_analysis_all_income <- 
-  ks_analysis_populated_complete
-
 ```
 
 
@@ -10763,7 +10938,7 @@ write.csv(p_values_corrections_t_test_no_urbans,
 
 
 ```{r summary statistics populated block groups}
-# calculate basic summary statistics   
+# calculate basic summary statistics
 
 # select variables to summarise
 summary_statistics_populated <- 
@@ -14090,10 +14265,7 @@ big_gam_k_5$fit
 ```
 
 
-
-
-
-```{r big logistic regressions, eval=FALSE, include=FALSE}
+```{r logistic regression main full model, eval=FALSE, include=FALSE}
 
 logistic_model_revised_full <- 
    stats::glm(extant_swd_binary ~ 
@@ -14109,7 +14281,7 @@ logistic_model_revised_full <-
         income_house_median_ten_thousands_B19013_001 + 
         prod_count + 
         AWATER_KM, 
-      data = ks_income_complete_main_vars_only, 
+      data = ks_income_specific, 
       family = binomial)
 
 summary(logistic_model_revised_full)
@@ -14129,97 +14301,56 @@ logistic_model_revised_full_dep_names <-
         "AWATER_KM")
 
 logistic_model_extant_swd_binary_at_end <- 
-  ks_income_complete_main_vars_only %>% 
-  dplyr::select(-extant_swd_binary, 
-         everything())
+  ks_income_specific %>% 
+  dplyr::select(logistic_model_revised_full_dep_names, 
+                extant_swd_binary) 
 
 
-# automated choice of best fit
+#### automated choice of best fit ####
+
 logistic_matrix <- 
   data.matrix(logistic_model_extant_swd_binary_at_end)
 
 test_for_automatic_selection <- 
   as.data.frame(logistic_matrix)
 
-# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
-# bestAIC <- 
+# # DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+# bestAIC <-
 #   bestglm(test_for_automatic_selection, IC = "AIC", family = binomial)
-# bestBIC <- 
+# bestBIC <-
 #   bestglm(test_for_automatic_selection, IC = "BIC", family = binomial)
 
+save(bestAIC, 
+          file = "bestAIC.rdata")
+save(bestBIC, 
+          file = "bestAIC.rdata")
+
+load(file = "bestAIC.rdata")
+load(file = "bestBIC.rdata")
+
+# bestAIC$BestModel
+# bestBIC$BestModel
+
 write.csv(bestAIC$BestModels, 
-          file = "bestmodelsAIC.csv")
-
-bestAIC
-bestBIC
+          file = "bestBIC.csv")
 write.csv(bestBIC$BestModels, 
-          file = "bestmodelsBIC.csv")
+          file = "bestBIC.csv")
 
-bestBIC
-bestBIC$BestModel
-bestBIC$BestModel$residuals
-
-stats::AIC(big_gam_k_5, 
+# pull AICS and BICs
+stats::AIC(# big_gam_k_5, 
            logistic_model_revised_full, 
            bestAIC$BestModel, 
            bestBIC$BestModel)
 
-stats::BIC(big_gam_k_5, 
+stats::BIC(# big_gam_k_5, 
            logistic_model_revised_full, 
            bestAIC$BestModel, 
            bestBIC$BestModel)
 
-# logistic model with best AIC
-logistic_model_revised_best_AIC <- 
-   stats::glm(extant_swd_binary ~ 
-        pop_dense_hundreds_B01001_001_ALAND + 
-        female_true_percent_B01001_026_001 + 
-        unemployed_true_percent_B23025_005_003 + 
-        prod_count, 
-      data = ks_income_complete_main_vars_only, 
-      family = binomial)
 
-summary(logistic_model_revised_best_AIC)
+#### pull logistic data for tables in thesis ####
 
-plot(logistic_model_revised_best_AIC)
-
-residual_best_aic <- 
-  rstandard(logistic_model_revised_best_AIC)
-
-spatial_residuals <- 
-  tibble(GEOID = ks_income_complete_main_vars_only$GEOID, 
-    residuals = residual_best_aic, 
-            longitude = ks_income_complete_main_vars_only$INTPTLON, 
-            latitude = ks_income_complete_main_vars_only$INTPTLAT)
-
-spatial_residuals
-
-# project spatial data into North_America_Albers_Equal_Area_Conic (EPSG:102008)
-
-spatial_residuals = st_read(spatial_residuals, 
-                            options = c("X_POSSIBLE_NAMES = longitude",
-                                        "Y_POSSIBLE_NAMES= latitude"), 
-                            4269)
-
-
-
-
-
-logistic_model_revised_full_dep_names <- 
-        c("pop_dense_hundreds_B01001_001_ALAND", 
-        "female_true_percent_B01001_026_001", 
-        "unemployed_true_percent_B23025_005_003",
-        "prod_count")
-
-
-
-
-```
-
-
-```{r pull logistic data for tables in thesis}
-
-nrow(ks_income_complete_main_vars_only)
+nrow(ks_income_specific)
 
 # get profile confidence intervals
 big_log_profile_confidence_intervals <- 
@@ -14299,89 +14430,307 @@ bic_log_tibble_for_thesis <-
 write_csv(bic_log_tibble_for_thesis, 
           path = "bic_log_tibble_for_thesis.csv")
 
-  
-  
-  
-stats::BIC(logistic_model_revised_full)
-
-names(big_log_estimate_exp)
-
-big_log_estimate_exp_no_intercept <- 
-  big_log_estimate_exp %>% 
-  filter()
-  
-
-big_logistic_for_thesis <- 
-  cbind(logistic_model_revised_full_dep_names, 
-            big_log_profile_confidence_intervals_no_intercept)
-
-confint_tidy(logistic_model_revised_full, 
-                 conf.level = 0.95, 
-                 func = stats::confint)
-summary(logistic_model_revised_full)
-            
-big_logistic_for_thesis <- 
-  logistic_model_revised_full_dep_names
-
-  
-
-
-
-
-
-
-logistic_model_revised_full$data
-
-
-best_glm_run <- 
-  stats::glm(extant_swd_binary ~ 
-        pop_tot_B01001_001 + 
-        pop_dense_B01001_001_ALAND + 
-        aian_percent_any_race_B02010_001 +  
-        white_non_hisp_lat_percent_B03002_003_001 +  
-        education_high_school_plus_percent_B15003_017_to_025 + 
-        renter_occupy_percent_B25003_003_001 +  
-        unemployed_percent_B23025_005_003 +  
-        income_house_median_B19013_001 +  
-        shale_presence + 
-        horizontal_binary, 
-      data = ks_analysis_all_income, 
-      family = binomial)
-best_glm_run
-
-thing <- 
-  safeBinaryRegression::glm(extant_swd_binary ~ 
-                            pop_tot_B01001_001 + 
-                            pop_dense_B01001_001_ALAND + 
-                            aian_percent_any_race_B02010_001 +  
-                            white_non_hisp_lat_percent_B03002_003_001 +  
-                            education_high_school_plus_percent_B15003_017_to_025 + 
-                            renter_occupy_percent_B25003_003_001 +  
-                            unemployed_percent_B23025_005_003 +  
-                            income_house_median_B19013_001 +  
-                            shale_presence + 
-                            horizontal_binary, 
-                          data = ks_analysis_all_income, 
-                          family = binomial, 
-                          separation = "test")
-
-second_best_glm_run <- 
-  stats::glm(extant_swd_binary ~ 
-        pop_tot_B01001_001 + 
-        pop_dense_B01001_001_ALAND + 
-        white_non_hisp_lat_percent_B03002_003_001 +  
-        education_high_school_plus_percent_B15003_017_to_025 + 
-        renter_occupy_percent_B25003_003_001 +  
-        unemployed_percent_B23025_005_003 +  
-        income_house_median_B19013_001 +  
-        shale_presence + 
-        horizontal_binary, 
-      data = ks_analysis_all_income, 
-      family = binomial)
-second_best_glm_run
 ```
 
+
+```{r logistic regression ice full model, eval=FALSE, include=FALSE}
+
+logistic_model_revised_full <- 
+   stats::glm(extant_swd_binary ~ 
+        pop_dense_hundreds_B01001_001_ALAND + 
+        female_true_percent_B01001_026_001 + 
+        age_0_to_17_true_percent_B01001 + 
+        age_65_plus_true_percent_B01001 + 
+        white_non_hisp_lat_true_percent_B03002_003_001 + 
+        education_high_school_plus_true_percent_B15003_017_to_025 + 
+        no_health_insurance_true_percent_B27010_017_033_050_066 + 
+        renter_occupy_percent_B25003_003_001 + 
+        unemployed_true_percent_B23025_005_003 + 
+        ice_B19001 + 
+        prod_count + 
+        AWATER_KM, 
+      data = ks_ice_specific, 
+      family = binomial)
+
+summary(logistic_model_revised_full)
+
+logistic_model_revised_full_dep_names <- 
+        c("pop_dense_hundreds_B01001_001_ALAND", 
+        "female_true_percent_B01001_026_001", 
+        "age_0_to_17_true_percent_B01001", 
+        "age_65_plus_true_percent_B01001", 
+        "white_non_hisp_lat_true_percent_B03002_003_001", 
+        "education_high_school_plus_true_percent_B15003_017_to_025", 
+        "no_health_insurance_true_percent_B27010_017_033_050_066", 
+        "renter_occupy_percent_B25003_003_001", 
+        "unemployed_true_percent_B23025_005_003", 
+        "ice_B19001", 
+        "prod_count",
+        "AWATER_KM")
+
+logistic_model_extant_swd_binary_at_end <- 
+  ks_income_specific %>% 
+  dplyr::select(logistic_model_revised_full_dep_names, 
+                extant_swd_binary) 
+
+
+#### automated choice of best fit ####
+
+logistic_matrix <- 
+  data.matrix(logistic_model_extant_swd_binary_at_end)
+
+test_for_automatic_selection <- 
+  as.data.frame(logistic_matrix)
+
+# # DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+# bestAIC <-
+#   bestglm(test_for_automatic_selection, IC = "AIC", family = binomial)
+# bestBIC <-
+#   bestglm(test_for_automatic_selection, IC = "BIC", family = binomial)
+
+save(bestAIC, 
+          file = "bestAIC.rdata")
+save(bestBIC, 
+          file = "bestAIC.rdata")
+
+load(file = "bestAIC.rdata")
+load(file = "bestBIC.rdata")
+
+# bestAIC$BestModel
+# bestBIC$BestModel
+
+write.csv(bestAIC$BestModels, 
+          file = "bestBIC.csv")
+write.csv(bestBIC$BestModels, 
+          file = "bestBIC.csv")
+
+# pull AICS and BICs
+stats::AIC(# big_gam_k_5, 
+           logistic_model_revised_full, 
+           bestAIC$BestModel, 
+           bestBIC$BestModel)
+
+stats::BIC(# big_gam_k_5, 
+           logistic_model_revised_full, 
+           bestAIC$BestModel, 
+           bestBIC$BestModel)
+
+
+#### pull logistic data for tables in thesis ####
+
+nrow(ks_ice_specific)
+
+# get profile confidence intervals
+big_log_profile_confidence_intervals <- 
+  profilinator(logistic_model_revised_full)
+
+# remove intercept
+big_log_profile_confidence_intervals_no_intercept <-
+  big_log_profile_confidence_intervals[2:13,]
+
+# get and exponentiate estimate
+big_log_estimate_exp <- 
+  exp(logistic_model_revised_full$coefficients)
+
+big_log_tibble_for_thesis <- 
+  names(big_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  cbind(big_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(big_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+write_csv(big_log_tibble_for_thesis, 
+          path = "big_log_tibble_for_thesis.csv")
+
+
+#### AIC tibble ####
+
+# get profile confidence intervals
+aic_log_profile_confidence_intervals <- 
+  profilinator(bestAIC$BestModel)
+
+# remove intercept
+aic_log_profile_confidence_intervals_no_intercept <-
+  aic_log_profile_confidence_intervals[2:5,]
+
+# get and exponentiate estimate
+aic_log_estimate_exp <- 
+  exp(bestAIC$BestModel$coefficients)
+
+aic_log_tibble_for_thesis <- 
+  names(aic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  cbind(aic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(aic_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+write_csv(aic_log_tibble_for_thesis, 
+          path = "aic_log_tibble_for_thesis.csv")
+
+
+#### BIC tibble ####
+
+# get profile confidence intervals
+bic_log_profile_confidence_intervals <- 
+  profilinator(bestBIC$BestModel)
+
+# remove intercept
+bic_log_profile_confidence_intervals_no_intercept <-
+  bic_log_profile_confidence_intervals[2:3,]
+
+# get and exponentiate estimate
+bic_log_estimate_exp <- 
+  exp(bestBIC$BestModel$coefficients)
+
+bic_log_tibble_for_thesis <- 
+  names(bic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  cbind(bic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(bic_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+write_csv(bic_log_tibble_for_thesis, 
+          path = "bic_log_tibble_for_thesis.csv")
+
+```
+
+
+
+```{r pull logistic data for tables in thesis}
+
+nrow(ks_income_specific)
+
+# get profile confidence intervals
+big_log_profile_confidence_intervals <- 
+  profilinator(logistic_model_revised_full)
+
+# remove intercept
+big_log_profile_confidence_intervals_no_intercept <-
+  big_log_profile_confidence_intervals[2:13,]
+
+# get and exponentiate estimate
+big_log_estimate_exp <- 
+  exp(logistic_model_revised_full$coefficients)
+
+big_log_tibble_for_thesis <- 
+  names(big_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  cbind(big_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(big_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+write_csv(big_log_tibble_for_thesis, 
+          path = "big_log_tibble_for_thesis.csv")
+
+
+#### AIC tibble ####
+
+# get profile confidence intervals
+aic_log_profile_confidence_intervals <- 
+  profilinator(bestAIC$BestModel)
+
+# remove intercept
+aic_log_profile_confidence_intervals_no_intercept <-
+  aic_log_profile_confidence_intervals[2:5,]
+
+# get and exponentiate estimate
+aic_log_estimate_exp <- 
+  exp(bestAIC$BestModel$coefficients)
+
+aic_log_tibble_for_thesis <- 
+  names(aic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  cbind(aic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(aic_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+write_csv(aic_log_tibble_for_thesis, 
+          path = "aic_log_tibble_for_thesis.csv")
+
+
+#### BIC tibble ####
+
+# get profile confidence intervals
+bic_log_profile_confidence_intervals <- 
+  profilinator(bestBIC$BestModel)
+
+# remove intercept
+bic_log_profile_confidence_intervals_no_intercept <-
+  bic_log_profile_confidence_intervals[2:3,]
+
+# get and exponentiate estimate
+bic_log_estimate_exp <- 
+  exp(bestBIC$BestModel$coefficients)
+
+bic_log_tibble_for_thesis <- 
+  names(bic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  cbind(bic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(bic_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+write_csv(bic_log_tibble_for_thesis, 
+          path = "bic_log_tibble_for_thesis.csv")
+
+```
+
+
+
+
 ## spatial evaluation
+
+
+
+```{r evaluating spatiality}
+summary(logistic_model_revised_best_AIC)
+
+plot(logistic_model_revised_best_AIC)
+
+residual_best_aic <- 
+  rstandard(logistic_model_revised_best_AIC)
+
+spatial_residuals <- 
+  tibble(GEOID = ks_income_specific$GEOID, 
+    residuals = residual_best_aic, 
+            longitude = ks_income_specific$INTPTLON, 
+            latitude = ks_income_specific$INTPTLAT)
+
+spatial_residuals
+
+# project spatial data into North_America_Albers_Equal_Area_Conic (EPSG:102008)
+
+spatial_residuals = st_read(spatial_residuals, 
+                            options = c("X_POSSIBLE_NAMES = longitude",
+                                        "Y_POSSIBLE_NAMES= latitude"), 
+                            4269)
+
+
+
+
+
+logistic_model_revised_full_dep_names <- 
+        c("pop_dense_hundreds_B01001_001_ALAND", 
+        "female_true_percent_B01001_026_001", 
+        "unemployed_true_percent_B23025_005_003",
+        "prod_count")
+
+
+
+
+```
+
 
 ```{r moran's i}
 # # isolate extant swd wells
@@ -14975,6 +15324,133 @@ univariable_poisson_table_tibble <-
 # ABANDON HOPE ALL YE WHO ENTER HERE, WHERE OLD CODE GOES TO DIE
 
 ```{r dead code, eval=FALSE, include=FALSE}
+
+
+  
+# stats::BIC(logistic_model_revised_full)
+# 
+# names(big_log_estimate_exp)
+# 
+# big_log_estimate_exp_no_intercept <- 
+#   big_log_estimate_exp %>% 
+#   filter()
+#   
+# 
+# big_logistic_for_thesis <- 
+#   cbind(logistic_model_revised_full_dep_names, 
+#             big_log_profile_confidence_intervals_no_intercept)
+# 
+# confint_tidy(logistic_model_revised_full, 
+#                  conf.level = 0.95, 
+#                  func = stats::confint)
+# summary(logistic_model_revised_full)
+#             
+# big_logistic_for_thesis <- 
+#   logistic_model_revised_full_dep_names
+# 
+#   
+# 
+# 
+# 
+# 
+# 
+# 
+# logistic_model_revised_full$data
+# 
+# 
+# best_glm_run <- 
+#   stats::glm(extant_swd_binary ~ 
+#         pop_tot_B01001_001 + 
+#         pop_dense_B01001_001_ALAND + 
+#         aian_percent_any_race_B02010_001 +  
+#         white_non_hisp_lat_percent_B03002_003_001 +  
+#         education_high_school_plus_percent_B15003_017_to_025 + 
+#         renter_occupy_percent_B25003_003_001 +  
+#         unemployed_percent_B23025_005_003 +  
+#         income_house_median_B19013_001 +  
+#         shale_presence + 
+#         horizontal_binary, 
+#       data = ks_analysis_all_income, 
+#       family = binomial)
+# best_glm_run
+# 
+# thing <- 
+#   safeBinaryRegression::glm(extant_swd_binary ~ 
+#                             pop_tot_B01001_001 + 
+#                             pop_dense_B01001_001_ALAND + 
+#                             aian_percent_any_race_B02010_001 +  
+#                             white_non_hisp_lat_percent_B03002_003_001 +  
+#                             education_high_school_plus_percent_B15003_017_to_025 + 
+#                             renter_occupy_percent_B25003_003_001 +  
+#                             unemployed_percent_B23025_005_003 +  
+#                             income_house_median_B19013_001 +  
+#                             shale_presence + 
+#                             horizontal_binary, 
+#                           data = ks_analysis_all_income, 
+#                           family = binomial, 
+#                           separation = "test")
+# 
+# second_best_glm_run <- 
+#   stats::glm(extant_swd_binary ~ 
+#         pop_tot_B01001_001 + 
+#         pop_dense_B01001_001_ALAND + 
+#         white_non_hisp_lat_percent_B03002_003_001 +  
+#         education_high_school_plus_percent_B15003_017_to_025 + 
+#         renter_occupy_percent_B25003_003_001 +  
+#         unemployed_percent_B23025_005_003 +  
+#         income_house_median_B19013_001 +  
+#         shale_presence + 
+#         horizontal_binary, 
+#       data = ks_analysis_all_income, 
+#       family = binomial)
+# second_best_glm_run
+
+
+# #### make post-correlation dataset excluding land area, % Hisp/Lat, median earnings, % in poverty, and household value
+# 
+# ks_analysis_pop_indep <- 
+#   subset(ks_analysis_populated, 
+#          dplyr::select = -c(
+#            ALAND_KM, 
+#            hisp_lat_percent_B03002_012_001, 
+#            earnings_median_B20002_001, 
+#            house_value_median_B25077_001, 
+#            poverty_below_100_percent_C17002_002_003_001))
+# 
+# # check for NAs
+# # count NAs in ks_analysis_populated to total the missing values
+# missing_value_totals_indep <- 
+#   colSums(is.na(ks_analysis_pop_indep))
+# 
+# # make dataframe of rows with NAs in them (n = 46, all due to missing income)
+# na_rows_ks_analysis_pop_indep <- 
+#   ks_analysis_pop_indep[
+#     !complete.cases(ks_analysis_pop_indep), ]
+# 
+# # only complete cases for regression
+# ks_analysis_only_complete <- 
+#   ks_analysis_pop_indep[
+#     complete.cases(ks_analysis_pop_indep),]
+# 
+# # make dataframe even with excluded variables but with non-complete rows deleted
+# ks_analysis_populated_complete <- 
+#   ks_analysis_populated[which(
+#     ks_analysis_populated$GEOID %in% 
+#       ks_analysis_only_complete$GEOID
+#   ),]
+# 
+# # save write chunk
+# write.csv(ks_analysis_populated_complete, 
+#           file = "ks_analysis_populated_complete.csv")
+# save(ks_analysis_populated_complete, 
+#      file = "ks_analysis_populated_complete.rdata")
+# nrow(ks_analysis_dataset)
+# ks_analysis_all_income <- 
+#   ks_analysis_populated_complete
+
+
+
+
 
 
 # # number of rows with and without disposal wells for income only
