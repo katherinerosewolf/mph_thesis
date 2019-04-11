@@ -124,7 +124,28 @@ logitloess <- function(x, y, t, nm, dat, s) {
     scale_x_continuous(labels = comma)
 }
 
-
+# function to make estimates and confidence intervals for tables
+pretty_columninator <- 
+  function(tibble_name, odds_ratio, low_ci, high_ci) {
+    tibble_name %>% 
+      mutate(odds_ratio_pretty = formatC(odds_ratio, 
+                                 format = "f", 
+                                 digits = 2), 
+             low_ci_pretty = formatC(low_ci,
+                                     format = "f",
+                                     digits = 2),
+             high_ci_pretty = formatC(high_ci,
+                                      format = "f",
+                                      digits = 2),
+             magic_column = paste0(odds_ratio_pretty,
+                                   " (",
+                                   low_ci_pretty,
+                                   "–",
+                                   high_ci_pretty,
+                                   ")"
+             )
+      )
+    }
 
 # Multiple plot function
 #
@@ -3413,8 +3434,12 @@ merged_tibbles <-
       no_health_insurance_percent_B27010_017_033_050_066 * 100,
     poverty_below_100_true_percent_C17002_002_003_001 = 
       poverty_below_100_percent_C17002_002_003_001 * 100,
+    renter_occupy_true_percent_B25003_003_001 = 
+      renter_occupy_percent_B25003_003_001 * 100, 
     unemployed_true_percent_B23025_005_003 = 
       unemployed_percent_B23025_005_003 * 100, 
+    ice_ten_B19001 = 
+      ice_B19001 * 10,
     ALAND_KM_ten = 
       ALAND_KM / 10, 
     AWATER_KM_ten = 
@@ -3485,6 +3510,7 @@ merged_tibbles_analysis <-
     "house_value_median_B25077_001",
     "no_health_insurance_percent_B27010_017_033_050_066",
     "poverty_below_100_percent_C17002_002_003_001",
+    "renter_occupy_percent_B25003_003_001", 
     "unemployed_percent_B23025_005_003", 
     "ice_B19001", 
     "tract_geoid", 
@@ -3508,6 +3534,7 @@ merged_tibbles_analysis <-
     "no_health_insurance_true_percent_B27010_017_033_050_066",
     "poverty_below_100_true_percent_C17002_002_003_001",
     "unemployed_true_percent_B23025_005_003", 
+    "ice_ten_B19001", 
     "ALAND_KM_ten", 
     "AWATER_KM_ten"
     )]
@@ -3570,7 +3597,7 @@ ks_income_specific <-
         white_non_hisp_lat_true_percent_B03002_003_001,  
         education_high_school_plus_true_percent_B15003_017_to_025,  
         no_health_insurance_true_percent_B27010_017_033_050_066,  
-        renter_occupy_percent_B25003_003_001,  
+        renter_occupy_true_percent_B25003_003_001,  
         unemployed_true_percent_B23025_005_003,  
         income_house_median_ten_thousands_B19013_001,  
         prod_count,  
@@ -3593,9 +3620,9 @@ ks_ice_specific <-
         white_non_hisp_lat_true_percent_B03002_003_001,  
         education_high_school_plus_true_percent_B15003_017_to_025,  
         no_health_insurance_true_percent_B27010_017_033_050_066,  
-        renter_occupy_percent_B25003_003_001,  
+        renter_occupy_true_percent_B25003_003_001,  
         unemployed_true_percent_B23025_005_003,  
-        ice_B19001,  
+        ice_ten_B19001,  
         prod_count,  
         AWATER_KM, 
         INTPTLAT, 
@@ -3617,7 +3644,7 @@ ks_poverty_specific <-
         white_non_hisp_lat_true_percent_B03002_003_001,  
         education_high_school_plus_true_percent_B15003_017_to_025,  
         no_health_insurance_true_percent_B27010_017_033_050_066,  
-        renter_occupy_percent_B25003_003_001,  
+        renter_occupy_true_percent_B25003_003_001,  
         unemployed_true_percent_B23025_005_003,  
         poverty_below_100_true_percent_C17002_002_003_001,  
         prod_count,  
@@ -3640,7 +3667,7 @@ ks_house_specific <-
         white_non_hisp_lat_true_percent_B03002_003_001,  
         education_high_school_plus_true_percent_B15003_017_to_025,  
         no_health_insurance_true_percent_B27010_017_033_050_066,  
-        renter_occupy_percent_B25003_003_001,  
+        renter_occupy_true_percent_B25003_003_001,  
         unemployed_true_percent_B23025_005_003,  
         house_value_median_ten_thousands_B25077_001,  
         prod_count,  
@@ -3663,7 +3690,7 @@ ks_earnings_specific <-
         white_non_hisp_lat_true_percent_B03002_003_001,  
         education_high_school_plus_true_percent_B15003_017_to_025,  
         no_health_insurance_true_percent_B27010_017_033_050_066,  
-        renter_occupy_percent_B25003_003_001,  
+        renter_occupy_true_percent_B25003_003_001,  
         unemployed_true_percent_B23025_005_003,  
         earnings_median_ten_thousands_B20002_001,  
         prod_count,  
@@ -10675,7 +10702,7 @@ home_value_t_test_populated <-
 home_value_t_test_populated
 
 ice_t_test_populated <- 
-  t.test(ice_B19001 ~ extant_swd_binary,
+  t.test(ice_ten_B19001 ~ extant_swd_binary,
          data = ks_analysis_populated)
 ice_t_test_populated
 
@@ -12208,7 +12235,7 @@ dependent_variable_names <-
     "earnings_median_B20002_001", 
     "income_house_median_B19013_001",   
     "house_value_median_B25077_001",  
-    "ice_B19001",  
+    "ice_ten_B19001",  
     "prod_count",
     "ALAND_KM",  
     "AWATER_KM")
@@ -12232,7 +12259,7 @@ revised_dependent_variable_names <-
     "earnings_median_ten_thousands_B20002_001", 
     "income_house_median_ten_thousands_B19013_001",   
     "house_value_median_ten_thousands_B25077_001",  
-    "ice_B19001",  
+    "ice_ten_B19001",  
     "prod_count",
     "ALAND_KM_ten",  
     "AWATER_KM")
@@ -12272,7 +12299,7 @@ names(univariable_logistic_models_lrm) <-
 ```
 
 
-```{r logistic regression initial table}
+```{r make logistic regression univariable table for thesis}
 # makes table of estimate, standard error, statistic, and p-value
 initial_coefficients <- 
   plyr::ldply(univariable_logistic_models_glm, 
@@ -12288,11 +12315,7 @@ univariable_initial_tibble <-
   univariable_initial_tibble %>% 
   mutate(odds_ratio = exp(estimate))
 
-```
-
-
-```{r make table for thesis}
-
+# put odds ratios into a table
 univariable_logistic_table_tibble <- 
   univariable_initial_tibble %>% 
   dplyr::select(model, term, odds_ratio) %>%   # select relevant columns
@@ -12300,10 +12323,7 @@ univariable_logistic_table_tibble <-
   mutate(model = as.character(model)) %>%   # make model a character vector
   dplyr::select(model, odds_ratio)   # get rid of term
 
-```
-
-
-```{r profile confidence intervals for odds ratio}
+#### r profile confidence intervals for odds ratio ####
 
 # function to make them
 profilinator <- 
@@ -12384,10 +12404,8 @@ univariable_profile_ci_tibble <-
   univariable_profile_ci_tibble %>% 
   dplyr::rename(profile_ci_or_low = conf.low, 
          profile_ci_or_high = conf.high)
-  
-```
 
-```{r combine profile confidence intervals with odds ratios}
+#### r combine profile confidence intervals with odds ratios ####
 
 # remove intercept rows
 univariable_profile_ci_tibble_for_thesis <- 
@@ -12402,8 +12420,7 @@ univariable_logistic_table_tibble <-
             by = "model") %>% 
   mutate_if(is.numeric, round, digits = 2)
 
-
-
+# write table to disk
 write_csv(univariable_logistic_table_tibble, 
           path = "univariable_logistic_table_tibble.csv")
 
@@ -14276,7 +14293,7 @@ logistic_model_revised_full <-
         white_non_hisp_lat_true_percent_B03002_003_001 + 
         education_high_school_plus_true_percent_B15003_017_to_025 + 
         no_health_insurance_true_percent_B27010_017_033_050_066 + 
-        renter_occupy_percent_B25003_003_001 + 
+        renter_occupy_true_percent_B25003_003_001 + 
         unemployed_true_percent_B23025_005_003 + 
         income_house_median_ten_thousands_B19013_001 + 
         prod_count + 
@@ -14294,7 +14311,7 @@ logistic_model_revised_full_dep_names <-
         "white_non_hisp_lat_true_percent_B03002_003_001", 
         "education_high_school_plus_true_percent_B15003_017_to_025", 
         "no_health_insurance_true_percent_B27010_017_033_050_066", 
-        "renter_occupy_percent_B25003_003_001", 
+        "renter_occupy_true_percent_B25003_003_001", 
         "unemployed_true_percent_B23025_005_003", 
         "income_house_median_ten_thousands_B19013_001", 
         "prod_count",
@@ -14314,7 +14331,7 @@ logistic_matrix <-
 test_for_automatic_selection <- 
   as.data.frame(logistic_matrix)
 
-# # DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
 # bestAIC <-
 #   bestglm(test_for_automatic_selection, IC = "AIC", family = binomial)
 # bestBIC <-
@@ -14323,7 +14340,7 @@ test_for_automatic_selection <-
 save(bestAIC, 
           file = "bestAIC.rdata")
 save(bestBIC, 
-          file = "bestAIC.rdata")
+          file = "bestBIC.rdata")
 
 load(file = "bestAIC.rdata")
 load(file = "bestBIC.rdata")
@@ -14332,7 +14349,7 @@ load(file = "bestBIC.rdata")
 # bestBIC$BestModel
 
 write.csv(bestAIC$BestModels, 
-          file = "bestBIC.csv")
+          file = "bestAIC.csv")
 write.csv(bestBIC$BestModels, 
           file = "bestBIC.csv")
 
@@ -14358,7 +14375,7 @@ big_log_profile_confidence_intervals <-
 
 # remove intercept
 big_log_profile_confidence_intervals_no_intercept <-
-  big_log_profile_confidence_intervals[2:13,]
+  big_log_profile_confidence_intervals[-(1:1),]
 
 # get and exponentiate estimate
 big_log_estimate_exp <- 
@@ -14385,7 +14402,7 @@ aic_log_profile_confidence_intervals <-
 
 # remove intercept
 aic_log_profile_confidence_intervals_no_intercept <-
-  aic_log_profile_confidence_intervals[2:5,]
+  aic_log_profile_confidence_intervals[-(1:1),]
 
 # get and exponentiate estimate
 aic_log_estimate_exp <- 
@@ -14412,7 +14429,7 @@ bic_log_profile_confidence_intervals <-
 
 # remove intercept
 bic_log_profile_confidence_intervals_no_intercept <-
-  bic_log_profile_confidence_intervals[2:3,]
+  bic_log_profile_confidence_intervals[-(1:1),]
 
 # get and exponentiate estimate
 bic_log_estimate_exp <- 
@@ -14435,7 +14452,7 @@ write_csv(bic_log_tibble_for_thesis,
 
 ```{r logistic regression ice full model, eval=FALSE, include=FALSE}
 
-logistic_model_revised_full <- 
+logistic_model_ice_revised_full <- 
    stats::glm(extant_swd_binary ~ 
         pop_dense_hundreds_B01001_001_ALAND + 
         female_true_percent_B01001_026_001 + 
@@ -14444,17 +14461,17 @@ logistic_model_revised_full <-
         white_non_hisp_lat_true_percent_B03002_003_001 + 
         education_high_school_plus_true_percent_B15003_017_to_025 + 
         no_health_insurance_true_percent_B27010_017_033_050_066 + 
-        renter_occupy_percent_B25003_003_001 + 
+        renter_occupy_true_percent_B25003_003_001 + 
         unemployed_true_percent_B23025_005_003 + 
-        ice_B19001 + 
+        ice_ten_B19001 + 
         prod_count + 
         AWATER_KM, 
       data = ks_ice_specific, 
       family = binomial)
 
-summary(logistic_model_revised_full)
+summary(logistic_model_ice_revised_full)
 
-logistic_model_revised_full_dep_names <- 
+logistic_model_ice_revised_full_dep_names <- 
         c("pop_dense_hundreds_B01001_001_ALAND", 
         "female_true_percent_B01001_026_001", 
         "age_0_to_17_true_percent_B01001", 
@@ -14462,58 +14479,58 @@ logistic_model_revised_full_dep_names <-
         "white_non_hisp_lat_true_percent_B03002_003_001", 
         "education_high_school_plus_true_percent_B15003_017_to_025", 
         "no_health_insurance_true_percent_B27010_017_033_050_066", 
-        "renter_occupy_percent_B25003_003_001", 
+        "renter_occupy_true_percent_B25003_003_001", 
         "unemployed_true_percent_B23025_005_003", 
-        "ice_B19001", 
+        "ice_ten_B19001", 
         "prod_count",
         "AWATER_KM")
 
-logistic_model_extant_swd_binary_at_end <- 
-  ks_income_specific %>% 
-  dplyr::select(logistic_model_revised_full_dep_names, 
+logistic_model_ice_extant_swd_binary_at_end <- 
+  ks_ice_specific %>% 
+  dplyr::select(logistic_model_ice_revised_full_dep_names, 
                 extant_swd_binary) 
 
 
 #### automated choice of best fit ####
 
-logistic_matrix <- 
-  data.matrix(logistic_model_extant_swd_binary_at_end)
+logistic_ice_matrix <- 
+  data.matrix(logistic_model_ice_extant_swd_binary_at_end)
 
-test_for_automatic_selection <- 
-  as.data.frame(logistic_matrix)
+ice_test_for_automatic_selection <- 
+  as.data.frame(logistic_ice_matrix)
 
-# # DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
-# bestAIC <-
-#   bestglm(test_for_automatic_selection, IC = "AIC", family = binomial)
-# bestBIC <-
-#   bestglm(test_for_automatic_selection, IC = "BIC", family = binomial)
+# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+ice_bestAIC <-
+  bestglm(ice_test_for_automatic_selection, IC = "AIC", family = binomial)
+ice_bestBIC <-
+  bestglm(ice_test_for_automatic_selection, IC = "BIC", family = binomial)
 
-save(bestAIC, 
-          file = "bestAIC.rdata")
-save(bestBIC, 
-          file = "bestAIC.rdata")
+save(ice_bestAIC, 
+          file = "ice_bestAIC.rdata")
+save(ice_bestBIC, 
+          file = "ice_bestBIC.rdata")
 
-load(file = "bestAIC.rdata")
-load(file = "bestBIC.rdata")
+load(file = "ice_bestAIC.rdata")
+load(file = "ice_bestBIC.rdata")
 
-# bestAIC$BestModel
-# bestBIC$BestModel
+ice_bestAIC$BestModel
+ice_bestBIC$BestModel
 
-write.csv(bestAIC$BestModels, 
-          file = "bestBIC.csv")
-write.csv(bestBIC$BestModels, 
-          file = "bestBIC.csv")
+write.csv(ice_bestAIC$BestModels, 
+          file = "ice_bestAIC.csv")
+write.csv(ice_bestBIC$BestModels, 
+          file = "ice_bestBIC.csv")
 
 # pull AICS and BICs
 stats::AIC(# big_gam_k_5, 
-           logistic_model_revised_full, 
-           bestAIC$BestModel, 
-           bestBIC$BestModel)
+           logistic_model_ice_revised_full, 
+           ice_bestAIC$BestModel, 
+           ice_bestBIC$BestModel)
 
 stats::BIC(# big_gam_k_5, 
-           logistic_model_revised_full, 
-           bestAIC$BestModel, 
-           bestBIC$BestModel)
+           logistic_model_ice_revised_full, 
+           ice_bestAIC$BestModel, 
+           ice_bestBIC$BestModel)
 
 
 #### pull logistic data for tables in thesis ####
@@ -14521,171 +14538,588 @@ stats::BIC(# big_gam_k_5,
 nrow(ks_ice_specific)
 
 # get profile confidence intervals
-big_log_profile_confidence_intervals <- 
-  profilinator(logistic_model_revised_full)
+ice_big_log_profile_confidence_intervals <- 
+  profilinator(logistic_model_ice_revised_full)
 
 # remove intercept
-big_log_profile_confidence_intervals_no_intercept <-
-  big_log_profile_confidence_intervals[2:13,]
+ice_big_log_profile_confidence_intervals_no_intercept <-
+  ice_big_log_profile_confidence_intervals[-(1:1),]
 
 # get and exponentiate estimate
-big_log_estimate_exp <- 
-  exp(logistic_model_revised_full$coefficients)
+ice_big_log_estimate_exp <- 
+  exp(logistic_model_ice_revised_full$coefficients)
 
-big_log_tibble_for_thesis <- 
-  names(big_log_estimate_exp) %>% 
+ice_big_log_tibble_for_thesis <- 
+  names(ice_big_log_estimate_exp) %>% 
   as_tibble() %>% 
-  cbind(big_log_estimate_exp) %>% 
+  cbind(ice_big_log_estimate_exp) %>% 
   as_tibble() %>% 
   filter(value != "(Intercept)") %>% 
-  bind_cols(big_log_profile_confidence_intervals_no_intercept) %>% 
+  bind_cols(ice_big_log_profile_confidence_intervals_no_intercept) %>% 
   mutate_if(is.numeric, round, digits = 2)
 
-write_csv(big_log_tibble_for_thesis, 
-          path = "big_log_tibble_for_thesis.csv")
+write_csv(ice_big_log_tibble_for_thesis, 
+          path = "ice_big_log_tibble_for_thesis.csv")
 
 
 #### AIC tibble ####
 
 # get profile confidence intervals
-aic_log_profile_confidence_intervals <- 
-  profilinator(bestAIC$BestModel)
+ice_aic_log_profile_confidence_intervals <- 
+  profilinator(ice_bestAIC$BestModel)
 
 # remove intercept
-aic_log_profile_confidence_intervals_no_intercept <-
-  aic_log_profile_confidence_intervals[2:5,]
+ice_aic_log_profile_confidence_intervals_no_intercept <-
+  ice_aic_log_profile_confidence_intervals[-(1:1),]
 
 # get and exponentiate estimate
-aic_log_estimate_exp <- 
-  exp(bestAIC$BestModel$coefficients)
+ice_aic_log_estimate_exp <- 
+  exp(ice_bestAIC$BestModel$coefficients)
 
-aic_log_tibble_for_thesis <- 
-  names(aic_log_estimate_exp) %>% 
+ice_aic_log_tibble_for_thesis <- 
+  names(ice_aic_log_estimate_exp) %>% 
   as_tibble() %>% 
-  cbind(aic_log_estimate_exp) %>% 
+  cbind(ice_aic_log_estimate_exp) %>% 
   as_tibble() %>% 
   filter(value != "(Intercept)") %>% 
-  bind_cols(aic_log_profile_confidence_intervals_no_intercept) %>% 
+  bind_cols(ice_aic_log_profile_confidence_intervals_no_intercept) %>% 
   mutate_if(is.numeric, round, digits = 2)
 
-write_csv(aic_log_tibble_for_thesis, 
-          path = "aic_log_tibble_for_thesis.csv")
+write_csv(ice_aic_log_tibble_for_thesis, 
+          path = "ice_aic_log_tibble_for_thesis.csv")
 
 
 #### BIC tibble ####
 
 # get profile confidence intervals
-bic_log_profile_confidence_intervals <- 
-  profilinator(bestBIC$BestModel)
+ice_bic_log_profile_confidence_intervals <- 
+  profilinator(ice_bestBIC$BestModel)
 
 # remove intercept
-bic_log_profile_confidence_intervals_no_intercept <-
-  bic_log_profile_confidence_intervals[2:3,]
+ice_bic_log_profile_confidence_intervals_no_intercept <-
+  ice_bic_log_profile_confidence_intervals[-(1:1),]
 
 # get and exponentiate estimate
-bic_log_estimate_exp <- 
-  exp(bestBIC$BestModel$coefficients)
+ice_bic_log_estimate_exp <- 
+  exp(ice_bestBIC$BestModel$coefficients)
 
-bic_log_tibble_for_thesis <- 
-  names(bic_log_estimate_exp) %>% 
+ice_bic_log_tibble_for_thesis <- 
+  names(ice_bic_log_estimate_exp) %>% 
   as_tibble() %>% 
-  cbind(bic_log_estimate_exp) %>% 
+  cbind(ice_bic_log_estimate_exp) %>% 
   as_tibble() %>% 
   filter(value != "(Intercept)") %>% 
-  bind_cols(bic_log_profile_confidence_intervals_no_intercept) %>% 
+  bind_cols(ice_bic_log_profile_confidence_intervals_no_intercept) %>% 
   mutate_if(is.numeric, round, digits = 2)
 
-write_csv(bic_log_tibble_for_thesis, 
-          path = "bic_log_tibble_for_thesis.csv")
+write_csv(ice_bic_log_tibble_for_thesis, 
+          path = "ice_bic_log_tibble_for_thesis.csv")
 
 ```
 
 
+```{r logistic regression home value full model, eval=FALSE, include=FALSE}
 
-```{r pull logistic data for tables in thesis}
+logistic_model_house_revised_full <- 
+   stats::glm(extant_swd_binary ~ 
+        pop_dense_hundreds_B01001_001_ALAND + 
+        female_true_percent_B01001_026_001 + 
+        age_0_to_17_true_percent_B01001 + 
+        age_65_plus_true_percent_B01001 + 
+        white_non_hisp_lat_true_percent_B03002_003_001 + 
+        education_high_school_plus_true_percent_B15003_017_to_025 + 
+        no_health_insurance_true_percent_B27010_017_033_050_066 + 
+        renter_occupy_true_percent_B25003_003_001 + 
+        unemployed_true_percent_B23025_005_003 + 
+        house_value_median_ten_thousands_B25077_001 + 
+        prod_count + 
+        AWATER_KM,
+      data = ks_house_specific, 
+      family = binomial)
 
-nrow(ks_income_specific)
+summary(logistic_model_house_revised_full)
+
+logistic_model_house_revised_full_dep_names <- 
+        c("pop_dense_hundreds_B01001_001_ALAND", 
+        "female_true_percent_B01001_026_001", 
+        "age_0_to_17_true_percent_B01001", 
+        "age_65_plus_true_percent_B01001", 
+        "white_non_hisp_lat_true_percent_B03002_003_001", 
+        "education_high_school_plus_true_percent_B15003_017_to_025", 
+        "no_health_insurance_true_percent_B27010_017_033_050_066", 
+        "renter_occupy_true_percent_B25003_003_001", 
+        "unemployed_true_percent_B23025_005_003", 
+        "house_value_median_ten_thousands_B25077_001", 
+        "prod_count",
+        "AWATER_KM")
+
+logistic_model_house_extant_swd_binary_at_end <- 
+  ks_house_specific %>% 
+  dplyr::select(logistic_model_house_revised_full_dep_names, 
+                extant_swd_binary) 
+
+
+#### automated chohouse of best fit ####
+
+logistic_house_matrix <- 
+  data.matrix(logistic_model_house_extant_swd_binary_at_end)
+
+house_test_for_automatic_selection <- 
+  as.data.frame(logistic_house_matrix)
+
+# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+house_bestAIC <-
+  bestglm(house_test_for_automatic_selection, IC = "AIC", family = binomial)
+house_bestBIC <-
+  bestglm(house_test_for_automatic_selection, IC = "BIC", family = binomial)
+
+save(house_bestAIC, 
+          file = "house_bestAIC.rdata")
+save(house_bestBIC, 
+          file = "house_bestAIC.rdata")
+
+load(file = "house_bestAIC.rdata")
+load(file = "house_bestBIC.rdata")
+
+house_bestAIC$BestModel
+house_bestBIC$BestModel
+
+write.csv(house_bestAIC$BestModels, 
+          file = "house_bestBIC.csv")
+write.csv(house_bestBIC$BestModels, 
+          file = "house_bestBIC.csv")
+
+# pull AICS and BICs
+stats::AIC(# big_gam_k_5, 
+           logistic_model_house_revised_full, 
+           house_bestAIC$BestModel, 
+           house_bestBIC$BestModel)
+
+stats::BIC(# big_gam_k_5, 
+           logistic_model_house_revised_full, 
+           house_bestAIC$BestModel, 
+           house_bestBIC$BestModel)
+
+
+#### pull logistic data for tables in thesis ####
+
+nrow(ks_house_specific)
 
 # get profile confidence intervals
-big_log_profile_confidence_intervals <- 
-  profilinator(logistic_model_revised_full)
+house_big_log_profile_confidence_intervals <- 
+  profilinator(logistic_model_house_revised_full)
 
 # remove intercept
-big_log_profile_confidence_intervals_no_intercept <-
-  big_log_profile_confidence_intervals[2:13,]
+house_big_log_profile_confidence_intervals_no_intercept <-
+  house_big_log_profile_confidence_intervals[-(1:1),]
 
 # get and exponentiate estimate
-big_log_estimate_exp <- 
-  exp(logistic_model_revised_full$coefficients)
+house_big_log_estimate_exp <- 
+  exp(logistic_model_house_revised_full$coefficients)
 
-big_log_tibble_for_thesis <- 
-  names(big_log_estimate_exp) %>% 
+house_big_log_tibble_for_thesis <- 
+  names(house_big_log_estimate_exp) %>% 
   as_tibble() %>% 
-  cbind(big_log_estimate_exp) %>% 
+  cbind(house_big_log_estimate_exp) %>% 
   as_tibble() %>% 
   filter(value != "(Intercept)") %>% 
-  bind_cols(big_log_profile_confidence_intervals_no_intercept) %>% 
+  bind_cols(house_big_log_profile_confidence_intervals_no_intercept) %>% 
   mutate_if(is.numeric, round, digits = 2)
 
-write_csv(big_log_tibble_for_thesis, 
-          path = "big_log_tibble_for_thesis.csv")
+write_csv(house_big_log_tibble_for_thesis, 
+          path = "house_big_log_tibble_for_thesis.csv")
 
 
 #### AIC tibble ####
 
 # get profile confidence intervals
-aic_log_profile_confidence_intervals <- 
-  profilinator(bestAIC$BestModel)
+house_aic_log_profile_confidence_intervals <- 
+  profilinator(house_bestAIC$BestModel)
 
 # remove intercept
-aic_log_profile_confidence_intervals_no_intercept <-
-  aic_log_profile_confidence_intervals[2:5,]
+house_aic_log_profile_confidence_intervals_no_intercept <-
+  house_aic_log_profile_confidence_intervals[-(1:1),]
 
 # get and exponentiate estimate
-aic_log_estimate_exp <- 
-  exp(bestAIC$BestModel$coefficients)
+house_aic_log_estimate_exp <- 
+  exp(house_bestAIC$BestModel$coefficients)
 
-aic_log_tibble_for_thesis <- 
-  names(aic_log_estimate_exp) %>% 
+house_aic_log_tibble_for_thesis <- 
+  names(house_aic_log_estimate_exp) %>% 
   as_tibble() %>% 
-  cbind(aic_log_estimate_exp) %>% 
+  cbind(house_aic_log_estimate_exp) %>% 
   as_tibble() %>% 
   filter(value != "(Intercept)") %>% 
-  bind_cols(aic_log_profile_confidence_intervals_no_intercept) %>% 
+  bind_cols(house_aic_log_profile_confidence_intervals_no_intercept) %>% 
   mutate_if(is.numeric, round, digits = 2)
 
-write_csv(aic_log_tibble_for_thesis, 
-          path = "aic_log_tibble_for_thesis.csv")
+write_csv(house_aic_log_tibble_for_thesis, 
+          path = "house_aic_log_tibble_for_thesis.csv")
 
 
 #### BIC tibble ####
 
 # get profile confidence intervals
-bic_log_profile_confidence_intervals <- 
-  profilinator(bestBIC$BestModel)
+house_bic_log_profile_confidence_intervals <- 
+  profilinator(house_bestBIC$BestModel)
 
 # remove intercept
-bic_log_profile_confidence_intervals_no_intercept <-
-  bic_log_profile_confidence_intervals[2:3,]
+house_bic_log_profile_confidence_intervals_no_intercept <-
+  house_bic_log_profile_confidence_intervals[-(1:1),]
 
 # get and exponentiate estimate
-bic_log_estimate_exp <- 
-  exp(bestBIC$BestModel$coefficients)
+house_bic_log_estimate_exp <- 
+  exp(house_bestBIC$BestModel$coefficients)
 
-bic_log_tibble_for_thesis <- 
-  names(bic_log_estimate_exp) %>% 
+house_bic_log_tibble_for_thesis <- 
+  names(house_bic_log_estimate_exp) %>% 
   as_tibble() %>% 
-  cbind(bic_log_estimate_exp) %>% 
+  cbind(house_bic_log_estimate_exp) %>% 
   as_tibble() %>% 
   filter(value != "(Intercept)") %>% 
-  bind_cols(bic_log_profile_confidence_intervals_no_intercept) %>% 
+  bind_cols(house_bic_log_profile_confidence_intervals_no_intercept) %>% 
   mutate_if(is.numeric, round, digits = 2)
 
-write_csv(bic_log_tibble_for_thesis, 
-          path = "bic_log_tibble_for_thesis.csv")
+write_csv(house_bic_log_tibble_for_thesis, 
+          path = "house_bic_log_tibble_for_thesis.csv")
 
 ```
 
+
+```{r logistic regression poverty full model, eval=FALSE, include=FALSE}
+
+logistic_model_poverty_revised_full <- 
+   stats::glm(extant_swd_binary ~ 
+        pop_dense_hundreds_B01001_001_ALAND + 
+        female_true_percent_B01001_026_001 + 
+        age_0_to_17_true_percent_B01001 + 
+        age_65_plus_true_percent_B01001 + 
+        white_non_hisp_lat_true_percent_B03002_003_001 + 
+        education_high_school_plus_true_percent_B15003_017_to_025 + 
+        no_health_insurance_true_percent_B27010_017_033_050_066 + 
+        renter_occupy_true_percent_B25003_003_001 + 
+        unemployed_true_percent_B23025_005_003 + 
+        poverty_below_100_true_percent_C17002_002_003_001 + 
+        prod_count + 
+        AWATER_KM,
+      data = ks_poverty_specific, 
+      family = binomial)
+
+summary(logistic_model_poverty_revised_full)
+
+logistic_model_poverty_revised_full_dep_names <- 
+        c("pop_dense_hundreds_B01001_001_ALAND", 
+        "female_true_percent_B01001_026_001", 
+        "age_0_to_17_true_percent_B01001", 
+        "age_65_plus_true_percent_B01001", 
+        "white_non_hisp_lat_true_percent_B03002_003_001", 
+        "education_high_school_plus_true_percent_B15003_017_to_025", 
+        "no_health_insurance_true_percent_B27010_017_033_050_066", 
+        "renter_occupy_true_percent_B25003_003_001", 
+        "unemployed_true_percent_B23025_005_003", 
+        "poverty_below_100_true_percent_C17002_002_003_001", 
+        "prod_count",
+        "AWATER_KM")
+
+logistic_model_poverty_extant_swd_binary_at_end <- 
+  ks_poverty_specific %>% 
+  dplyr::select(logistic_model_poverty_revised_full_dep_names, 
+                extant_swd_binary) 
+
+
+#### automated chopoverty of best fit ####
+
+logistic_poverty_matrix <- 
+  data.matrix(logistic_model_poverty_extant_swd_binary_at_end)
+
+poverty_test_for_automatic_selection <- 
+  as.data.frame(logistic_poverty_matrix)
+
+# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+poverty_bestAIC <-
+  bestglm(poverty_test_for_automatic_selection, IC = "AIC", family = binomial)
+poverty_bestBIC <-
+  bestglm(poverty_test_for_automatic_selection, IC = "BIC", family = binomial)
+
+save(poverty_bestAIC, 
+          file = "poverty_bestAIC.rdata")
+save(poverty_bestBIC, 
+          file = "poverty_bestBIC.rdata")
+
+load(file = "poverty_bestAIC.rdata")
+load(file = "poverty_bestBIC.rdata")
+
+poverty_bestAIC$BestModel
+poverty_bestBIC$BestModel
+
+write.csv(poverty_bestAIC$BestModels, 
+          file = "poverty_bestAIC.csv")
+write.csv(poverty_bestBIC$BestModels, 
+          file = "poverty_bestBIC.csv")
+
+# pull AICS and BICs
+stats::AIC(# big_gam_k_5, 
+           logistic_model_poverty_revised_full, 
+           poverty_bestAIC$BestModel, 
+           poverty_bestBIC$BestModel)
+
+stats::BIC(# big_gam_k_5, 
+           logistic_model_poverty_revised_full, 
+           poverty_bestAIC$BestModel, 
+           poverty_bestBIC$BestModel)
+
+
+#### pull logistic data for tables in thesis ####
+
+nrow(ks_poverty_specific)
+
+# get profile confidence intervals
+poverty_big_log_profile_confidence_intervals <- 
+  profilinator(logistic_model_poverty_revised_full)
+
+# remove intercept
+poverty_big_log_profile_confidence_intervals_no_intercept <-
+  poverty_big_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+poverty_big_log_estimate_exp <- 
+  exp(logistic_model_poverty_revised_full$coefficients)
+
+poverty_big_log_tibble_for_thesis <- 
+  names(poverty_big_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  cbind(poverty_big_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(poverty_big_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+write_csv(poverty_big_log_tibble_for_thesis, 
+          path = "poverty_big_log_tibble_for_thesis.csv")
+
+
+#### AIC tibble ####
+
+# get profile confidence intervals
+poverty_aic_log_profile_confidence_intervals <- 
+  profilinator(poverty_bestAIC$BestModel)
+
+# remove intercept
+poverty_aic_log_profile_confidence_intervals_no_intercept <-
+  poverty_aic_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+poverty_aic_log_estimate_exp <- 
+  exp(poverty_bestAIC$BestModel$coefficients)
+
+poverty_aic_log_tibble_for_thesis <- 
+  names(poverty_aic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  cbind(poverty_aic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(poverty_aic_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+write_csv(poverty_aic_log_tibble_for_thesis, 
+          path = "poverty_aic_log_tibble_for_thesis.csv")
+
+
+#### BIC tibble ####
+
+# get profile confidence intervals
+poverty_bic_log_profile_confidence_intervals <- 
+  profilinator(poverty_bestBIC$BestModel)
+
+# remove intercept
+poverty_bic_log_profile_confidence_intervals_no_intercept <-
+  poverty_bic_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+poverty_bic_log_estimate_exp <- 
+  exp(poverty_bestBIC$BestModel$coefficients)
+
+poverty_bic_log_tibble_for_thesis <- 
+  names(poverty_bic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  cbind(poverty_bic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(poverty_bic_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+write_csv(poverty_bic_log_tibble_for_thesis, 
+          path = "poverty_bic_log_tibble_for_thesis.csv")
+
+```
+
+
+```{r logistic regression earnings full model, eval=FALSE, include=FALSE}
+
+logistic_model_earnings_revised_full <- 
+   stats::glm(extant_swd_binary ~ 
+        pop_dense_hundreds_B01001_001_ALAND + 
+        female_true_percent_B01001_026_001 + 
+        age_0_to_17_true_percent_B01001 + 
+        age_65_plus_true_percent_B01001 + 
+        white_non_hisp_lat_true_percent_B03002_003_001 + 
+        education_high_school_plus_true_percent_B15003_017_to_025 + 
+        no_health_insurance_true_percent_B27010_017_033_050_066 + 
+        renter_occupy_true_percent_B25003_003_001 + 
+        unemployed_true_percent_B23025_005_003 + 
+        earnings_median_ten_thousands_B20002_001 + 
+        prod_count + 
+        AWATER_KM,
+      data = ks_earnings_specific, 
+      family = binomial)
+
+summary(logistic_model_earnings_revised_full)
+
+logistic_model_earnings_revised_full_dep_names <- 
+        c("pop_dense_hundreds_B01001_001_ALAND", 
+        "female_true_percent_B01001_026_001", 
+        "age_0_to_17_true_percent_B01001", 
+        "age_65_plus_true_percent_B01001", 
+        "white_non_hisp_lat_true_percent_B03002_003_001", 
+        "education_high_school_plus_true_percent_B15003_017_to_025", 
+        "no_health_insurance_true_percent_B27010_017_033_050_066", 
+        "renter_occupy_true_percent_B25003_003_001", 
+        "unemployed_true_percent_B23025_005_003", 
+        "earnings_median_ten_thousands_B20002_001", 
+        "prod_count",
+        "AWATER_KM")
+
+logistic_model_earnings_extant_swd_binary_at_end <- 
+  ks_earnings_specific %>% 
+  dplyr::select(logistic_model_earnings_revised_full_dep_names, 
+                extant_swd_binary) 
+
+
+#### automated choearnings of best fit ####
+
+logistic_earnings_matrix <- 
+  data.matrix(logistic_model_earnings_extant_swd_binary_at_end)
+
+earnings_test_for_automatic_selection <- 
+  as.data.frame(logistic_earnings_matrix)
+
+# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+earnings_bestAIC <-
+  bestglm(earnings_test_for_automatic_selection, IC = "AIC", family = binomial)
+earnings_bestBIC <-
+  bestglm(earnings_test_for_automatic_selection, IC = "BIC", family = binomial)
+
+save(earnings_bestAIC, 
+          file = "earnings_bestAIC.rdata")
+save(earnings_bestBIC, 
+          file = "earnings_bestBIC.rdata")
+
+load(file = "earnings_bestAIC.rdata")
+load(file = "earnings_bestBIC.rdata")
+
+earnings_bestAIC$BestModel
+earnings_bestBIC$BestModel
+
+write.csv(earnings_bestAIC$BestModels, 
+          file = "earnings_bestAIC.csv")
+write.csv(earnings_bestBIC$BestModels, 
+          file = "earnings_bestBIC.csv")
+
+# pull AICS and BICs
+stats::AIC(# big_gam_k_5, 
+           logistic_model_earnings_revised_full, 
+           earnings_bestAIC$BestModel, 
+           earnings_bestBIC$BestModel)
+
+stats::BIC(# big_gam_k_5, 
+           logistic_model_earnings_revised_full, 
+           earnings_bestAIC$BestModel, 
+           earnings_bestBIC$BestModel)
+
+
+#### pull logistic data for tables in thesis ####
+
+nrow(ks_earnings_specific)
+
+# get profile confidence intervals
+earnings_big_log_profile_confidence_intervals <- 
+  profilinator(logistic_model_earnings_revised_full)
+
+# remove intercept
+earnings_big_log_profile_confidence_intervals_no_intercept <-
+  earnings_big_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+earnings_big_log_estimate_exp <- 
+  exp(logistic_model_earnings_revised_full$coefficients)
+
+earnings_big_log_tibble_for_thesis <- 
+  names(earnings_big_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  cbind(earnings_big_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(earnings_big_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+write_csv(earnings_big_log_tibble_for_thesis, 
+          path = "earnings_big_log_tibble_for_thesis.csv")
+
+
+#### AIC tibble ####
+
+# get profile confidence intervals
+earnings_aic_log_profile_confidence_intervals <- 
+  profilinator(earnings_bestAIC$BestModel)
+
+# remove intercept
+earnings_aic_log_profile_confidence_intervals_no_intercept <-
+  earnings_aic_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+earnings_aic_log_estimate_exp <- 
+  exp(earnings_bestAIC$BestModel$coefficients)
+
+earnings_aic_log_tibble_for_thesis <- 
+  names(earnings_aic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  cbind(earnings_aic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(earnings_aic_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+write_csv(earnings_aic_log_tibble_for_thesis, 
+          path = "earnings_aic_log_tibble_for_thesis.csv")
+
+
+#### BIC tibble ####
+
+# get profile confidence intervals
+earnings_bic_log_profile_confidence_intervals <- 
+  profilinator(earnings_bestBIC$BestModel)
+
+# remove intercept
+earnings_bic_log_profile_confidence_intervals_no_intercept <-
+  earnings_bic_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+earnings_bic_log_estimate_exp <- 
+  exp(earnings_bestBIC$BestModel$coefficients)
+
+earnings_bic_log_tibble_for_thesis <- 
+  names(earnings_bic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  cbind(earnings_bic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(earnings_bic_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+write_csv(earnings_bic_log_tibble_for_thesis, 
+          path = "earnings_bic_log_tibble_for_thesis.csv")
+
+```
 
 
 
@@ -15314,10 +15748,1586 @@ univariable_poisson_table_tibble <-
 ```
 
 
-
 ```{r univariable zero-inflated binomial}
 
 ```
+
+
+## rural sensitivity analysis
+
+```{r make rural dataset}
+
+ks_analysis_rural <- 
+  ks_analysis_populated %>% 
+  filter(pop_dense_B01001_001_ALAND <= 386.101876841)
+nrow(ks_analysis_rural)
+
+```
+
+
+```{r t-tests rural population density cutoff}
+
+prod_t_test_rural <-
+  t.test(prod_count ~ extant_swd_binary,
+         data = ks_analysis_rural)
+prod_t_test_rural
+
+pop_t_test_rural <-
+  t.test(pop_tot_B01001_001 ~ extant_swd_binary,
+         data = ks_analysis_rural)
+pop_t_test_rural
+
+pop_dense_t_test_rural <- 
+  t.test(pop_dense_B01001_001_ALAND ~ extant_swd_binary,
+         data = ks_analysis_rural)
+pop_dense_t_test_rural
+
+female_t_test_rural <-
+  t.test(female_percent_B01001_026_001 ~ extant_swd_binary,
+         data = ks_analysis_rural)
+female_t_test_rural
+
+age_18_t_test_rural <- 
+  t.test(age_0_to_17_percent_B01001 ~ extant_swd_binary,
+         data = ks_analysis_rural)
+age_18_t_test_rural
+
+age_65_t_test_rural <- 
+  t.test(age_65_plus_percent_B01001 ~ extant_swd_binary,
+         data = ks_analysis_rural)
+age_65_t_test_rural
+
+aian_t_test_rural <- 
+  t.test(aian_percent_any_race_B02010_001 ~ extant_swd_binary,
+         data = ks_analysis_rural)
+aian_t_test_rural
+
+hisp_lat_t_test_rural <- 
+  t.test(hisp_lat_percent_B03002_012_001 ~ extant_swd_binary,
+         data = ks_analysis_rural)
+hisp_lat_t_test_rural
+
+black_t_test_rural <- 
+  t.test(black_percent_B03002_004_001 ~ extant_swd_binary,
+         data = ks_analysis_rural)
+black_t_test_rural
+
+white_t_test_rural <- 
+  t.test(white_non_hisp_lat_percent_B03002_003_001 ~ extant_swd_binary,
+         data = ks_analysis_rural)
+white_t_test_rural
+
+education_t_test_rural <-
+  t.test(education_high_school_plus_percent_B15003_017_to_025 ~ 
+           extant_swd_binary,
+         data = ks_analysis_rural)
+education_t_test_rural
+
+lim_eng_t_test_rural <- 
+  t.test(limited_english_percent_C16002_004_007_010_013_001 ~ 
+           extant_swd_binary,
+         data = ks_analysis_rural)
+lim_eng_t_test_rural
+
+health_ins_t_test_rural <-
+  t.test(no_health_insurance_percent_B27010_017_033_050_066 ~ 
+           extant_swd_binary,
+         data = ks_analysis_rural)
+health_ins_t_test_rural
+
+renter_t_test_rural <- 
+  t.test(renter_occupy_percent_B25003_003_001 ~ 
+           extant_swd_binary,
+         data = ks_analysis_rural)
+renter_t_test_rural
+
+unemploy_t_test_rural <- 
+  t.test(unemployed_percent_B23025_005_003 ~ extant_swd_binary,
+         data = ks_analysis_rural)
+unemploy_t_test_rural
+
+poverty_t_test_rural <- 
+  t.test(poverty_below_100_percent_C17002_002_003_001 ~ extant_swd_binary,
+         data = ks_analysis_rural)
+poverty_t_test_rural
+
+earnings_t_test_rural <- 
+  t.test(earnings_median_B20002_001 ~ extant_swd_binary,
+         data = ks_analysis_rural)
+earnings_t_test_rural
+
+income_t_test_rural <- 
+  t.test(income_house_median_B19013_001 ~ extant_swd_binary,
+         data = ks_analysis_rural)
+income_t_test_rural
+
+home_value_t_test_rural <- 
+  t.test(house_value_median_B25077_001 ~ extant_swd_binary,
+         data = ks_analysis_rural)
+home_value_t_test_rural
+
+ice_t_test_rural <- 
+  t.test(ice_ten_B19001 ~ extant_swd_binary,
+         data = ks_analysis_rural)
+ice_t_test_rural
+
+land_t_test_rural <- 
+  t.test(ALAND_KM ~ extant_swd_binary,
+         data = ks_analysis_rural)
+land_t_test_rural
+
+water_t_test_rural <- 
+  t.test(AWATER_KM ~ extant_swd_binary,
+         data = ks_analysis_rural)
+water_t_test_rural
+
+
+
+# collect p-values for correction
+label_categories <- c("Total population", 
+                      "Population density", 
+                      "% female", 
+                      "% age < 18", 
+                      "% age > 64", 
+                      "% Native American", 
+                      "% Hispanic or Latinx", 
+                      "% Black or African American", 
+                      "% non-Hispanic white", 
+                      "% high school education", 
+                      "% limited-English households", 
+                      "% with no health insurance", 
+                      "% renter-occupied households", 
+                      "% unemployed", 
+                      "% in poverty", 
+                      "Median earnings", 
+                      "Median household income", 
+                      "Median home value",
+                      "Income concentration at the extremes", 
+                      "Production well count",
+                      "Land area", 
+                      "Water area")
+
+p_values_t_tests_rural <- 
+  as.numeric(c(pop_t_test_rural$p.value, 
+               pop_dense_t_test_rural$p.value, 
+               female_t_test_rural$p.value,
+               age_18_t_test_rural$p.value, 
+               age_65_t_test_rural$p.value, 
+               aian_t_test_rural$p.value, 
+               hisp_lat_t_test_rural$p.value, 
+               black_t_test_rural$p.value,
+               white_t_test_rural$p.value, 
+               education_t_test_rural$p.value, 
+               lim_eng_t_test_rural$p.value, 
+               health_ins_t_test_rural$p.value, 
+               renter_t_test_rural$p.value, 
+               unemploy_t_test_rural$p.value, 
+               poverty_t_test_rural$p.value, 
+               earnings_t_test_rural$p.value, 
+               income_t_test_rural$p.value, 
+               home_value_t_test_rural$p.value, 
+               ice_t_test_rural$p.value, 
+               prod_t_test_rural$p.value, 
+               land_t_test_rural$p.value, 
+               water_t_test_rural$p.value))
+
+p_values_corrections_t_tests_rural <- 
+  as.data.frame(cbind(label_categories))
+colnames(p_values_corrections_t_tests_rural) <- 
+  c("labels")
+
+p_values_corrections_t_tests_rural$original_p <- 
+  p_values_t_tests_rural
+
+p_values_corrections_t_tests_rural$holm <- 
+  p.adjust(p_values_t_tests_rural, 
+           method = "holm")
+
+p_values_corrections_t_tests_rural <- 
+  as_tibble(p_values_corrections_t_tests_rural)
+
+# make the table pretty
+p_values_corrections_t_tests_rural$original_p <- 
+  formatC(p_values_corrections_t_tests_rural$original_p, 
+          format = "g", 
+          digits = 2)
+p_values_corrections_t_tests_rural$holm <- 
+  formatC(p_values_corrections_t_tests_rural$holm, 
+          format = "g", 
+          digits = 2)
+
+
+write.csv(p_values_corrections_t_tests_rural, 
+          file = "p_values_t_tests_rural.csv")
+
+```
+
+
+```{r summary statistics rural}
+# calculate basic summary statistics
+
+full_variable_vector <- 
+  c("pop_tot_hundreds_B01001_001",
+    "pop_dense_hundreds_B01001_001_ALAND", 
+    "female_true_percent_B01001_026_001", 
+    "age_0_to_17_true_percent_B01001",
+    "age_65_plus_true_percent_B01001", 
+    "aian_true_percent_any_race_B02010_001",
+    "hisp_lat_true_percent_B03002_012_001",
+    "black_true_percent_B03002_004_001",    
+    "white_non_hisp_lat_true_percent_B03002_003_001",
+    "education_high_school_plus_true_percent_B15003_017_to_025",
+    "limited_english_true_percent_C16002_004_007_010_013_001",
+    "no_health_insurance_true_percent_B27010_017_033_050_066",
+    "renter_occupy_true_percent_B25003_003_001",
+    "unemployed_true_percent_B23025_005_003", 
+    "poverty_below_100_true_percent_C17002_002_003_001",
+    "earnings_median_ten_thousands_B20002_001",
+    "income_house_median_ten_thousands_B19013_001",
+    "house_value_median_ten_thousands_B25077_001",
+    "ice_ten_B19001", 
+    "prod_count",
+    "ALAND_KM_ten", 
+    "AWATER_KM",
+    "extant_swd_binary")
+
+target <- 
+  c("pop_tot_hundreds_B01001_001_",
+    "pop_dense_hundreds_B01001_001_ALAND_", 
+    "female_true_percent_B01001_026_001_", 
+    "age_0_to_17_true_percent_B01001_",
+    "age_65_plus_true_percent_B01001_", 
+    "aian_true_percent_any_race_B02010_001_",
+    "hisp_lat_true_percent_B03002_012_001_",
+    "black_true_percent_B03002_004_001_",    
+    "white_non_hisp_lat_true_percent_B03002_003_001_",
+    "education_high_school_plus_true_percent_B15003_017_to_025_",
+    "limited_english_true_percent_C16002_004_007_010_013_001_",
+    "no_health_insurance_true_percent_B27010_017_033_050_066_",
+    "renter_occupy_true_percent_B25003_003_001_",
+    "unemployed_true_percent_B23025_005_003_", 
+    "poverty_below_100_true_percent_C17002_002_003_001_",
+    "earnings_median_ten_thousands_B20002_001_",
+    "income_house_median_ten_thousands_B19013_001_",
+    "house_value_median_ten_thousands_B25077_001_",
+    "ice_ten_B19001_", 
+    "prod_count_",
+    "ALAND_KM_ten_", 
+    "AWATER_KM_")
+  
+# select variables to summarise
+summary_statistics_rural <- 
+  ks_analysis_rural %>% 
+  dplyr::select(full_variable_vector) %>% 
+  summarise_all(funs(oooo_min = min, 
+                     oooo_q25 = quantile(., 0.25), 
+                     oooo_median = median, 
+                     oooo_q75 = quantile(., 0.75), 
+                     oooo_max = max,
+                     oooo_mean = mean, 
+                     oooo_sd = sd), na.rm = TRUE)
+
+ks_stats_tidy_rural <- 
+  summary_statistics_rural %>% 
+  gather(stat, val) %>%
+  separate(stat, into = c("var", "stat"), sep = "ooo") %>%
+  spread(stat, val) %>%
+  dplyr::select(var, o_min, o_q25, o_median, o_q75, o_max, o_mean, o_sd)
+
+ks_stats_tidy_rural_ordered <- 
+  ks_stats_tidy_rural[
+    match(target, 
+          ks_stats_tidy_rural$var),]
+
+write.csv(ks_stats_tidy_rural_ordered, 
+          file = "ks_stats_tidy_rural_ordered.csv")
+
+# summary statistics no wells rural
+summary_statistics_no_wells_rural <- 
+  ks_analysis_rural %>% 
+  dplyr::select(full_variable_vector) %>% 
+  filter(extant_swd_binary == 0) %>%
+  summarise_all(funs(oooo_min = min, 
+                     oooo_q25 = quantile(., 0.25), 
+                     oooo_median = median, 
+                     oooo_q75 = quantile(., 0.75), 
+                     oooo_max = max,
+                     oooo_mean = mean, 
+                     oooo_sd = sd), na.rm = TRUE)
+
+ks_stats_no_wells_rural <- 
+  summary_statistics_no_wells_rural %>% gather(stat, val) %>%
+  separate(stat, into = c("var", "stat"), sep = "ooo") %>%
+  spread(stat, val) %>%
+  dplyr::select(var, o_min, o_q25, o_median, o_q75, o_max, o_mean, o_sd)
+
+ks_stats_no_wells_rural_ordered <- 
+  ks_stats_no_wells_rural[
+    match(target, 
+          ks_stats_no_wells_rural$var),]
+
+write.csv(ks_stats_no_wells_rural_ordered, 
+          file = "ks_stats_no_wells_rural_ordered.csv")
+
+# summary statistics with wells
+summary_statistics_with_wells_rural <- 
+  ks_analysis_rural %>% 
+  dplyr::select(full_variable_vector) %>% 
+  filter(extant_swd_binary == 1) %>%
+  summarise_all(funs(oooo_min = min, 
+                     oooo_q25 = quantile(., 0.25), 
+                     oooo_median = median, 
+                     oooo_q75 = quantile(., 0.75), 
+                     oooo_max = max,
+                     oooo_mean = mean, 
+                     oooo_sd = sd), na.rm = TRUE)
+
+ks_stats_with_wells_rural <- 
+  summary_statistics_with_wells_rural %>% 
+  gather(stat, val) %>%
+  separate(stat, into = c("var", "stat"), sep = "ooo") %>%
+  spread(stat, val) %>%
+  dplyr::select(var, o_min, o_q25, o_median, o_q75, o_max, o_mean, o_sd)
+
+ks_stats_with_wells_rural_ordered <- 
+  ks_stats_with_wells_rural[
+    match(target, 
+          ks_stats_with_wells_rural$var),]
+
+write.csv(ks_stats_with_wells_rural_ordered, 
+          file = "ks_stats_with_wells_rural_ordered.csv")
+
+# make table for thesis
+rural_main_summary_variables <- 
+  ks_stats_tidy_rural_ordered %>% 
+  dplyr::select(var, main_median = o_median, main_low = o_q25, main_high = o_q75)
+
+rural_main_no_well_variables <- 
+  ks_stats_no_wells_rural_ordered %>% 
+  dplyr::select(var, no_median = o_median, no_low = o_q25, no_high = o_q75) 
+
+rural_main_with_well_variables <- 
+  ks_stats_with_wells_rural_ordered %>% 
+  dplyr::select(var, with_median = o_median, with_low = o_q25, with_high = o_q75) 
+
+full_rural_summary_tibble_for_thesis <- 
+  rural_main_summary_variables %>% 
+  full_join(rural_main_no_well_variables, by = "var") %>% 
+  full_join(rural_main_with_well_variables, by = "var")
+
+# format the columns
+full_rural_summary_tibble_for_thesis <- 
+  map_dfc(full_rural_summary_tibble_for_thesis, 
+         function(x) 
+           if(is.numeric(x)) 
+             formatC(x, format = "g", digits = 7) 
+         else x)
+
+full_rural_summary_tibble_for_thesis <- 
+  full_rural_summary_tibble_for_thesis %>% 
+  mutate(main_iqr = paste(main_low, main_high, sep = "\u2013"), 
+         no_iqr = paste(no_low, no_high, sep = "\u2013"), 
+         with_iqr = paste(with_low, with_high, sep = "\u2013")
+  ) %>% 
+  dplyr::select("var", 
+                with_median, 
+                with_iqr, 
+                no_median, 
+                no_iqr, 
+                main_median, 
+                main_iqr
+                )
+
+write_csv(full_rural_summary_tibble_for_thesis, 
+          path = "full_rural_summary_tibble_for_thesis.csv")
+
+```
+
+
+```{r counts for rurals}
+
+full_variable_vector <- 
+  c("pop_tot_hundreds_B01001_001",
+    "pop_dense_hundreds_B01001_001_ALAND", 
+    "female_true_percent_B01001_026_001", 
+    "age_0_to_17_true_percent_B01001",
+    "age_65_plus_true_percent_B01001", 
+    "aian_true_percent_any_race_B02010_001",
+    "hisp_lat_true_percent_B03002_012_001",
+    "black_true_percent_B03002_004_001",    
+    "white_non_hisp_lat_true_percent_B03002_003_001",
+    "education_high_school_plus_true_percent_B15003_017_to_025",
+    "limited_english_true_percent_C16002_004_007_010_013_001",
+    "no_health_insurance_true_percent_B27010_017_033_050_066",
+    "renter_occupy_true_percent_B25003_003_001",
+    "unemployed_true_percent_B23025_005_003", 
+    "poverty_below_100_true_percent_C17002_002_003_001",
+    "earnings_median_ten_thousands_B20002_001",
+    "income_house_median_ten_thousands_B19013_001",
+    "house_value_median_ten_thousands_B25077_001",
+    "ice_ten_B19001", 
+    "prod_count",
+    "ALAND_KM_ten", 
+    "AWATER_KM",
+    "extant_swd_binary")
+
+ks_analysis_rural %>% 
+  filter(extant_swd_binary == 1) %>% 
+  nrow()
+
+ks_analysis_rural %>% 
+  filter(extant_swd_binary == 0) %>% 
+  nrow()
+
+# count nas all block groups
+rural_na_overall_counts_vector <- 
+  ks_analysis_rural %>% 
+  dplyr::select(full_variable_vector) %>% 
+  is.na() %>% 
+  colSums() 
+
+rural_na_overall_counts_tibble <- 
+  as_tibble(rural_na_overall_counts_vector) %>%
+  mutate(total_missing_data = value, 
+         variable_name = names(rural_na_overall_counts_vector), 
+         total_with_data = 1013 - total_missing_data) %>% 
+  dplyr::select(variable_name, total_missing_data, total_with_data)
+
+# count nas block groups with wells
+rural_well_na_overall_counts_vector <- 
+  ks_analysis_rural %>% 
+  dplyr::select(full_variable_vector) %>% 
+  filter(extant_swd_binary == 1) %>% 
+  is.na() %>% 
+  colSums() 
+
+rural_well_na_overall_counts_tibble <- 
+  as_tibble(rural_well_na_overall_counts_vector) %>%
+  mutate(total_missing_data = value, 
+         variable_name = names(rural_well_na_overall_counts_vector), 
+         total_with_data = 460 - total_missing_data) %>% 
+  dplyr::select(variable_name, total_missing_data, total_with_data)
+
+
+# count nas block groups without wells
+rural_no_well_na_overall_counts_vector <- 
+  ks_analysis_rural %>% 
+  dplyr::select(full_variable_vector) %>% 
+  filter(extant_swd_binary == 0) %>% 
+  is.na() %>% 
+  colSums() 
+
+rural_no_well_na_overall_counts_tibble <- 
+  as_tibble(rural_no_well_na_overall_counts_vector) %>%
+  mutate(total_missing_data = value, 
+         variable_name = names(rural_no_well_na_overall_counts_vector), 
+         total_with_data = 553 - total_missing_data) %>% 
+  dplyr::select(variable_name, total_missing_data, total_with_data)
+
+write_csv(rural_na_overall_counts_tibble, 
+          path = "rural_na_overall_counts_tibble.csv")
+write_csv(rural_well_na_overall_counts_tibble, 
+          path = "rural_well_na_overall_counts_tibble.csv")
+write_csv(rural_no_well_na_overall_counts_tibble, 
+          path = "rural_no_well_na_overall_counts_tibble.csv")
+
+```
+
+
+```{r rural univariate logistic regressions}
+
+revised_dependent_variable_names <- 
+  c("pop_tot_hundreds_B01001_001", 
+    "pop_dense_hundreds_B01001_001_ALAND", 
+    "female_true_percent_B01001_026_001", 
+    "age_0_to_17_true_percent_B01001", 
+    "age_65_plus_true_percent_B01001",   
+    "aian_true_percent_any_race_B02010_001",   
+    "hisp_lat_true_percent_B03002_012_001", 
+    "black_true_percent_B03002_004_001",
+    "white_non_hisp_lat_true_percent_B03002_003_001",   
+    "education_high_school_plus_true_percent_B15003_017_to_025",   
+    "limited_english_true_percent_C16002_004_007_010_013_001",   
+    "no_health_insurance_true_percent_B27010_017_033_050_066",   
+    "renter_occupy_true_percent_B25003_003_001",   
+    "unemployed_true_percent_B23025_005_003",   
+    "poverty_below_100_true_percent_C17002_002_003_001",  
+    "earnings_median_ten_thousands_B20002_001", 
+    "income_house_median_ten_thousands_B19013_001",   
+    "house_value_median_ten_thousands_B25077_001",  
+    "ice_ten_B19001",  
+    "prod_count",
+    "ALAND_KM_ten",  
+    "AWATER_KM")
+  
+# thing that rms needs, who knows why
+dd = datadist(ks_analysis_rural)
+options(datadist="dd")
+
+# run all the univariable logistic regressions AT ONCE (MWAHAHA) for glm
+rural_univariable_logistic_models_glm <-
+  sapply(revised_dependent_variable_names, 
+         function(x) {
+    glm(substitute(extant_swd_binary ~ indy,
+        list(indy = as.name(x))),
+        data = ks_analysis_rural,
+        family = binomial)})
+
+names(rural_univariable_logistic_models_glm) <- 
+  revised_dependent_variable_names
+
+# run all the univariable logisitic regression AT ONCE (MWAHAHA) for lrm package
+
+# make function using lrm package
+rural_lrm_function <- 
+  function(dependent_variable) {
+    lrm(extant_swd_binary ~ ks_analysis_rural[[dependent_variable]],
+        data = ks_analysis_rural, 
+        x = TRUE, y = TRUE)}
+
+# run all of the lrms
+rural_univariable_logistic_models_lrm <-
+  lapply(revised_dependent_variable_names, 
+         rural_lrm_function)
+
+names(rural_univariable_logistic_models_lrm) <- 
+  revised_dependent_variable_names
+```
+
+
+```{r make logistic regression univariable table for thesis}
+# makes table of estimate, standard error, statistic, and p-value
+rural_initial_coefficients <- 
+  plyr::ldply(rural_univariable_logistic_models_glm, 
+              tidy, 
+              .id = "model")
+
+# make tibble
+rural_univariable_initial_tibble <- 
+  as_tibble(rural_initial_coefficients)
+
+# add odds ratios
+rural_univariable_initial_tibble <- 
+  rural_univariable_initial_tibble %>% 
+  mutate(odds_ratio = exp(estimate))
+
+# put odds ratios into a table
+rural_univariable_logistic_table_tibble <- 
+  rural_univariable_initial_tibble %>% 
+  dplyr::select(model, term, odds_ratio) %>%   # select relevant columns
+  filter(term != "(Intercept)") %>%   # remove intercept rows
+  mutate(model = as.character(model)) %>%   # make model a character vector
+  dplyr::select(model, odds_ratio)   # get rid of term
+
+#### r profile confidence intervals for odds ratio ####
+
+# function to make them
+profilinator <- 
+  function(x) {
+  profile_confint_estimate <- 
+    confint_tidy(x, 
+                 conf.level = 0.95, 
+                 func = stats::confint)
+  profile_confint_odds_ratio <- 
+    exp(profile_confint_estimate)
+}
+
+options(warn = 1)
+
+# make list of tibbles with cis
+rural_profile_ci_list <- 
+  lapply(rural_univariable_logistic_models_glm, 
+         profilinator)
+
+# get names of tibbles
+rural_names_profile_ci_variables <- 
+  names(rural_profile_ci_list)
+
+# add names of tibbles as a new column
+rural_profile_ci_list_with_names <- 
+  mapply(cbind, 
+         rural_profile_ci_list, 
+         "model" = rural_names_profile_ci_variables, 
+         SIMPLIFY = F)
+rural_profile_ci_list_with_names
+  
+# add term as new column
+rural_profile_ci_list_with_names_terms <- 
+  mapply(cbind, 
+         rural_profile_ci_list_with_names, 
+         "term" = rural_names_profile_ci_variables, 
+         SIMPLIFY = F)
+rural_profile_ci_list_with_names_terms
+
+# fix it back into a tibble
+rural_profile_ci_list_tibble_try <- 
+  map(rural_profile_ci_list_with_names_terms, as.tibble)
+
+# make factor columns into character columns
+rural_profile_ci_list_tibble <- 
+   lapply(rural_profile_ci_list_tibble_try, 
+          function(x) {
+            x$model <- as.character(x$model) 
+            return(x)
+          })
+
+rural_profile_ci_list_tibble <- 
+   lapply(rural_profile_ci_list_tibble, 
+          function(x) {
+            x$term <- as.character(x$term) 
+            return(x)
+          })
+
+# replace intercept term with "(Intercept)"
+cute_function <- 
+  function(x) {
+    x[1,4] <- 
+      "(Intercept)"
+    return(x)
+  }
+
+rural_profile_ci_list_tibble <- 
+  lapply(rural_profile_ci_list_tibble, 
+         cute_function)
+  
+# make one big tibble from all the rows
+rural_univariable_profile_ci_tibble <- 
+  bind_rows(rural_profile_ci_list_tibble)
+rural_univariable_profile_ci_tibble
+
+# rename confidence interval as profile
+rural_univariable_profile_ci_tibble <- 
+  rural_univariable_profile_ci_tibble %>% 
+  dplyr::rename(rural_profile_ci_or_low = conf.low, 
+         rural_profile_ci_or_high = conf.high)
+
+#### r combine profile confidence intervals with odds ratios ####
+
+# remove intercept rows
+rural_univariable_profile_ci_tibble_for_thesis <- 
+  rural_univariable_profile_ci_tibble %>% 
+  filter(term != "(Intercept)") %>% 
+  dplyr::select(-term)
+
+# merge with prior table
+rural_univariable_logistic_table_tibble <- 
+  rural_univariable_logistic_table_tibble %>% 
+  full_join(rural_univariable_profile_ci_tibble_for_thesis, 
+            by = "model") %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+single_column_magic_univariable_rural_tibble <- 
+  rural_univariable_logistic_table_tibble %>% 
+  mutate(odds_ratio	= formatC(odds_ratio, 
+                              format = "f", 
+                              digits = 2),
+         rural_profile_ci_or_low	= formatC(rural_profile_ci_or_low, 
+                                           format = "f", 
+                                           digits = 2),
+         rural_profile_ci_or_high = formatC(rural_profile_ci_or_high, 
+                                            format = "f", 
+                                            digits = 2), 
+         magic_column = paste0(odds_ratio, 
+                              " (", 
+                              rural_profile_ci_or_low, 
+                              "–", 
+                              rural_profile_ci_or_high, 
+                              ")")
+         ) %>% 
+  full_join(rural_na_overall_counts_tibble, by = c("model" = "variable_name")) %>% 
+  full_join(rural_well_na_overall_counts_tibble, by = c("model" = "variable_name")) %>% 
+  full_join(rural_no_well_na_overall_counts_tibble, by = c("model" = "variable_name"))
+  
+# write table to disk
+write_csv(single_column_magic_univariable_rural_tibble, 
+          path = "rural_univariable_logistic_table_tibble.csv")
+
+```
+
+
+```{r rural logistic regression main full model, eval=FALSE, include=FALSE}
+
+ks_rural_income_specific <- 
+  ks_analysis_rural %>% 
+  filter(!is.na(income_house_median_ten_thousands_B19013_001))
+  
+rural_logistic_model_revised_full <- 
+   stats::glm(extant_swd_binary ~ 
+        pop_dense_hundreds_B01001_001_ALAND + 
+        female_true_percent_B01001_026_001 + 
+        age_0_to_17_true_percent_B01001 + 
+        age_65_plus_true_percent_B01001 + 
+        white_non_hisp_lat_true_percent_B03002_003_001 + 
+        education_high_school_plus_true_percent_B15003_017_to_025 + 
+        no_health_insurance_true_percent_B27010_017_033_050_066 + 
+        renter_occupy_true_percent_B25003_003_001 + 
+        unemployed_true_percent_B23025_005_003 + 
+        income_house_median_ten_thousands_B19013_001 + 
+        prod_count + 
+        AWATER_KM, 
+      data = ks_rural_income_specific, 
+      family = binomial)
+
+summary(rural_logistic_model_revised_full)
+
+logistic_model_revised_full_dep_names <- 
+        c("pop_dense_hundreds_B01001_001_ALAND", 
+        "female_true_percent_B01001_026_001", 
+        "age_0_to_17_true_percent_B01001", 
+        "age_65_plus_true_percent_B01001", 
+        "white_non_hisp_lat_true_percent_B03002_003_001", 
+        "education_high_school_plus_true_percent_B15003_017_to_025", 
+        "no_health_insurance_true_percent_B27010_017_033_050_066", 
+        "renter_occupy_true_percent_B25003_003_001", 
+        "unemployed_true_percent_B23025_005_003", 
+        "income_house_median_ten_thousands_B19013_001", 
+        "prod_count",
+        "AWATER_KM")
+
+rural_logistic_model_extant_swd_binary_at_end <- 
+  ks_rural_income_specific %>% 
+  dplyr::select(logistic_model_revised_full_dep_names, 
+                extant_swd_binary) 
+
+
+#### automated choice of best fit ####
+
+rural_logistic_matrix <- 
+  data.matrix(rural_logistic_model_extant_swd_binary_at_end)
+
+rural_test_for_automatic_selection <- 
+  as.data.frame(rural_logistic_matrix)
+
+# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+rural_bestAIC <-
+  bestglm(rural_test_for_automatic_selection, IC = "AIC", family = binomial)
+rural_bestBIC <-
+  bestglm(rural_test_for_automatic_selection, IC = "BIC", family = binomial)
+
+save(rural_bestAIC, 
+          file = "rural_bestAIC.rdata")
+save(rural_bestBIC, 
+          file = "rural_bestBIC.rdata")
+
+load(file = "rural_bestAIC.rdata")
+load(file = "rural_bestBIC.rdata")
+
+bestAIC$BestModel
+bestBIC$BestModel
+
+write.csv(rural_bestAIC$BestModels, 
+          file = "rural_bestAIC.csv")
+write.csv(rural_bestBIC$BestModels, 
+          file = "rural_bestBIC.csv")
+
+# pull AICS and BICs
+stats::AIC(# big_gam_k_5, 
+           rural_logistic_model_revised_full, 
+           rural_bestAIC$BestModel, 
+           rural_bestBIC$BestModel)
+
+stats::BIC(# big_gam_k_5, 
+           rural_logistic_model_revised_full, 
+           rural_bestAIC$BestModel, 
+           rural_bestBIC$BestModel)
+
+
+#### pull logistic data for tables in thesis ####
+
+nrow(ks_rural_income_specific)
+
+# get profile confidence intervals
+rural_big_log_profile_confidence_intervals <- 
+  profilinator(rural_logistic_model_revised_full)
+
+# remove intercept
+rural_big_log_profile_confidence_intervals_no_intercept <-
+  rural_big_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+rural_big_log_estimate_exp <- 
+  exp(rural_logistic_model_revised_full$coefficients)
+
+# make tibble
+rural_big_log_tibble_for_thesis <- 
+  names(rural_big_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  cbind(rural_big_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(rural_big_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+# put everything in one column for copy-pasting
+single_column_magic_rural_big_log_tibble <- 
+  rural_big_log_tibble_for_thesis %>% 
+  mutate(rural_big_log_estimate_exp	= formatC(rural_big_log_estimate_exp, 
+                              format = "f", 
+                              digits = 2),
+         conf.low	= formatC(conf.low, 
+                                           format = "f", 
+                                           digits = 2),
+         conf.high = formatC(conf.high, 
+                                            format = "f", 
+                                            digits = 2), 
+         magic_column = paste0(rural_big_log_estimate_exp, 
+                              " (", 
+                              conf.low, 
+                              "–", 
+                              conf.high, 
+                              ")"))
+  
+# write table to disk
+write_csv(single_column_magic_rural_big_log_tibble, 
+          path = "single_column_magic_rural_big_log_tibble.csv")
+
+
+#### AIC tibble ####
+
+# get profile confidence intervals
+rural_aic_log_profile_confidence_intervals <- 
+  profilinator(rural_bestAIC$BestModel)
+
+# remove intercept
+rural_aic_log_profile_confidence_intervals_no_intercept <-
+  rural_aic_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+rural_aic_log_estimate_exp <- 
+  exp(rural_bestAIC$BestModel$coefficients)
+
+rural_aic_log_tibble_for_thesis <- 
+  names(rural_aic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  cbind(rural_aic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(rural_aic_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+
+# put everything in one column for copy-pasting
+single_column_magic_rural_aic_tibble <- 
+  pretty_columninator(rural_aic_log_tibble_for_thesis, 
+                      odds_ratio = 
+                        rural_aic_log_tibble_for_thesis$rural_aic_log_estimate_exp, 
+                      low_ci = rural_aic_log_tibble_for_thesis$conf.low, 
+                      high_ci = rural_aic_log_tibble_for_thesis$conf.high)
+  
+# write table to disk
+write_csv(single_column_magic_rural_aic_tibble, 
+          path = "single_column_magic_rural_aic_tibble.csv")
+
+
+#### BIC tibble ####
+
+# get profile confidence intervals
+rural_bic_log_profile_confidence_intervals <- 
+  profilinator(rural_bestBIC$BestModel)
+
+# remove intercept
+rural_bic_log_profile_confidence_intervals_no_intercept <-
+  rural_bic_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+rural_bic_log_estimate_exp <- 
+  exp(rural_bestBIC$BestModel$coefficients)
+
+rural_bic_log_tibble_for_thesis <- 
+  names(rural_bic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  cbind(rural_bic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(rural_bic_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+# put everything in one column for copy-pasting
+single_column_magic_rural_bic_tibble <- 
+  pretty_columninator(rural_bic_log_tibble_for_thesis, 
+                      odds_ratio = 
+                        rural_bic_log_tibble_for_thesis$rural_bic_log_estimate_exp, 
+                      low_ci = rural_bic_log_tibble_for_thesis$conf.low, 
+                      high_ci = rural_bic_log_tibble_for_thesis$conf.high)
+  
+# write table to disk
+write_csv(single_column_magic_rural_bic_tibble, 
+          path = "single_column_magic_rural_bic_tibble.csv")
+```
+
+
+```{r rural logistic regression ice full model, eval=FALSE, include=FALSE}
+
+logistic_model_ice_revised_full <- 
+   stats::glm(extant_swd_binary ~ 
+        pop_dense_hundreds_B01001_001_ALAND + 
+        female_true_percent_B01001_026_001 + 
+        age_0_to_17_true_percent_B01001 + 
+        age_65_plus_true_percent_B01001 + 
+        white_non_hisp_lat_true_percent_B03002_003_001 + 
+        education_high_school_plus_true_percent_B15003_017_to_025 + 
+        no_health_insurance_true_percent_B27010_017_033_050_066 + 
+        renter_occupy_true_percent_B25003_003_001 + 
+        unemployed_true_percent_B23025_005_003 + 
+        ice_ten_B19001 + 
+        prod_count + 
+        AWATER_KM, 
+      data = ks_ice_specific, 
+      family = binomial)
+
+summary(logistic_model_ice_revised_full)
+
+logistic_model_ice_revised_full_dep_names <- 
+        c("pop_dense_hundreds_B01001_001_ALAND", 
+        "female_true_percent_B01001_026_001", 
+        "age_0_to_17_true_percent_B01001", 
+        "age_65_plus_true_percent_B01001", 
+        "white_non_hisp_lat_true_percent_B03002_003_001", 
+        "education_high_school_plus_true_percent_B15003_017_to_025", 
+        "no_health_insurance_true_percent_B27010_017_033_050_066", 
+        "renter_occupy_true_percent_B25003_003_001", 
+        "unemployed_true_percent_B23025_005_003", 
+        "ice_ten_B19001", 
+        "prod_count",
+        "AWATER_KM")
+
+logistic_model_ice_extant_swd_binary_at_end <- 
+  ks_ice_specific %>% 
+  dplyr::select(logistic_model_ice_revised_full_dep_names, 
+                extant_swd_binary) 
+
+
+#### automated choice of best fit ####
+
+logistic_ice_matrix <- 
+  data.matrix(logistic_model_ice_extant_swd_binary_at_end)
+
+ice_test_for_automatic_selection <- 
+  as.data.frame(logistic_ice_matrix)
+
+# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+ice_bestAIC <-
+  bestglm(ice_test_for_automatic_selection, IC = "AIC", family = binomial)
+ice_bestBIC <-
+  bestglm(ice_test_for_automatic_selection, IC = "BIC", family = binomial)
+
+save(ice_bestAIC, 
+          file = "ice_bestAIC.rdata")
+save(ice_bestBIC, 
+          file = "ice_bestBIC.rdata")
+
+load(file = "ice_bestAIC.rdata")
+load(file = "ice_bestBIC.rdata")
+
+ice_bestAIC$BestModel
+ice_bestBIC$BestModel
+
+write.csv(ice_bestAIC$BestModels, 
+          file = "ice_bestAIC.csv")
+write.csv(ice_bestBIC$BestModels, 
+          file = "ice_bestBIC.csv")
+
+# pull AICS and BICs
+stats::AIC(# big_gam_k_5, 
+           logistic_model_ice_revised_full, 
+           ice_bestAIC$BestModel, 
+           ice_bestBIC$BestModel)
+
+stats::BIC(# big_gam_k_5, 
+           logistic_model_ice_revised_full, 
+           ice_bestAIC$BestModel, 
+           ice_bestBIC$BestModel)
+
+
+#### pull logistic data for tables in thesis ####
+
+nrow(ks_ice_specific)
+
+# get profile confidence intervals
+ice_big_log_profile_confidence_intervals <- 
+  profilinator(logistic_model_ice_revised_full)
+
+# remove intercept
+ice_big_log_profile_confidence_intervals_no_intercept <-
+  ice_big_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+ice_big_log_estimate_exp <- 
+  exp(logistic_model_ice_revised_full$coefficients)
+
+ice_big_log_tibble_for_thesis <- 
+  names(ice_big_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  cbind(ice_big_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(ice_big_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+write_csv(ice_big_log_tibble_for_thesis, 
+          path = "ice_big_log_tibble_for_thesis.csv")
+
+
+#### AIC tibble ####
+
+# get profile confidence intervals
+ice_aic_log_profile_confidence_intervals <- 
+  profilinator(ice_bestAIC$BestModel)
+
+# remove intercept
+ice_aic_log_profile_confidence_intervals_no_intercept <-
+  ice_aic_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+ice_aic_log_estimate_exp <- 
+  exp(ice_bestAIC$BestModel$coefficients)
+
+ice_aic_log_tibble_for_thesis <- 
+  names(ice_aic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  cbind(ice_aic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(ice_aic_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+write_csv(ice_aic_log_tibble_for_thesis, 
+          path = "ice_aic_log_tibble_for_thesis.csv")
+
+
+#### BIC tibble ####
+
+# get profile confidence intervals
+ice_bic_log_profile_confidence_intervals <- 
+  profilinator(ice_bestBIC$BestModel)
+
+# remove intercept
+ice_bic_log_profile_confidence_intervals_no_intercept <-
+  ice_bic_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+ice_bic_log_estimate_exp <- 
+  exp(ice_bestBIC$BestModel$coefficients)
+
+ice_bic_log_tibble_for_thesis <- 
+  names(ice_bic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  cbind(ice_bic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(ice_bic_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+write_csv(ice_bic_log_tibble_for_thesis, 
+          path = "ice_bic_log_tibble_for_thesis.csv")
+
+```
+
+
+```{r rural logistic regression home value full model, eval=FALSE, include=FALSE}
+
+logistic_model_house_revised_full <- 
+   stats::glm(extant_swd_binary ~ 
+        pop_dense_hundreds_B01001_001_ALAND + 
+        female_true_percent_B01001_026_001 + 
+        age_0_to_17_true_percent_B01001 + 
+        age_65_plus_true_percent_B01001 + 
+        white_non_hisp_lat_true_percent_B03002_003_001 + 
+        education_high_school_plus_true_percent_B15003_017_to_025 + 
+        no_health_insurance_true_percent_B27010_017_033_050_066 + 
+        renter_occupy_true_percent_B25003_003_001 + 
+        unemployed_true_percent_B23025_005_003 + 
+        house_value_median_ten_thousands_B25077_001 + 
+        prod_count + 
+        AWATER_KM,
+      data = ks_house_specific, 
+      family = binomial)
+
+summary(logistic_model_house_revised_full)
+
+logistic_model_house_revised_full_dep_names <- 
+        c("pop_dense_hundreds_B01001_001_ALAND", 
+        "female_true_percent_B01001_026_001", 
+        "age_0_to_17_true_percent_B01001", 
+        "age_65_plus_true_percent_B01001", 
+        "white_non_hisp_lat_true_percent_B03002_003_001", 
+        "education_high_school_plus_true_percent_B15003_017_to_025", 
+        "no_health_insurance_true_percent_B27010_017_033_050_066", 
+        "renter_occupy_true_percent_B25003_003_001", 
+        "unemployed_true_percent_B23025_005_003", 
+        "house_value_median_ten_thousands_B25077_001", 
+        "prod_count",
+        "AWATER_KM")
+
+logistic_model_house_extant_swd_binary_at_end <- 
+  ks_house_specific %>% 
+  dplyr::select(logistic_model_house_revised_full_dep_names, 
+                extant_swd_binary) 
+
+
+#### automated chohouse of best fit ####
+
+logistic_house_matrix <- 
+  data.matrix(logistic_model_house_extant_swd_binary_at_end)
+
+house_test_for_automatic_selection <- 
+  as.data.frame(logistic_house_matrix)
+
+# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+house_bestAIC <-
+  bestglm(house_test_for_automatic_selection, IC = "AIC", family = binomial)
+house_bestBIC <-
+  bestglm(house_test_for_automatic_selection, IC = "BIC", family = binomial)
+
+save(house_bestAIC, 
+          file = "house_bestAIC.rdata")
+save(house_bestBIC, 
+          file = "house_bestAIC.rdata")
+
+load(file = "house_bestAIC.rdata")
+load(file = "house_bestBIC.rdata")
+
+house_bestAIC$BestModel
+house_bestBIC$BestModel
+
+write.csv(house_bestAIC$BestModels, 
+          file = "house_bestBIC.csv")
+write.csv(house_bestBIC$BestModels, 
+          file = "house_bestBIC.csv")
+
+# pull AICS and BICs
+stats::AIC(# big_gam_k_5, 
+           logistic_model_house_revised_full, 
+           house_bestAIC$BestModel, 
+           house_bestBIC$BestModel)
+
+stats::BIC(# big_gam_k_5, 
+           logistic_model_house_revised_full, 
+           house_bestAIC$BestModel, 
+           house_bestBIC$BestModel)
+
+
+#### pull logistic data for tables in thesis ####
+
+nrow(ks_house_specific)
+
+# get profile confidence intervals
+house_big_log_profile_confidence_intervals <- 
+  profilinator(logistic_model_house_revised_full)
+
+# remove intercept
+house_big_log_profile_confidence_intervals_no_intercept <-
+  house_big_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+house_big_log_estimate_exp <- 
+  exp(logistic_model_house_revised_full$coefficients)
+
+house_big_log_tibble_for_thesis <- 
+  names(house_big_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  cbind(house_big_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(house_big_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+write_csv(house_big_log_tibble_for_thesis, 
+          path = "house_big_log_tibble_for_thesis.csv")
+
+
+#### AIC tibble ####
+
+# get profile confidence intervals
+house_aic_log_profile_confidence_intervals <- 
+  profilinator(house_bestAIC$BestModel)
+
+# remove intercept
+house_aic_log_profile_confidence_intervals_no_intercept <-
+  house_aic_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+house_aic_log_estimate_exp <- 
+  exp(house_bestAIC$BestModel$coefficients)
+
+house_aic_log_tibble_for_thesis <- 
+  names(house_aic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  cbind(house_aic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(house_aic_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+write_csv(house_aic_log_tibble_for_thesis, 
+          path = "house_aic_log_tibble_for_thesis.csv")
+
+
+#### BIC tibble ####
+
+# get profile confidence intervals
+house_bic_log_profile_confidence_intervals <- 
+  profilinator(house_bestBIC$BestModel)
+
+# remove intercept
+house_bic_log_profile_confidence_intervals_no_intercept <-
+  house_bic_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+house_bic_log_estimate_exp <- 
+  exp(house_bestBIC$BestModel$coefficients)
+
+house_bic_log_tibble_for_thesis <- 
+  names(house_bic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  cbind(house_bic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(house_bic_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+write_csv(house_bic_log_tibble_for_thesis, 
+          path = "house_bic_log_tibble_for_thesis.csv")
+
+```
+
+
+```{r rural logistic regression poverty full model, eval=FALSE, include=FALSE}
+
+logistic_model_poverty_revised_full <- 
+   stats::glm(extant_swd_binary ~ 
+        pop_dense_hundreds_B01001_001_ALAND + 
+        female_true_percent_B01001_026_001 + 
+        age_0_to_17_true_percent_B01001 + 
+        age_65_plus_true_percent_B01001 + 
+        white_non_hisp_lat_true_percent_B03002_003_001 + 
+        education_high_school_plus_true_percent_B15003_017_to_025 + 
+        no_health_insurance_true_percent_B27010_017_033_050_066 + 
+        renter_occupy_true_percent_B25003_003_001 + 
+        unemployed_true_percent_B23025_005_003 + 
+        poverty_below_100_true_percent_C17002_002_003_001 + 
+        prod_count + 
+        AWATER_KM,
+      data = ks_poverty_specific, 
+      family = binomial)
+
+summary(logistic_model_poverty_revised_full)
+
+logistic_model_poverty_revised_full_dep_names <- 
+        c("pop_dense_hundreds_B01001_001_ALAND", 
+        "female_true_percent_B01001_026_001", 
+        "age_0_to_17_true_percent_B01001", 
+        "age_65_plus_true_percent_B01001", 
+        "white_non_hisp_lat_true_percent_B03002_003_001", 
+        "education_high_school_plus_true_percent_B15003_017_to_025", 
+        "no_health_insurance_true_percent_B27010_017_033_050_066", 
+        "renter_occupy_true_percent_B25003_003_001", 
+        "unemployed_true_percent_B23025_005_003", 
+        "poverty_below_100_true_percent_C17002_002_003_001", 
+        "prod_count",
+        "AWATER_KM")
+
+logistic_model_poverty_extant_swd_binary_at_end <- 
+  ks_poverty_specific %>% 
+  dplyr::select(logistic_model_poverty_revised_full_dep_names, 
+                extant_swd_binary) 
+
+
+#### automated chopoverty of best fit ####
+
+logistic_poverty_matrix <- 
+  data.matrix(logistic_model_poverty_extant_swd_binary_at_end)
+
+poverty_test_for_automatic_selection <- 
+  as.data.frame(logistic_poverty_matrix)
+
+# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+poverty_bestAIC <-
+  bestglm(poverty_test_for_automatic_selection, IC = "AIC", family = binomial)
+poverty_bestBIC <-
+  bestglm(poverty_test_for_automatic_selection, IC = "BIC", family = binomial)
+
+save(poverty_bestAIC, 
+          file = "poverty_bestAIC.rdata")
+save(poverty_bestBIC, 
+          file = "poverty_bestBIC.rdata")
+
+load(file = "poverty_bestAIC.rdata")
+load(file = "poverty_bestBIC.rdata")
+
+poverty_bestAIC$BestModel
+poverty_bestBIC$BestModel
+
+write.csv(poverty_bestAIC$BestModels, 
+          file = "poverty_bestAIC.csv")
+write.csv(poverty_bestBIC$BestModels, 
+          file = "poverty_bestBIC.csv")
+
+# pull AICS and BICs
+stats::AIC(# big_gam_k_5, 
+           logistic_model_poverty_revised_full, 
+           poverty_bestAIC$BestModel, 
+           poverty_bestBIC$BestModel)
+
+stats::BIC(# big_gam_k_5, 
+           logistic_model_poverty_revised_full, 
+           poverty_bestAIC$BestModel, 
+           poverty_bestBIC$BestModel)
+
+
+#### pull logistic data for tables in thesis ####
+
+nrow(ks_poverty_specific)
+
+# get profile confidence intervals
+poverty_big_log_profile_confidence_intervals <- 
+  profilinator(logistic_model_poverty_revised_full)
+
+# remove intercept
+poverty_big_log_profile_confidence_intervals_no_intercept <-
+  poverty_big_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+poverty_big_log_estimate_exp <- 
+  exp(logistic_model_poverty_revised_full$coefficients)
+
+poverty_big_log_tibble_for_thesis <- 
+  names(poverty_big_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  cbind(poverty_big_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(poverty_big_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+write_csv(poverty_big_log_tibble_for_thesis, 
+          path = "poverty_big_log_tibble_for_thesis.csv")
+
+
+#### AIC tibble ####
+
+# get profile confidence intervals
+poverty_aic_log_profile_confidence_intervals <- 
+  profilinator(poverty_bestAIC$BestModel)
+
+# remove intercept
+poverty_aic_log_profile_confidence_intervals_no_intercept <-
+  poverty_aic_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+poverty_aic_log_estimate_exp <- 
+  exp(poverty_bestAIC$BestModel$coefficients)
+
+poverty_aic_log_tibble_for_thesis <- 
+  names(poverty_aic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  cbind(poverty_aic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(poverty_aic_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+write_csv(poverty_aic_log_tibble_for_thesis, 
+          path = "poverty_aic_log_tibble_for_thesis.csv")
+
+
+#### BIC tibble ####
+
+# get profile confidence intervals
+poverty_bic_log_profile_confidence_intervals <- 
+  profilinator(poverty_bestBIC$BestModel)
+
+# remove intercept
+poverty_bic_log_profile_confidence_intervals_no_intercept <-
+  poverty_bic_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+poverty_bic_log_estimate_exp <- 
+  exp(poverty_bestBIC$BestModel$coefficients)
+
+poverty_bic_log_tibble_for_thesis <- 
+  names(poverty_bic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  cbind(poverty_bic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(poverty_bic_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+write_csv(poverty_bic_log_tibble_for_thesis, 
+          path = "poverty_bic_log_tibble_for_thesis.csv")
+
+```
+
+
+```{r rural logistic regression earnings full model, eval=FALSE, include=FALSE}
+
+logistic_model_earnings_revised_full <- 
+   stats::glm(extant_swd_binary ~ 
+        pop_dense_hundreds_B01001_001_ALAND + 
+        female_true_percent_B01001_026_001 + 
+        age_0_to_17_true_percent_B01001 + 
+        age_65_plus_true_percent_B01001 + 
+        white_non_hisp_lat_true_percent_B03002_003_001 + 
+        education_high_school_plus_true_percent_B15003_017_to_025 + 
+        no_health_insurance_true_percent_B27010_017_033_050_066 + 
+        renter_occupy_true_percent_B25003_003_001 + 
+        unemployed_true_percent_B23025_005_003 + 
+        earnings_median_ten_thousands_B20002_001 + 
+        prod_count + 
+        AWATER_KM,
+      data = ks_earnings_specific, 
+      family = binomial)
+
+summary(logistic_model_earnings_revised_full)
+
+logistic_model_earnings_revised_full_dep_names <- 
+        c("pop_dense_hundreds_B01001_001_ALAND", 
+        "female_true_percent_B01001_026_001", 
+        "age_0_to_17_true_percent_B01001", 
+        "age_65_plus_true_percent_B01001", 
+        "white_non_hisp_lat_true_percent_B03002_003_001", 
+        "education_high_school_plus_true_percent_B15003_017_to_025", 
+        "no_health_insurance_true_percent_B27010_017_033_050_066", 
+        "renter_occupy_true_percent_B25003_003_001", 
+        "unemployed_true_percent_B23025_005_003", 
+        "earnings_median_ten_thousands_B20002_001", 
+        "prod_count",
+        "AWATER_KM")
+
+logistic_model_earnings_extant_swd_binary_at_end <- 
+  ks_earnings_specific %>% 
+  dplyr::select(logistic_model_earnings_revised_full_dep_names, 
+                extant_swd_binary) 
+
+
+#### automated choearnings of best fit ####
+
+logistic_earnings_matrix <- 
+  data.matrix(logistic_model_earnings_extant_swd_binary_at_end)
+
+earnings_test_for_automatic_selection <- 
+  as.data.frame(logistic_earnings_matrix)
+
+# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+earnings_bestAIC <-
+  bestglm(earnings_test_for_automatic_selection, IC = "AIC", family = binomial)
+earnings_bestBIC <-
+  bestglm(earnings_test_for_automatic_selection, IC = "BIC", family = binomial)
+
+save(earnings_bestAIC, 
+          file = "earnings_bestAIC.rdata")
+save(earnings_bestBIC, 
+          file = "earnings_bestBIC.rdata")
+
+load(file = "earnings_bestAIC.rdata")
+load(file = "earnings_bestBIC.rdata")
+
+earnings_bestAIC$BestModel
+earnings_bestBIC$BestModel
+
+write.csv(earnings_bestAIC$BestModels, 
+          file = "earnings_bestAIC.csv")
+write.csv(earnings_bestBIC$BestModels, 
+          file = "earnings_bestBIC.csv")
+
+# pull AICS and BICs
+stats::AIC(# big_gam_k_5, 
+           logistic_model_earnings_revised_full, 
+           earnings_bestAIC$BestModel, 
+           earnings_bestBIC$BestModel)
+
+stats::BIC(# big_gam_k_5, 
+           logistic_model_earnings_revised_full, 
+           earnings_bestAIC$BestModel, 
+           earnings_bestBIC$BestModel)
+
+
+#### pull logistic data for tables in thesis ####
+
+nrow(ks_earnings_specific)
+
+# get profile confidence intervals
+earnings_big_log_profile_confidence_intervals <- 
+  profilinator(logistic_model_earnings_revised_full)
+
+# remove intercept
+earnings_big_log_profile_confidence_intervals_no_intercept <-
+  earnings_big_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+earnings_big_log_estimate_exp <- 
+  exp(logistic_model_earnings_revised_full$coefficients)
+
+earnings_big_log_tibble_for_thesis <- 
+  names(earnings_big_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  cbind(earnings_big_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(earnings_big_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+write_csv(earnings_big_log_tibble_for_thesis, 
+          path = "earnings_big_log_tibble_for_thesis.csv")
+
+
+#### AIC tibble ####
+
+# get profile confidence intervals
+earnings_aic_log_profile_confidence_intervals <- 
+  profilinator(earnings_bestAIC$BestModel)
+
+# remove intercept
+earnings_aic_log_profile_confidence_intervals_no_intercept <-
+  earnings_aic_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+earnings_aic_log_estimate_exp <- 
+  exp(earnings_bestAIC$BestModel$coefficients)
+
+earnings_aic_log_tibble_for_thesis <- 
+  names(earnings_aic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  cbind(earnings_aic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(earnings_aic_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+write_csv(earnings_aic_log_tibble_for_thesis, 
+          path = "earnings_aic_log_tibble_for_thesis.csv")
+
+
+#### BIC tibble ####
+
+# get profile confidence intervals
+earnings_bic_log_profile_confidence_intervals <- 
+  profilinator(earnings_bestBIC$BestModel)
+
+# remove intercept
+earnings_bic_log_profile_confidence_intervals_no_intercept <-
+  earnings_bic_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+earnings_bic_log_estimate_exp <- 
+  exp(earnings_bestBIC$BestModel$coefficients)
+
+earnings_bic_log_tibble_for_thesis <- 
+  names(earnings_bic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  cbind(earnings_bic_log_estimate_exp) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(earnings_bic_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+write_csv(earnings_bic_log_tibble_for_thesis, 
+          path = "earnings_bic_log_tibble_for_thesis.csv")
+
+```
+
+
 
 
 
