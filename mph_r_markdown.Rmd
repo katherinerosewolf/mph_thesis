@@ -124,7 +124,18 @@ logitloess <- function(x, y, t, nm, dat, s) {
     scale_x_continuous(labels = comma)
 }
 
-# function to make estimates and confidence intervals for tables
+# function to make profile confidence intervals
+profilinator <- 
+  function(x) {
+  profile_confint_estimate <- 
+    confint_tidy(x, 
+                 conf.level = 0.95, 
+                 func = stats::confint)
+  profile_confint_odds_ratio <- 
+    exp(profile_confint_estimate)
+}
+
+# function to arrange estimates and confidence intervals in tables
 pretty_columninator <- 
   function(tibble_name, odds_ratio, low_ci, high_ci) {
     tibble_name %>% 
@@ -3835,7 +3846,7 @@ ks_analysis_all %>%
 ```
 
 
-```{r correlation matrix}
+```{r correlation matrix, eval=FALSE, include=FALSE}
 
 # make dataframe for the correlation dataset
 correlation_matrix_data  <-  
@@ -4061,14 +4072,14 @@ ggheatmap +
 
 # ice
 density_ice <-
-  density(ks_analysis_all_income$ice_B19001)
+  density(ks_income_specific$ice_B19001)
 density_ice_no_wells <-
-  density(ks_analysis_all_income$ice_B19001[
-    which(ks_analysis_all_income$extant_swd_binary == 0
+  density(ks_income_specific$ice_B19001[
+    which(ks_income_specific$extant_swd_binary == 0
     )])
 density_ice_with_wells <-
-  density(ks_analysis_all_income$ice_B19001[
-    which(ks_analysis_all_income$extant_swd_binary == 1
+  density(ks_income_specific$ice_B19001[
+    which(ks_income_specific$extant_swd_binary == 1
     )])
 # set up printing output
 par(mar=c(.5,.5,.5,.5))
@@ -4119,38 +4130,38 @@ plot(density_ice_with_wells,
 # polygon(density_ice, col="slateblue1", border="black")
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$ice_B19001,
+qqnorm(ks_income_specific$ice_B19001,
        col = 'orchid1',
        pch = 18,
        cex = 1,
        main = "All Block Groups",
        family = "Times New Roman")
-qqline(ks_analysis_all_income$ice_B19001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)],
+qqline(ks_income_specific$ice_B19001[
+  which(ks_income_specific$extant_swd_binary == 0)],
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$ice_B19001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)],
+qqnorm(ks_income_specific$ice_B19001[
+  which(ks_income_specific$extant_swd_binary == 0)],
   col = 'slateblue1',
   pch = 18,
   cex = 1,
   main = "Block Groups with No Disposal Wells",
   family = "Times New Roman")
-qqline(ks_analysis_all_income$ice_B19001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)],
+qqline(ks_income_specific$ice_B19001[
+  which(ks_income_specific$extant_swd_binary == 0)],
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$ice_B19001[
-  which(ks_analysis_all_income$extant_swd_binary == 1)],
+qqnorm(ks_income_specific$ice_B19001[
+  which(ks_income_specific$extant_swd_binary == 1)],
   col = 'springgreen1',
   pch = 18,
   cex = 1,
   main = "Block Groups with Disposal Wells",
   family = "Times New Roman")
-qqline(ks_analysis_all_income$ice_B19001[
-  which(ks_analysis_all_income$extant_swd_binary == 1)],
+qqline(ks_income_specific$ice_B19001[
+  which(ks_income_specific$extant_swd_binary == 1)],
   lwd=2)
 
 
@@ -4158,14 +4169,14 @@ qqline(ks_analysis_all_income$ice_B19001[
 
 # horizontal wells
 density_horizontal <-
-  density(ks_analysis_all_income$horizontal_count)
+  density(ks_income_specific$horizontal_count)
 density_horizontal_no_wells <-
-  density(ks_analysis_all_income$horizontal_count[
-    which(ks_analysis_all_income$extant_swd_binary == 0
+  density(ks_income_specific$horizontal_count[
+    which(ks_income_specific$extant_swd_binary == 0
     )])
 density_horizontal_with_wells <-
-  density(ks_analysis_all_income$horizontal_count[
-    which(ks_analysis_all_income$extant_swd_binary == 1
+  density(ks_income_specific$horizontal_count[
+    which(ks_income_specific$extant_swd_binary == 1
     )])
 # set up printing output
 par(mar=c(.5,.5,.5,.5))
@@ -4216,38 +4227,38 @@ plot(density_horizontal_with_wells,
 # polygon(density_horizontal, col="slateblue1", border="black")
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$horizontal_count,
+qqnorm(ks_income_specific$horizontal_count,
   col = 'orchid1',
   pch = 18,
   cex = 1,
   main = "All Block Groups",
   family = "Times New Roman")
-qqline(ks_analysis_all_income$horizontal_count[
-  which(ks_analysis_all_income$extant_swd_binary == 0)],
+qqline(ks_income_specific$horizontal_count[
+  which(ks_income_specific$extant_swd_binary == 0)],
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$horizontal_count[
-  which(ks_analysis_all_income$extant_swd_binary == 0)],
+qqnorm(ks_income_specific$horizontal_count[
+  which(ks_income_specific$extant_swd_binary == 0)],
        col = 'slateblue1',
        pch = 18,
        cex = 1,
        main = "Block Groups with No Disposal Wells",
   family = "Times New Roman")
-qqline(ks_analysis_all_income$horizontal_count[
-  which(ks_analysis_all_income$extant_swd_binary == 0)],
+qqline(ks_income_specific$horizontal_count[
+  which(ks_income_specific$extant_swd_binary == 0)],
        lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$horizontal_count[
-  which(ks_analysis_all_income$extant_swd_binary == 1)],
+qqnorm(ks_income_specific$horizontal_count[
+  which(ks_income_specific$extant_swd_binary == 1)],
   col = 'springgreen1',
   pch = 18,
   cex = 1,
   main = "Block Groups with Disposal Wells",
   family = "Times New Roman")
-qqline(ks_analysis_all_income$horizontal_count[
-  which(ks_analysis_all_income$extant_swd_binary == 1)],
+qqline(ks_income_specific$horizontal_count[
+  which(ks_income_specific$extant_swd_binary == 1)],
   lwd=2)
 
 
@@ -4260,14 +4271,14 @@ qqline(ks_analysis_all_income$horizontal_count[
 # total population
 
 density_population <-
-  density(ks_analysis_all_income$pop_tot_B01001_001)
+  density(ks_income_specific$pop_tot_B01001_001)
 density_population_no_wells <-
-  density(ks_analysis_all_income$pop_tot_B01001_001[
-    which(ks_analysis_all_income$extant_swd_binary == 0
+  density(ks_income_specific$pop_tot_B01001_001[
+    which(ks_income_specific$extant_swd_binary == 0
     )])
 density_population_with_wells <-
-  density(ks_analysis_all_income$pop_tot_B01001_001[
-    which(ks_analysis_all_income$extant_swd_binary == 1
+  density(ks_income_specific$pop_tot_B01001_001[
+    which(ks_income_specific$extant_swd_binary == 1
     )])
 
 # set up printing output
@@ -4328,7 +4339,7 @@ axis(side=1, at=axTicks(1),
 # polygon(density_population, col="slateblue1", border="black")
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$pop_tot_B01001_001,
+qqnorm(ks_income_specific$pop_tot_B01001_001,
        col = "orchid1",
        pch = 18,
        cex = 1,
@@ -4338,13 +4349,13 @@ qqnorm(ks_analysis_all_income$pop_tot_B01001_001,
 axis(side=2, at=axTicks(2),
      labels=formatC(axTicks(2), format="d", big.mark=','),
      family = "Times New Roman")
-qqline(ks_analysis_all_income$pop_tot_B01001_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)],
+qqline(ks_income_specific$pop_tot_B01001_001[
+  which(ks_income_specific$extant_swd_binary == 0)],
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$pop_tot_B01001_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)],
+qqnorm(ks_income_specific$pop_tot_B01001_001[
+  which(ks_income_specific$extant_swd_binary == 0)],
   col = 'slateblue1',
   pch = 18,
   cex = 1,
@@ -4353,13 +4364,13 @@ qqnorm(ks_analysis_all_income$pop_tot_B01001_001[
 axis(side=2, at=axTicks(2),
      labels=formatC(axTicks(2),
                     format="d", big.mark=','),  family = "Times New Roman")
-qqline(ks_analysis_all_income$pop_tot_B01001_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)],
+qqline(ks_income_specific$pop_tot_B01001_001[
+  which(ks_income_specific$extant_swd_binary == 0)],
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$pop_tot_B01001_001[
-  which(ks_analysis_all_income$extant_swd_binary == 1)],
+qqnorm(ks_income_specific$pop_tot_B01001_001[
+  which(ks_income_specific$extant_swd_binary == 1)],
   col = 'springgreen1',
   pch = 18,
   cex = 1,
@@ -4369,8 +4380,8 @@ qqnorm(ks_analysis_all_income$pop_tot_B01001_001[
 axis(side=2, at=axTicks(2),
      labels=formatC(axTicks(2),
                     format="d", big.mark=','),  family = "Times New Roman")
-qqline(ks_analysis_all_income$pop_tot_B01001_001[
-  which(ks_analysis_all_income$extant_swd_binary == 1)],
+qqline(ks_income_specific$pop_tot_B01001_001[
+  which(ks_income_specific$extant_swd_binary == 1)],
   lwd=2)
 
 
@@ -4378,14 +4389,14 @@ qqline(ks_analysis_all_income$pop_tot_B01001_001[
 # population density
 
 density_pop_dense <-
-  density(ks_analysis_all_income$pop_dense_B01001_001_ALAND)
+  density(ks_income_specific$pop_dense_B01001_001_ALAND)
 density_pop_dense_no_wells <-
-  density(ks_analysis_all_income$pop_dense_B01001_001_ALAND[
-    which(ks_analysis_all_income$extant_swd_binary == 0
+  density(ks_income_specific$pop_dense_B01001_001_ALAND[
+    which(ks_income_specific$extant_swd_binary == 0
     )])
 density_pop_dense_with_wells <-
-  density(ks_analysis_all_income$pop_dense_B01001_001_ALAND[
-    which(ks_analysis_all_income$extant_swd_binary == 1
+  density(ks_income_specific$pop_dense_B01001_001_ALAND[
+    which(ks_income_specific$extant_swd_binary == 1
     )])
 
 # set up printing output
@@ -4443,41 +4454,41 @@ axis(side=1, at=axTicks(1),
 # polygon(density_pop_dense, col="slateblue1", border="black")
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$pop_dense_B01001_001_ALAND,
+qqnorm(ks_income_specific$pop_dense_B01001_001_ALAND,
        col = 'orchid1',
        pch = 18,
        cex = 1,
        main = "All Block Groups", family = "Times New Roman", xaxt='n')
 axis(side=1, at=axTicks(1),
      labels=formatC(axTicks(1), format="d", big.mark=','), family = "Times New Roman")
-qqline(ks_analysis_all_income$pop_dense_B01001_001_ALAND[
-  which(ks_analysis_all_income$extant_swd_binary == 0)],
+qqline(ks_income_specific$pop_dense_B01001_001_ALAND[
+  which(ks_income_specific$extant_swd_binary == 0)],
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$pop_dense_B01001_001_ALAND[
-  which(ks_analysis_all_income$extant_swd_binary == 0)],
+qqnorm(ks_income_specific$pop_dense_B01001_001_ALAND[
+  which(ks_income_specific$extant_swd_binary == 0)],
   col = 'slateblue1',
   pch = 18,
   cex = 1,
   main = "Block Groups with No Disposal Wells", family = "Times New Roman", xaxt='n')
 axis(side=1, at=axTicks(1),
      labels=formatC(axTicks(1), format="d", big.mark=','), family = "Times New Roman")
-qqline(ks_analysis_all_income$pop_dense_B01001_001_ALAND[
-  which(ks_analysis_all_income$extant_swd_binary == 0)],
+qqline(ks_income_specific$pop_dense_B01001_001_ALAND[
+  which(ks_income_specific$extant_swd_binary == 0)],
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$pop_dense_B01001_001_ALAND[
-  which(ks_analysis_all_income$extant_swd_binary == 1)],
+qqnorm(ks_income_specific$pop_dense_B01001_001_ALAND[
+  which(ks_income_specific$extant_swd_binary == 1)],
   col = 'springgreen1',
   pch = 18,
   cex = 1,
   main = "Block Groups with Disposal Wells", family = "Times New Roman", xaxt='n')
 axis(side=1, at=axTicks(1),
      labels=formatC(axTicks(1), format="d", big.mark=','), family = "Times New Roman")
-qqline(ks_analysis_all_income$pop_dense_B01001_001_ALAND[
-  which(ks_analysis_all_income$extant_swd_binary == 1)],
+qqline(ks_income_specific$pop_dense_B01001_001_ALAND[
+  which(ks_income_specific$extant_swd_binary == 1)],
   lwd=2)
 
 
@@ -4489,14 +4500,14 @@ qqline(ks_analysis_all_income$pop_dense_B01001_001_ALAND[
 # female
 
 density_female <-
-  density(ks_analysis_all_income$female_percent_B01001_026_001*100)
+  density(ks_income_specific$female_percent_B01001_026_001*100)
 density_female_no_wells <-
-  density(ks_analysis_all_income$female_percent_B01001_026_001[
-    which(ks_analysis_all_income$extant_swd_binary == 0
+  density(ks_income_specific$female_percent_B01001_026_001[
+    which(ks_income_specific$extant_swd_binary == 0
     )]*100)
 density_female_with_wells <-
-  density(ks_analysis_all_income$female_percent_B01001_026_001[
-    which(ks_analysis_all_income$extant_swd_binary == 1
+  density(ks_income_specific$female_percent_B01001_026_001[
+    which(ks_income_specific$extant_swd_binary == 1
     )]*100)
 
 # set up printing output
@@ -4557,7 +4568,7 @@ axis(side=1, at=axTicks(1),
 # polygon(density_population, col="slateblue1", border="black")
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$female_percent_B01001_026_001*100,
+qqnorm(ks_income_specific$female_percent_B01001_026_001*100,
        col = "orchid1",
        pch = 18,
        cex = 1,
@@ -4567,13 +4578,13 @@ qqnorm(ks_analysis_all_income$female_percent_B01001_026_001*100,
 axis(side=2, at=axTicks(2),
      labels=formatC(axTicks(2), format="d", big.mark=','),
      family = "Times New Roman")
-qqline(ks_analysis_all_income$female_percent_B01001_026_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqline(ks_income_specific$female_percent_B01001_026_001[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$female_percent_B01001_026_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqnorm(ks_income_specific$female_percent_B01001_026_001[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   col = 'slateblue1',
   pch = 18,
   cex = 1,
@@ -4582,13 +4593,13 @@ qqnorm(ks_analysis_all_income$female_percent_B01001_026_001[
 axis(side=2, at=axTicks(2),
      labels=formatC(axTicks(2),
                     format="d", big.mark=','),  family = "Times New Roman")
-qqline(ks_analysis_all_income$female_percent_B01001_026_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqline(ks_income_specific$female_percent_B01001_026_001[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$female_percent_B01001_026_001[
-  which(ks_analysis_all_income$extant_swd_binary == 1)]*100,
+qqnorm(ks_income_specific$female_percent_B01001_026_001[
+  which(ks_income_specific$extant_swd_binary == 1)]*100,
   col = 'springgreen1',
   pch = 18,
   cex = 1,
@@ -4598,8 +4609,8 @@ qqnorm(ks_analysis_all_income$female_percent_B01001_026_001[
 axis(side=2, at=axTicks(2),
      labels=formatC(axTicks(2),
                     format="d", big.mark=','),  family = "Times New Roman")
-qqline(ks_analysis_all_income$female_percent_B01001_026_001[
-  which(ks_analysis_all_income$extant_swd_binary == 1)]*100,
+qqline(ks_income_specific$female_percent_B01001_026_001[
+  which(ks_income_specific$extant_swd_binary == 1)]*100,
   lwd=2)
 
 
@@ -4636,14 +4647,14 @@ text(0.5, 0.5,
      family = "Times New Roman")
 
 density_age_0_to_17 <-
-  density(ks_analysis_all_income$age_0_to_17_percent_B01001*100)
+  density(ks_income_specific$age_0_to_17_percent_B01001*100)
 density_age_0_to_17_no_wells <-
-  density(ks_analysis_all_income$age_0_to_17_percent_B01001[
-    which(ks_analysis_all_income$extant_swd_binary == 0
+  density(ks_income_specific$age_0_to_17_percent_B01001[
+    which(ks_income_specific$extant_swd_binary == 0
     )]*100)
 density_age_0_to_17_with_wells <-
-  density(ks_analysis_all_income$age_0_to_17_percent_B01001[
-    which(ks_analysis_all_income$extant_swd_binary == 1
+  density(ks_income_specific$age_0_to_17_percent_B01001[
+    which(ks_income_specific$extant_swd_binary == 1
     )]*100)
 
 par(mar=c(5,5,3,1))
@@ -4667,38 +4678,38 @@ plot(density_age_0_to_17_with_wells,
 # polygon(density_age_0_to_17, col="slateblue1", border="black")
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$age_0_to_17_percent_B01001*100,
+qqnorm(ks_income_specific$age_0_to_17_percent_B01001*100,
        col = 'orchid1',
        pch = 18,
        cex = 1,
        main = "All Block Groups",
        family = "Times New Roman")
-qqline(ks_analysis_all_income$age_0_to_17_percent_B01001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqline(ks_income_specific$age_0_to_17_percent_B01001[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$age_0_to_17_percent_B01001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqnorm(ks_income_specific$age_0_to_17_percent_B01001[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   col = 'slateblue1',
   pch = 18,
   cex = 1,
   main = "Block Groups with No Disposal Wells",
   family = "Times New Roman")
-qqline(ks_analysis_all_income$age_0_to_17_percent_B01001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqline(ks_income_specific$age_0_to_17_percent_B01001[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$age_0_to_17_percent_B01001[
-  which(ks_analysis_all_income$extant_swd_binary == 1)]*100,
+qqnorm(ks_income_specific$age_0_to_17_percent_B01001[
+  which(ks_income_specific$extant_swd_binary == 1)]*100,
   col = 'springgreen1',
   pch = 18,
   cex = 1,
   main = "Block Groups with Disposal Wells",
   family = "Times New Roman")
-qqline(ks_analysis_all_income$age_0_to_17_percent_B01001[
-  which(ks_analysis_all_income$extant_swd_binary == 1)]*100,
+qqline(ks_income_specific$age_0_to_17_percent_B01001[
+  which(ks_income_specific$extant_swd_binary == 1)]*100,
   lwd=2)
 
 
@@ -4734,14 +4745,14 @@ text(0.5, 0.5,
      family = "Times New Roman")
 
 density_age_65_plus <-
-  density(ks_analysis_all_income$age_65_plus_percent_B01001*100)
+  density(ks_income_specific$age_65_plus_percent_B01001*100)
 density_age_65_plus_no_wells <-
-  density(ks_analysis_all_income$age_65_plus_percent_B01001[
-    which(ks_analysis_all_income$extant_swd_binary == 0
+  density(ks_income_specific$age_65_plus_percent_B01001[
+    which(ks_income_specific$extant_swd_binary == 0
     )]*100)
 density_age_65_plus_with_wells <-
-  density(ks_analysis_all_income$age_65_plus_percent_B01001[
-    which(ks_analysis_all_income$extant_swd_binary == 1
+  density(ks_income_specific$age_65_plus_percent_B01001[
+    which(ks_income_specific$extant_swd_binary == 1
     )]*100)
 
 par(mar=c(5,5,3,1))
@@ -4765,38 +4776,38 @@ plot(density_age_65_plus_with_wells,
 # polygon(density_age_65_plus, col="slateblue1", border="black")
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$age_65_plus_percent_B01001*100,
+qqnorm(ks_income_specific$age_65_plus_percent_B01001*100,
        col = 'orchid1',
        pch = 18,
        cex = 1,
        main = "All Block Groups",
        family = "Times New Roman")
-qqline(ks_analysis_all_income$age_65_plus_percent_B01001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqline(ks_income_specific$age_65_plus_percent_B01001[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$age_65_plus_percent_B01001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqnorm(ks_income_specific$age_65_plus_percent_B01001[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   col = 'slateblue1',
   pch = 18,
   cex = 1,
   main = "Block Groups with No Disposal Wells",
   family = "Times New Roman")
-qqline(ks_analysis_all_income$age_65_plus_percent_B01001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqline(ks_income_specific$age_65_plus_percent_B01001[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$age_65_plus_percent_B01001[
-  which(ks_analysis_all_income$extant_swd_binary == 1)]*100,
+qqnorm(ks_income_specific$age_65_plus_percent_B01001[
+  which(ks_income_specific$extant_swd_binary == 1)]*100,
   col = 'springgreen1',
   pch = 18,
   cex = 1,
   main = "Block Groups with Disposal Wells",
   family = "Times New Roman")
-qqline(ks_analysis_all_income$age_65_plus_percent_B01001[
-  which(ks_analysis_all_income$extant_swd_binary == 1)]*100,
+qqline(ks_income_specific$age_65_plus_percent_B01001[
+  which(ks_income_specific$extant_swd_binary == 1)]*100,
   lwd=2)
 
 
@@ -4832,14 +4843,14 @@ text(0.5, 0.5,
      family = "Times New Roman")
 
 density_white <-
-  density(ks_analysis_all_income$white_non_hisp_lat_percent_B03002_003_001*100)
+  density(ks_income_specific$white_non_hisp_lat_percent_B03002_003_001*100)
 density_white_no_wells <-
-  density(ks_analysis_all_income$white_non_hisp_lat_percent_B03002_003_001[
-    which(ks_analysis_all_income$extant_swd_binary == 0
+  density(ks_income_specific$white_non_hisp_lat_percent_B03002_003_001[
+    which(ks_income_specific$extant_swd_binary == 0
     )]*100)
 density_white_with_wells <-
-  density(ks_analysis_all_income$white_non_hisp_lat_percent_B03002_003_001[
-    which(ks_analysis_all_income$extant_swd_binary == 1
+  density(ks_income_specific$white_non_hisp_lat_percent_B03002_003_001[
+    which(ks_income_specific$extant_swd_binary == 1
     )]*100)
 
 par(mar=c(5,5,3,1))
@@ -4863,38 +4874,38 @@ plot(density_white_with_wells,
 # polygon(density_white, col="slateblue1", border="black")
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$white_non_hisp_lat_percent_B03002_003_001*100,
+qqnorm(ks_income_specific$white_non_hisp_lat_percent_B03002_003_001*100,
        col = 'orchid1',
        pch = 18,
        cex = 1,
        main = "All Block Groups",
        family = "Times New Roman")
-qqline(ks_analysis_all_income$white_non_hisp_lat_percent_B03002_003_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqline(ks_income_specific$white_non_hisp_lat_percent_B03002_003_001[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$white_non_hisp_lat_percent_B03002_003_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqnorm(ks_income_specific$white_non_hisp_lat_percent_B03002_003_001[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   col = 'slateblue1',
   pch = 18,
   cex = 1,
   main = "Block Groups with No Disposal Wells",
   family = "Times New Roman")
-qqline(ks_analysis_all_income$white_non_hisp_lat_percent_B03002_003_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqline(ks_income_specific$white_non_hisp_lat_percent_B03002_003_001[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$white_non_hisp_lat_percent_B03002_003_001[
-  which(ks_analysis_all_income$extant_swd_binary == 1)]*100,
+qqnorm(ks_income_specific$white_non_hisp_lat_percent_B03002_003_001[
+  which(ks_income_specific$extant_swd_binary == 1)]*100,
   col = 'springgreen1',
   pch = 18,
   cex = 1,
   main = "Block Groups with Disposal Wells",
   family = "Times New Roman")
-qqline(ks_analysis_all_income$white_non_hisp_lat_percent_B03002_003_001[
-  which(ks_analysis_all_income$extant_swd_binary == 1)]*100,
+qqline(ks_income_specific$white_non_hisp_lat_percent_B03002_003_001[
+  which(ks_income_specific$extant_swd_binary == 1)]*100,
   lwd=2)
 
 
@@ -4930,14 +4941,14 @@ text(0.5, 0.5,
      family = "Times New Roman")
 
 density_aian <-
-  density(ks_analysis_all_income$aian_percent_any_race_B02010_001*100)
+  density(ks_income_specific$aian_percent_any_race_B02010_001*100)
 density_aian_no_wells <-
-  density(ks_analysis_all_income$aian_percent_any_race_B02010_001[
-    which(ks_analysis_all_income$extant_swd_binary == 0
+  density(ks_income_specific$aian_percent_any_race_B02010_001[
+    which(ks_income_specific$extant_swd_binary == 0
     )]*100)
 density_aian_with_wells <-
-  density(ks_analysis_all_income$aian_percent_any_race_B02010_001[
-    which(ks_analysis_all_income$extant_swd_binary == 1
+  density(ks_income_specific$aian_percent_any_race_B02010_001[
+    which(ks_income_specific$extant_swd_binary == 1
     )]*100)
 
 par(mar=c(5,5,3,1))
@@ -4963,38 +4974,38 @@ plot(density_aian_with_wells,
 # polygon(density_aian, col="slateblue1", border="black")
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$aian_percent_any_race_B02010_001*100,
+qqnorm(ks_income_specific$aian_percent_any_race_B02010_001*100,
        col = 'orchid1',
        pch = 18,
        cex = 1,
        main = "All Block Groups",
        family = "Times New Roman")
-qqline(ks_analysis_all_income$aian_percent_any_race_B02010_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqline(ks_income_specific$aian_percent_any_race_B02010_001[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$aian_percent_any_race_B02010_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqnorm(ks_income_specific$aian_percent_any_race_B02010_001[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   col = 'slateblue1',
   pch = 18,
   cex = 1,
   main = "Block Groups with No Disposal Wells",
   family = "Times New Roman")
-qqline(ks_analysis_all_income$aian_percent_any_race_B02010_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqline(ks_income_specific$aian_percent_any_race_B02010_001[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$aian_percent_any_race_B02010_001[
-  which(ks_analysis_all_income$extant_swd_binary == 1)]*100,
+qqnorm(ks_income_specific$aian_percent_any_race_B02010_001[
+  which(ks_income_specific$extant_swd_binary == 1)]*100,
   col = 'springgreen1',
   pch = 18,
   cex = 1,
   main = "Block Groups with Disposal Wells",
   family = "Times New Roman")
-qqline(ks_analysis_all_income$aian_percent_any_race_B02010_001[
-  which(ks_analysis_all_income$extant_swd_binary == 1)]*100,
+qqline(ks_income_specific$aian_percent_any_race_B02010_001[
+  which(ks_income_specific$extant_swd_binary == 1)]*100,
   lwd=2)
 
 
@@ -5031,14 +5042,14 @@ text(0.5, 0.5,
      family = "Times New Roman")
 
 density_black <-
-  density(ks_analysis_all_income$black_percent_B03002_004_001*100)
+  density(ks_income_specific$black_percent_B03002_004_001*100)
 density_black_no_wells <-
-  density(ks_analysis_all_income$black_percent_B03002_004_001[
-    which(ks_analysis_all_income$extant_swd_binary == 0
+  density(ks_income_specific$black_percent_B03002_004_001[
+    which(ks_income_specific$extant_swd_binary == 0
     )]*100)
 density_black_with_wells <-
-  density(ks_analysis_all_income$black_percent_B03002_004_001[
-    which(ks_analysis_all_income$extant_swd_binary == 1
+  density(ks_income_specific$black_percent_B03002_004_001[
+    which(ks_income_specific$extant_swd_binary == 1
     )]*100)
 
 par(mar=c(5,5,3,1))
@@ -5064,38 +5075,38 @@ plot(density_black_with_wells,
 # polygon(density_black, col="slateblue1", border="black")
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$black_percent_B03002_004_001*100,
+qqnorm(ks_income_specific$black_percent_B03002_004_001*100,
        col = 'orchid1',
        pch = 18,
        cex = 1,
        main = "All Block Groups",
        family = "Times New Roman")
-qqline(ks_analysis_all_income$black_percent_B03002_004_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqline(ks_income_specific$black_percent_B03002_004_001[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$black_percent_B03002_004_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqnorm(ks_income_specific$black_percent_B03002_004_001[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   col = 'slateblue1',
   pch = 18,
   cex = 1,
   main = "Block Groups with No Disposal Wells",
   family = "Times New Roman")
-qqline(ks_analysis_all_income$black_percent_B03002_004_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqline(ks_income_specific$black_percent_B03002_004_001[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$black_percent_B03002_004_001[
-  which(ks_analysis_all_income$extant_swd_binary == 1)]*100,
+qqnorm(ks_income_specific$black_percent_B03002_004_001[
+  which(ks_income_specific$extant_swd_binary == 1)]*100,
   col = 'springgreen1',
   pch = 18,
   cex = 1,
   main = "Block Groups with Disposal Wells",
   family = "Times New Roman")
-qqline(ks_analysis_all_income$black_percent_B03002_004_001[
-  which(ks_analysis_all_income$extant_swd_binary == 1)]*100,
+qqline(ks_income_specific$black_percent_B03002_004_001[
+  which(ks_income_specific$extant_swd_binary == 1)]*100,
   lwd=2)
 
 
@@ -5132,14 +5143,14 @@ text(0.5, 0.5,
      family = "Times New Roman")
 
 density_hs_ed <-
-  density(ks_analysis_all_income$education_high_school_plus_percent_B15003_017_to_025*100)
+  density(ks_income_specific$education_high_school_plus_percent_B15003_017_to_025*100)
 density_hs_ed_no_wells <-
-  density(ks_analysis_all_income$education_high_school_plus_percent_B15003_017_to_025[
-    which(ks_analysis_all_income$extant_swd_binary == 0
+  density(ks_income_specific$education_high_school_plus_percent_B15003_017_to_025[
+    which(ks_income_specific$extant_swd_binary == 0
     )]*100)
 density_hs_ed_with_wells <-
-  density(ks_analysis_all_income$education_high_school_plus_percent_B15003_017_to_025[
-    which(ks_analysis_all_income$extant_swd_binary == 1
+  density(ks_income_specific$education_high_school_plus_percent_B15003_017_to_025[
+    which(ks_income_specific$extant_swd_binary == 1
     )]*100)
 
 par(mar=c(5,5,3,1))
@@ -5166,19 +5177,19 @@ plot(density_hs_ed_with_wells,
 
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$education_high_school_plus_percent_B15003_017_to_025*100,
+qqnorm(ks_income_specific$education_high_school_plus_percent_B15003_017_to_025*100,
        col = 'orchid1',
        pch = 18,
        cex = 1,
        main = "All Block Groups",
        family = "Times New Roman")
-qqline(ks_analysis_all_income$education_high_school_plus_percent_B15003_017_to_025[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqline(ks_income_specific$education_high_school_plus_percent_B15003_017_to_025[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$education_high_school_plus_percent_B15003_017_to_025[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqnorm(ks_income_specific$education_high_school_plus_percent_B15003_017_to_025[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   col = 'slateblue1',
   pch = 18,
   cex = 1,
@@ -5190,13 +5201,13 @@ axis(side=1,
      labels=formatC(axTicks(1),
                     format="d",
                     big.mark=','))
-qqline(ks_analysis_all_income$education_high_school_plus_percent_B15003_017_to_025[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqline(ks_income_specific$education_high_school_plus_percent_B15003_017_to_025[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$education_high_school_plus_percent_B15003_017_to_025[
-  which(ks_analysis_all_income$extant_swd_binary == 1)]*100,
+qqnorm(ks_income_specific$education_high_school_plus_percent_B15003_017_to_025[
+  which(ks_income_specific$extant_swd_binary == 1)]*100,
   col = 'springgreen1',
   pch = 18,
   cex = 1,
@@ -5208,8 +5219,8 @@ axis(side=1,
      labels=formatC(axTicks(1),
                     format="d",
                     big.mark=','))
-qqline(ks_analysis_all_income$education_high_school_plus_percent_B15003_017_to_025[
-  which(ks_analysis_all_income$extant_swd_binary == 1)]*100,
+qqline(ks_income_specific$education_high_school_plus_percent_B15003_017_to_025[
+  which(ks_income_specific$extant_swd_binary == 1)]*100,
   lwd=2)
 
 
@@ -5245,14 +5256,14 @@ text(0.5, 0.5,
      family = "Times New Roman")
 
 density_rent <-
-  density(ks_analysis_all_income$renter_occupy_percent_B25003_003_001*100)
+  density(ks_income_specific$renter_occupy_percent_B25003_003_001*100)
 density_rent_no_wells <-
-  density(ks_analysis_all_income$renter_occupy_percent_B25003_003_001[
-    which(ks_analysis_all_income$extant_swd_binary == 0
+  density(ks_income_specific$renter_occupy_percent_B25003_003_001[
+    which(ks_income_specific$extant_swd_binary == 0
     )]*100)
 density_rent_with_wells <-
-  density(ks_analysis_all_income$renter_occupy_percent_B25003_003_001[
-    which(ks_analysis_all_income$extant_swd_binary == 1
+  density(ks_income_specific$renter_occupy_percent_B25003_003_001[
+    which(ks_income_specific$extant_swd_binary == 1
     )]*100)
 
 par(mar=c(5,5,3,1))
@@ -5278,38 +5289,38 @@ plot(density_rent_with_wells,
 # polygon(density_rent, col="slateblue1", border="black")
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$renter_occupy_percent_B25003_003_001*100,
+qqnorm(ks_income_specific$renter_occupy_percent_B25003_003_001*100,
        col = 'orchid1',
        pch = 18,
        cex = 1,
        main = "All Block Groups",
        family = "Times New Roman")
-qqline(ks_analysis_all_income$renter_occupy_percent_B25003_003_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqline(ks_income_specific$renter_occupy_percent_B25003_003_001[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$renter_occupy_percent_B25003_003_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqnorm(ks_income_specific$renter_occupy_percent_B25003_003_001[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   col = 'slateblue1',
   pch = 18,
   cex = 1,
   main = "Block Groups with No Disposal Wells",
   family = "Times New Roman")
-qqline(ks_analysis_all_income$renter_occupy_percent_B25003_003_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqline(ks_income_specific$renter_occupy_percent_B25003_003_001[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$renter_occupy_percent_B25003_003_001[
-  which(ks_analysis_all_income$extant_swd_binary == 1)]*100,
+qqnorm(ks_income_specific$renter_occupy_percent_B25003_003_001[
+  which(ks_income_specific$extant_swd_binary == 1)]*100,
   col = 'springgreen1',
   pch = 18,
   cex = 1,
   main = "Block Groups with Disposal Wells",
   family = "Times New Roman")
-qqline(ks_analysis_all_income$renter_occupy_percent_B25003_003_001[
-  which(ks_analysis_all_income$extant_swd_binary == 1)]*100,
+qqline(ks_income_specific$renter_occupy_percent_B25003_003_001[
+  which(ks_income_specific$extant_swd_binary == 1)]*100,
   lwd=2)
 
 
@@ -5345,14 +5356,14 @@ text(0.5, 0.5,
      family = "Times New Roman")
 
 density_no_eng <-
-  density(ks_analysis_all_income$limited_english_percent_C16002_004_007_010_013_001*100)
+  density(ks_income_specific$limited_english_percent_C16002_004_007_010_013_001*100)
 density_no_eng_no_wells <-
-  density(ks_analysis_all_income$limited_english_percent_C16002_004_007_010_013_001[
-    which(ks_analysis_all_income$extant_swd_binary == 0
+  density(ks_income_specific$limited_english_percent_C16002_004_007_010_013_001[
+    which(ks_income_specific$extant_swd_binary == 0
     )]*100)
 density_no_eng_with_wells <-
-  density(ks_analysis_all_income$limited_english_percent_C16002_004_007_010_013_001[
-    which(ks_analysis_all_income$extant_swd_binary == 1
+  density(ks_income_specific$limited_english_percent_C16002_004_007_010_013_001[
+    which(ks_income_specific$extant_swd_binary == 1
     )]*100)
 
 par(mar=c(5,5,3,1))
@@ -5378,38 +5389,38 @@ plot(density_no_eng_with_wells,
 # polygon(density_no_eng, col="slateblue1", border="black")
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$limited_english_percent_C16002_004_007_010_013_001*100,
+qqnorm(ks_income_specific$limited_english_percent_C16002_004_007_010_013_001*100,
        col = 'orchid1',
        pch = 18,
        cex = 1,
        main = "All Block Groups",
        family = "Times New Roman")
-qqline(ks_analysis_all_income$limited_english_percent_C16002_004_007_010_013_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqline(ks_income_specific$limited_english_percent_C16002_004_007_010_013_001[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$limited_english_percent_C16002_004_007_010_013_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqnorm(ks_income_specific$limited_english_percent_C16002_004_007_010_013_001[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   col = 'slateblue1',
   pch = 18,
   cex = 1,
   main = "Block Groups with No Disposal Wells",
   family = "Times New Roman")
-qqline(ks_analysis_all_income$limited_english_percent_C16002_004_007_010_013_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqline(ks_income_specific$limited_english_percent_C16002_004_007_010_013_001[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$limited_english_percent_C16002_004_007_010_013_001[
-  which(ks_analysis_all_income$extant_swd_binary == 1)]*100,
+qqnorm(ks_income_specific$limited_english_percent_C16002_004_007_010_013_001[
+  which(ks_income_specific$extant_swd_binary == 1)]*100,
   col = 'springgreen1',
   pch = 18,
   cex = 1,
   main = "Block Groups with Disposal Wells",
   family = "Times New Roman")
-qqline(ks_analysis_all_income$limited_english_percent_C16002_004_007_010_013_001[
-  which(ks_analysis_all_income$extant_swd_binary == 1)]*100,
+qqline(ks_income_specific$limited_english_percent_C16002_004_007_010_013_001[
+  which(ks_income_specific$extant_swd_binary == 1)]*100,
   lwd=2)
 
 
@@ -5448,14 +5459,14 @@ text(0.5, 0.5,
      family = "Times New Roman")
 
 density_income <-
-  density(ks_analysis_all_income$income_house_median_B19013_001)
+  density(ks_income_specific$income_house_median_B19013_001)
 density_income_no_wells <-
-  density(ks_analysis_all_income$income_house_median_B19013_001[
-    which(ks_analysis_all_income$extant_swd_binary == 0
+  density(ks_income_specific$income_house_median_B19013_001[
+    which(ks_income_specific$extant_swd_binary == 0
     )])
 density_income_with_wells <-
-  density(ks_analysis_all_income$income_house_median_B19013_001[
-    which(ks_analysis_all_income$extant_swd_binary == 1
+  density(ks_income_specific$income_house_median_B19013_001[
+    which(ks_income_specific$extant_swd_binary == 1
     )])
 
 par(mar=c(5,5,3,1))
@@ -5499,7 +5510,7 @@ axis(side=1,
 # polygon(density_income, col="slateblue1", border="black")
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$income_house_median_B19013_001,
+qqnorm(ks_income_specific$income_house_median_B19013_001,
        col = 'orchid1',
        pch = 18,
        cex = 1,
@@ -5511,13 +5522,13 @@ axis(side=2,
      labels=formatC(axTicks(2),
                     format="d",
                     big.mark=','), family = "Times New Roman")
-qqline(ks_analysis_all_income$income_house_median_B19013_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)],
+qqline(ks_income_specific$income_house_median_B19013_001[
+  which(ks_income_specific$extant_swd_binary == 0)],
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$income_house_median_B19013_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)],
+qqnorm(ks_income_specific$income_house_median_B19013_001[
+  which(ks_income_specific$extant_swd_binary == 0)],
   col = 'slateblue1',
   pch = 18,
   cex = 1,
@@ -5529,13 +5540,13 @@ axis(side=2,
      labels=formatC(axTicks(2),
                     format="d",
                     big.mark=','), family = "Times New Roman")
-qqline(ks_analysis_all_income$income_house_median_B19013_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)],
+qqline(ks_income_specific$income_house_median_B19013_001[
+  which(ks_income_specific$extant_swd_binary == 0)],
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$income_house_median_B19013_001[
-  which(ks_analysis_all_income$extant_swd_binary == 1)],
+qqnorm(ks_income_specific$income_house_median_B19013_001[
+  which(ks_income_specific$extant_swd_binary == 1)],
   col = 'springgreen1',
   pch = 18,
   cex = 1,
@@ -5548,8 +5559,8 @@ axis(side=2,
                     format="d",
                     big.mark=','),
      family = "Times New Roman")
-qqline(ks_analysis_all_income$income_house_median_B19013_001[
-  which(ks_analysis_all_income$extant_swd_binary == 1)],
+qqline(ks_income_specific$income_house_median_B19013_001[
+  which(ks_income_specific$extant_swd_binary == 1)],
   lwd=2)
 
 
@@ -5588,14 +5599,14 @@ text(0.5, 0.5,
      family = "Times New Roman")
 
 density_house_value <-
-  density(ks_analysis_all_income$house_value_median_B25077_001, na.rm = TRUE)
+  density(ks_income_specific$house_value_median_B25077_001, na.rm = TRUE)
 density_house_value_no_wells <-
-  density(ks_analysis_all_income$house_value_median_B25077_001[
-    which(ks_analysis_all_income$extant_swd_binary == 0
+  density(ks_income_specific$house_value_median_B25077_001[
+    which(ks_income_specific$extant_swd_binary == 0
     )], na.rm = TRUE)
 density_house_value_with_wells <-
-  density(ks_analysis_all_income$house_value_median_B25077_001[
-    which(ks_analysis_all_income$extant_swd_binary == 1
+  density(ks_income_specific$house_value_median_B25077_001[
+    which(ks_income_specific$extant_swd_binary == 1
     )], na.rm = TRUE)
 
 par(mar=c(5,5,3,1))
@@ -5639,7 +5650,7 @@ axis(side=1,
 # polygon(density_house_value, col="slateblue1", border="black")
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$house_value_median_B25077_001,
+qqnorm(ks_income_specific$house_value_median_B25077_001,
        col = 'orchid1',
        pch = 18,
        cex = 1,
@@ -5651,13 +5662,13 @@ axis(side=2,
      labels=formatC(axTicks(2),
                     format="d",
                     big.mark=','), family = "Times New Roman")
-qqline(ks_analysis_all_income$house_value_median_B25077_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)],
+qqline(ks_income_specific$house_value_median_B25077_001[
+  which(ks_income_specific$extant_swd_binary == 0)],
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$house_value_median_B25077_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)],
+qqnorm(ks_income_specific$house_value_median_B25077_001[
+  which(ks_income_specific$extant_swd_binary == 0)],
   col = 'slateblue1',
   pch = 18,
   cex = 1,
@@ -5669,13 +5680,13 @@ axis(side=2,
      labels=formatC(axTicks(2),
                     format="d",
                     big.mark=','), family = "Times New Roman")
-qqline(ks_analysis_all_income$house_value_median_B25077_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)],
+qqline(ks_income_specific$house_value_median_B25077_001[
+  which(ks_income_specific$extant_swd_binary == 0)],
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$house_value_median_B25077_001[
-  which(ks_analysis_all_income$extant_swd_binary == 1)],
+qqnorm(ks_income_specific$house_value_median_B25077_001[
+  which(ks_income_specific$extant_swd_binary == 1)],
   col = 'springgreen1',
   pch = 18,
   cex = 1,
@@ -5687,8 +5698,8 @@ axis(side=2,
      labels=formatC(axTicks(2),
                     format="d",
                     big.mark=','), family = "Times New Roman")
-qqline(ks_analysis_all_income$house_value_median_B25077_001[
-  which(ks_analysis_all_income$extant_swd_binary == 1)],
+qqline(ks_income_specific$house_value_median_B25077_001[
+  which(ks_income_specific$extant_swd_binary == 1)],
   lwd=2)
 
 
@@ -5724,14 +5735,14 @@ text(0.5, 0.5,
      family = "Times New Roman")
 
 density_no_insure <-
-  density(ks_analysis_all_income$no_health_insurance_percent_B27010_017_033_050_066*100)
+  density(ks_income_specific$no_health_insurance_percent_B27010_017_033_050_066*100)
 density_no_insure_no_wells <-
-  density(ks_analysis_all_income$no_health_insurance_percent_B27010_017_033_050_066[
-    which(ks_analysis_all_income$extant_swd_binary == 0
+  density(ks_income_specific$no_health_insurance_percent_B27010_017_033_050_066[
+    which(ks_income_specific$extant_swd_binary == 0
     )]*100)
 density_no_insure_with_wells <-
-  density(ks_analysis_all_income$no_health_insurance_percent_B27010_017_033_050_066[
-    which(ks_analysis_all_income$extant_swd_binary == 1
+  density(ks_income_specific$no_health_insurance_percent_B27010_017_033_050_066[
+    which(ks_income_specific$extant_swd_binary == 1
     )]*100)
 
 par(mar=c(5,5,3,1))
@@ -5757,38 +5768,38 @@ plot(density_no_insure_with_wells,
 # polygon(density_no_insure, col="slateblue1", border="black")
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$no_health_insurance_percent_B27010_017_033_050_066*100,
+qqnorm(ks_income_specific$no_health_insurance_percent_B27010_017_033_050_066*100,
        col = 'orchid1',
        pch = 18,
        cex = 1,
        main = "All Block Groups",
        family = "Times New Roman")
-qqline(ks_analysis_all_income$no_health_insurance_percent_B27010_017_033_050_066[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqline(ks_income_specific$no_health_insurance_percent_B27010_017_033_050_066[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$no_health_insurance_percent_B27010_017_033_050_066[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqnorm(ks_income_specific$no_health_insurance_percent_B27010_017_033_050_066[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   col = 'slateblue1',
   pch = 18,
   cex = 1,
   main = "Block Groups with No Disposal Wells",
   family = "Times New Roman")
-qqline(ks_analysis_all_income$no_health_insurance_percent_B27010_017_033_050_066[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqline(ks_income_specific$no_health_insurance_percent_B27010_017_033_050_066[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$no_health_insurance_percent_B27010_017_033_050_066[
-  which(ks_analysis_all_income$extant_swd_binary == 1)]*100,
+qqnorm(ks_income_specific$no_health_insurance_percent_B27010_017_033_050_066[
+  which(ks_income_specific$extant_swd_binary == 1)]*100,
   col = 'springgreen1',
   pch = 18,
   cex = 1,
   main = "Block Groups with Disposal Wells",
   family = "Times New Roman")
-qqline(ks_analysis_all_income$no_health_insurance_percent_B27010_017_033_050_066[
-  which(ks_analysis_all_income$extant_swd_binary == 1)]*100,
+qqline(ks_income_specific$no_health_insurance_percent_B27010_017_033_050_066[
+  which(ks_income_specific$extant_swd_binary == 1)]*100,
   lwd=2)
 
 
@@ -5796,14 +5807,14 @@ qqline(ks_analysis_all_income$no_health_insurance_percent_B27010_017_033_050_066
 # unemployment
 
 density_unemploy <-
-  density(ks_analysis_all_income$unemployed_percent_B23025_005_003*100)
+  density(ks_income_specific$unemployed_percent_B23025_005_003*100)
 density_unemploy_no_wells <-
-  density(ks_analysis_all_income$unemployed_percent_B23025_005_003[
-    which(ks_analysis_all_income$extant_swd_binary == 0
+  density(ks_income_specific$unemployed_percent_B23025_005_003[
+    which(ks_income_specific$extant_swd_binary == 0
     )]*100)
 density_unemploy_with_wells <-
-  density(ks_analysis_all_income$unemployed_percent_B23025_005_003[
-    which(ks_analysis_all_income$extant_swd_binary == 1
+  density(ks_income_specific$unemployed_percent_B23025_005_003[
+    which(ks_income_specific$extant_swd_binary == 1
     )]*100)
 
 # set up printing output
@@ -5857,38 +5868,38 @@ plot(density_unemploy_with_wells,
 # polygon(density_unemploy, col="slateblue1", border="black")
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$unemployed_percent_B23025_005_003*100,
+qqnorm(ks_income_specific$unemployed_percent_B23025_005_003*100,
        col = 'orchid1',
        pch = 18,
        cex = 1,
        main = "All Block Groups",
        family = "Times New Roman")
-qqline(ks_analysis_all_income$unemployed_percent_B23025_005_003[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqline(ks_income_specific$unemployed_percent_B23025_005_003[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$unemployed_percent_B23025_005_003[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqnorm(ks_income_specific$unemployed_percent_B23025_005_003[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   col = 'slateblue1',
   pch = 18,
   cex = 1,
   main = "Block Groups with No Disposal Wells",
   family = "Times New Roman")
-qqline(ks_analysis_all_income$unemployed_percent_B23025_005_003[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqline(ks_income_specific$unemployed_percent_B23025_005_003[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$unemployed_percent_B23025_005_003[
-  which(ks_analysis_all_income$extant_swd_binary == 1)]*100,
+qqnorm(ks_income_specific$unemployed_percent_B23025_005_003[
+  which(ks_income_specific$extant_swd_binary == 1)]*100,
   col = 'springgreen',
   pch = 18,
   cex = 1,
   main = "Block Groups with Disposal Wells",
   family = "Times New Roman")
-qqline(ks_analysis_all_income$unemployed_percent_B23025_005_003[
-  which(ks_analysis_all_income$extant_swd_binary == 1)]*100,
+qqline(ks_income_specific$unemployed_percent_B23025_005_003[
+  which(ks_income_specific$extant_swd_binary == 1)]*100,
   lwd=2)
 
 
@@ -5896,14 +5907,14 @@ qqline(ks_analysis_all_income$unemployed_percent_B23025_005_003[
 # land area
 
 density_ALAND_KM <-
-  density(ks_analysis_all_income$ALAND_KM)
+  density(ks_income_specific$ALAND_KM)
 density_ALAND_KM_no_wells <-
-  density(ks_analysis_all_income$ALAND_KM[
-    which(ks_analysis_all_income$extant_swd_binary == 0
+  density(ks_income_specific$ALAND_KM[
+    which(ks_income_specific$extant_swd_binary == 0
     )])
 density_ALAND_KM_with_wells <-
-  density(ks_analysis_all_income$ALAND_KM[
-    which(ks_analysis_all_income$extant_swd_binary == 1
+  density(ks_income_specific$ALAND_KM[
+    which(ks_income_specific$extant_swd_binary == 1
     )])
 
 # set up printing output
@@ -5975,7 +5986,7 @@ axis(side=1,
 # polygon(density_ALAND_KM, col="slateblue1", border="black")
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$ALAND_KM,
+qqnorm(ks_income_specific$ALAND_KM,
        col = 'orchid1',
        pch = 18,
        cex = 1,
@@ -5987,13 +5998,13 @@ axis(side=2,
      labels=formatC(axTicks(2),
                     format="d",
                     big.mark=','), family = "Times New Roman")
-qqline(ks_analysis_all_income$ALAND_KM[
-  which(ks_analysis_all_income$extant_swd_binary == 0)],
+qqline(ks_income_specific$ALAND_KM[
+  which(ks_income_specific$extant_swd_binary == 0)],
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$ALAND_KM[
-  which(ks_analysis_all_income$extant_swd_binary == 0)],
+qqnorm(ks_income_specific$ALAND_KM[
+  which(ks_income_specific$extant_swd_binary == 0)],
   col = 'slateblue1',
   pch = 18,
   cex = 1,
@@ -6005,13 +6016,13 @@ axis(side=2,
      labels=formatC(axTicks(2),
                     format="d",
                     big.mark=','), family = "Times New Roman")
-qqline(ks_analysis_all_income$ALAND_KM[
-  which(ks_analysis_all_income$extant_swd_binary == 0)],
+qqline(ks_income_specific$ALAND_KM[
+  which(ks_income_specific$extant_swd_binary == 0)],
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$ALAND_KM[
-  which(ks_analysis_all_income$extant_swd_binary == 1)],
+qqnorm(ks_income_specific$ALAND_KM[
+  which(ks_income_specific$extant_swd_binary == 1)],
   col = 'springgreen1',
   pch = 18,
   cex = 1,
@@ -6023,8 +6034,8 @@ axis(side=2,
      labels=formatC(axTicks(2),
                     format="d",
                     big.mark=','), family = "Times New Roman")
-qqline(ks_analysis_all_income$ALAND_KM[
-  which(ks_analysis_all_income$extant_swd_binary == 1)],
+qqline(ks_income_specific$ALAND_KM[
+  which(ks_income_specific$extant_swd_binary == 1)],
   lwd=2)
 
 
@@ -6032,14 +6043,14 @@ qqline(ks_analysis_all_income$ALAND_KM[
 # percent Hispanic or Latinx
 
 density_hisp_lat <-
-  density(ks_analysis_all_income$hisp_lat_percent_B03002_012_001*100)
+  density(ks_income_specific$hisp_lat_percent_B03002_012_001*100)
 density_hisp_lat_no_wells <-
-  density(ks_analysis_all_income$hisp_lat_percent_B03002_012_001[
-    which(ks_analysis_all_income$extant_swd_binary == 0
+  density(ks_income_specific$hisp_lat_percent_B03002_012_001[
+    which(ks_income_specific$extant_swd_binary == 0
     )]*100)
 density_hisp_lat_with_wells <-
-  density(ks_analysis_all_income$hisp_lat_percent_B03002_012_001[
-    which(ks_analysis_all_income$extant_swd_binary == 1
+  density(ks_income_specific$hisp_lat_percent_B03002_012_001[
+    which(ks_income_specific$extant_swd_binary == 1
     )]*100)
 
 # set up printing output
@@ -6093,38 +6104,38 @@ plot(density_hisp_lat_with_wells,
 # polygon(density_hisp_lat, col="slateblue1", border="black")
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$hisp_lat_percent_B03002_012_001*100,
+qqnorm(ks_income_specific$hisp_lat_percent_B03002_012_001*100,
        col = 'orchid1',
        pch = 18,
        cex = 1,
        main = "All Block Groups",
        family = "Times New Roman")
-qqline(ks_analysis_all_income$hisp_lat_percent_B03002_012_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqline(ks_income_specific$hisp_lat_percent_B03002_012_001[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$hisp_lat_percent_B03002_012_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqnorm(ks_income_specific$hisp_lat_percent_B03002_012_001[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   col = 'slateblue1',
   pch = 18,
   cex = 1,
   main = "Block Groups with No Disposal Wells",
   family = "Times New Roman")
-qqline(ks_analysis_all_income$hisp_lat_percent_B03002_012_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqline(ks_income_specific$hisp_lat_percent_B03002_012_001[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$hisp_lat_percent_B03002_012_001[
-  which(ks_analysis_all_income$extant_swd_binary == 1)]*100,
+qqnorm(ks_income_specific$hisp_lat_percent_B03002_012_001[
+  which(ks_income_specific$extant_swd_binary == 1)]*100,
   col = 'springgreen1',
   pch = 18,
   cex = 1,
   main = "Block Groups with Disposal Wells",
   family = "Times New Roman")
-qqline(ks_analysis_all_income$hisp_lat_percent_B03002_012_001[
-  which(ks_analysis_all_income$extant_swd_binary == 1)]*100,
+qqline(ks_income_specific$hisp_lat_percent_B03002_012_001[
+  which(ks_income_specific$extant_swd_binary == 1)]*100,
   lwd=2)
 
 
@@ -6132,14 +6143,14 @@ qqline(ks_analysis_all_income$hisp_lat_percent_B03002_012_001[
 # median earnings
 
 density_earnings <-
-  density(ks_analysis_all_income$earnings_median_B20002_001, na.rm = TRUE)
+  density(ks_income_specific$earnings_median_B20002_001, na.rm = TRUE)
 density_earnings_no_wells <-
-  density(ks_analysis_all_income$earnings_median_B20002_001[
-    which(ks_analysis_all_income$extant_swd_binary == 0
+  density(ks_income_specific$earnings_median_B20002_001[
+    which(ks_income_specific$extant_swd_binary == 0
     )], na.rm = TRUE)
 density_earnings_with_wells <-
-  density(ks_analysis_all_income$earnings_median_B20002_001[
-    which(ks_analysis_all_income$extant_swd_binary == 1
+  density(ks_income_specific$earnings_median_B20002_001[
+    which(ks_income_specific$extant_swd_binary == 1
     )], na.rm = TRUE)
 
 # set up printing output
@@ -6211,7 +6222,7 @@ axis(side=1,
 # polygon(density_earnings, col="slateblue1", border="black")
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$earnings_median_B20002_001,
+qqnorm(ks_income_specific$earnings_median_B20002_001,
        col = 'orchid1',
        pch = 18,
        cex = 1,
@@ -6223,13 +6234,13 @@ axis(side=2,
      labels=formatC(axTicks(2),
                     format="d",
                     big.mark=','), family = "Times New Roman")
-qqline(ks_analysis_all_income$earnings_median_B20002_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)],
+qqline(ks_income_specific$earnings_median_B20002_001[
+  which(ks_income_specific$extant_swd_binary == 0)],
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$earnings_median_B20002_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)],
+qqnorm(ks_income_specific$earnings_median_B20002_001[
+  which(ks_income_specific$extant_swd_binary == 0)],
   col = 'slateblue1',
   pch = 18,
   cex = 1,
@@ -6241,13 +6252,13 @@ axis(side=1,
      labels=formatC(axTicks(1),
                     format="d",
                     big.mark=','), family = "Times New Roman")
-qqline(ks_analysis_all_income$earnings_median_B20002_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)],
+qqline(ks_income_specific$earnings_median_B20002_001[
+  which(ks_income_specific$extant_swd_binary == 0)],
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$earnings_median_B20002_001[
-  which(ks_analysis_all_income$extant_swd_binary == 1)],
+qqnorm(ks_income_specific$earnings_median_B20002_001[
+  which(ks_income_specific$extant_swd_binary == 1)],
   col = 'springgreen1',
   pch = 18,
   cex = 1,
@@ -6259,8 +6270,8 @@ axis(side=2,
      labels=formatC(axTicks(2),
                     format="d",
                     big.mark=','), family = "Times New Roman")
-qqline(ks_analysis_all_income$earnings_median_B20002_001[
-  which(ks_analysis_all_income$extant_swd_binary == 1)],
+qqline(ks_income_specific$earnings_median_B20002_001[
+  which(ks_income_specific$extant_swd_binary == 1)],
   lwd=2)
 
 
@@ -6269,14 +6280,14 @@ qqline(ks_analysis_all_income$earnings_median_B20002_001[
 # percent in poverty
 
 density_poverty <-
-  density(ks_analysis_all_income$poverty_below_100_percent_C17002_002_003_001*100)
+  density(ks_income_specific$poverty_below_100_percent_C17002_002_003_001*100)
 density_poverty_no_wells <-
-  density(ks_analysis_all_income$poverty_below_100_percent_C17002_002_003_001[
-    which(ks_analysis_all_income$extant_swd_binary == 0
+  density(ks_income_specific$poverty_below_100_percent_C17002_002_003_001[
+    which(ks_income_specific$extant_swd_binary == 0
     )]*100)
 density_poverty_with_wells <-
-  density(ks_analysis_all_income$poverty_below_100_percent_C17002_002_003_001[
-    which(ks_analysis_all_income$extant_swd_binary == 1
+  density(ks_income_specific$poverty_below_100_percent_C17002_002_003_001[
+    which(ks_income_specific$extant_swd_binary == 1
     )]*100)
 
 # set up printing output
@@ -6330,38 +6341,38 @@ plot(density_poverty_with_wells,
 # polygon(density_poverty, col="slateblue1", border="black")
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$poverty_below_100_percent_C17002_002_003_001*100,
+qqnorm(ks_income_specific$poverty_below_100_percent_C17002_002_003_001*100,
        col = 'orchid1',
        pch = 18,
        cex = 1,
        main = "All Block Groups",
        family = "Times New Roman")
-qqline(ks_analysis_all_income$poverty_below_100_percent_C17002_002_003_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqline(ks_income_specific$poverty_below_100_percent_C17002_002_003_001[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$poverty_below_100_percent_C17002_002_003_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqnorm(ks_income_specific$poverty_below_100_percent_C17002_002_003_001[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   col = 'slateblue1',
   pch = 18,
   cex = 1,
   main = "Block Groups with No Disposal Wells",
   family = "Times New Roman")
-qqline(ks_analysis_all_income$poverty_below_100_percent_C17002_002_003_001[
-  which(ks_analysis_all_income$extant_swd_binary == 0)]*100,
+qqline(ks_income_specific$poverty_below_100_percent_C17002_002_003_001[
+  which(ks_income_specific$extant_swd_binary == 0)]*100,
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$poverty_below_100_percent_C17002_002_003_001[
-  which(ks_analysis_all_income$extant_swd_binary == 1)]*100,
+qqnorm(ks_income_specific$poverty_below_100_percent_C17002_002_003_001[
+  which(ks_income_specific$extant_swd_binary == 1)]*100,
   col = 'springgreen1',
   pch = 18,
   cex = 1,
   main = "Block Groups with Disposal Wells",
   family = "Times New Roman")
-qqline(ks_analysis_all_income$poverty_below_100_percent_C17002_002_003_001[
-  which(ks_analysis_all_income$extant_swd_binary == 1)]*100,
+qqline(ks_income_specific$poverty_below_100_percent_C17002_002_003_001[
+  which(ks_income_specific$extant_swd_binary == 1)]*100,
   lwd=2)
 
 
@@ -6370,14 +6381,14 @@ qqline(ks_analysis_all_income$poverty_below_100_percent_C17002_002_003_001[
 # water area
 
 density_water <-
-  density(ks_analysis_all_income$AWATER_KM)
+  density(ks_income_specific$AWATER_KM)
 density_water_no_wells <-
-  density(ks_analysis_all_income$AWATER_KM[
-    which(ks_analysis_all_income$extant_swd_binary == 0
+  density(ks_income_specific$AWATER_KM[
+    which(ks_income_specific$extant_swd_binary == 0
     )])
 density_water_with_wells <-
-  density(ks_analysis_all_income$AWATER_KM[
-    which(ks_analysis_all_income$extant_swd_binary == 1
+  density(ks_income_specific$AWATER_KM[
+    which(ks_income_specific$extant_swd_binary == 1
     )])
 
 # set up printing output
@@ -6449,7 +6460,7 @@ axis(side=1,
 # polygon(density_water, col="slateblue1", border="black")
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$AWATER_KM,
+qqnorm(ks_income_specific$AWATER_KM,
        col = 'orchid1',
        pch = 18,
        cex = 1,
@@ -6467,13 +6478,13 @@ axis(side=1,
      labels=formatC(axTicks(1),
                     format="d",
                     big.mark=','), family = "Times New Roman")
-qqline(ks_analysis_all_income$AWATER_KM[
-  which(ks_analysis_all_income$extant_swd_binary == 0)],
+qqline(ks_income_specific$AWATER_KM[
+  which(ks_income_specific$extant_swd_binary == 0)],
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$AWATER_KM[
-  which(ks_analysis_all_income$extant_swd_binary == 0)],
+qqnorm(ks_income_specific$AWATER_KM[
+  which(ks_income_specific$extant_swd_binary == 0)],
   col = 'slateblue1',
   pch = 18,
   cex = 1,
@@ -6485,13 +6496,13 @@ axis(side=2,
      labels=formatC(axTicks(2),
                     format="d",
                     big.mark=','), family = "Times New Roman")
-qqline(ks_analysis_all_income$AWATER_KM[
-  which(ks_analysis_all_income$extant_swd_binary == 0)],
+qqline(ks_income_specific$AWATER_KM[
+  which(ks_income_specific$extant_swd_binary == 0)],
   lwd=2)
 
 par(mar=c(5,5,3,1))
-qqnorm(ks_analysis_all_income$AWATER_KM[
-  which(ks_analysis_all_income$extant_swd_binary == 1)],
+qqnorm(ks_income_specific$AWATER_KM[
+  which(ks_income_specific$extant_swd_binary == 1)],
   col = 'springgreen1',
   pch = 18,
   cex = 1,
@@ -6503,8 +6514,8 @@ axis(side=2,
      labels=formatC(axTicks(2),
                     format="d",
                     big.mark=','), family = "Times New Roman")
-qqline(ks_analysis_all_income$AWATER_KM[
-  which(ks_analysis_all_income$extant_swd_binary == 1)],
+qqline(ks_income_specific$AWATER_KM[
+  which(ks_income_specific$extant_swd_binary == 1)],
   lwd=2)
 ```
 
@@ -6838,7 +6849,7 @@ qqnorm(ks_analysis_populated$pop_tot_B01001_001[
 axis(side=2, at=axTicks(2),
      labels=formatC(axTicks(2),
                     format="d", big.mark=','),  family = "Times New Roman")
-qqline(ks_analysis_all_income$pop_tot_B01001_001[
+qqline(ks_income_specific$pop_tot_B01001_001[
   which(ks_analysis_populated$extant_swd_binary == 1)],
   lwd=2)
 
@@ -8978,7 +8989,7 @@ axis(side=2,
                     format="d",
                     big.mark=','), family = "Times New Roman")
 qqline(ks_analysis_populated$AWATER_KM[
-  which(ks_analysis_all_income$extant_swd_binary == 1)],
+  which(ks_income_specific$extant_swd_binary == 1)],
   lwd=2)
 ```
 
@@ -8986,11 +8997,11 @@ qqline(ks_analysis_populated$AWATER_KM[
 ```{r NOT UPDATED box plots block groups with income, eval=FALSE, include=FALSE}
 
 # make dataset for box plotting
-ks_analysis_all_income$extant_swd_binary_text <- 
+ks_income_specific$extant_swd_binary_text <- 
   "1+"
 
-ks_analysis_all_income <- 
-  within(ks_analysis_all_income, 
+ks_income_specific <- 
+  within(ks_income_specific, 
          extant_swd_binary_text[extant_swd_binary == 0] <- "0")
 
 # make function to display n
@@ -9000,7 +9011,7 @@ give.n <- function(x){
 
 # ice
 ice_boxplot <-
-  ggplot(ks_analysis_all_income,
+  ggplot(ks_income_specific,
          aes(x = extant_swd_binary_text,
              y = ice_B19001,
              fill = extant_swd_binary_text)) +
@@ -9022,7 +9033,7 @@ ice_boxplot
 
 # age 18
 age_18_boxplot <-
-  ggplot(ks_analysis_all_income,
+  ggplot(ks_income_specific,
          aes(x = extant_swd_binary_text,
              y = age_0_to_17_percent_B01001*100,
              fill = extant_swd_binary_text)) +
@@ -9045,7 +9056,7 @@ age_18_boxplot
 
 # age 65
 age_65_boxplot <-
-  ggplot(ks_analysis_all_income,
+  ggplot(ks_income_specific,
          aes(x = extant_swd_binary_text,
              y = age_65_plus_percent_B01001*100,
              fill = extant_swd_binary_text)) +
@@ -9068,7 +9079,7 @@ age_65_boxplot
 
 # horizontal well count
 horizontal_boxplot <-
-  ggplot(ks_analysis_all_income,
+  ggplot(ks_income_specific,
          aes(x = extant_swd_binary_text,
              y = horizontal_count,
              fill = extant_swd_binary_text)) +
@@ -9092,9 +9103,9 @@ horizontal_boxplot
 
 # median household value 77 missing
 home_value_boxplot <-
-  ggplot(ks_analysis_all_income,
+  ggplot(ks_income_specific,
          aes(x = extant_swd_binary_text,
-             y = ks_analysis_all_income$house_value_median_B25077_001,
+             y = ks_income_specific$house_value_median_B25077_001,
              fill = extant_swd_binary_text)) +
   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
                outlier.colour = NULL) +
@@ -9116,9 +9127,9 @@ home_value_boxplot
 
 # median earnings   # missing 33 data points (1778 no wells, 482 with wells)
 earnings_boxplot <-
-  ggplot(ks_analysis_all_income,
+  ggplot(ks_income_specific,
          aes(x = extant_swd_binary_text,
-             y = ks_analysis_all_income$earnings_median_B20002_001,
+             y = ks_income_specific$earnings_median_B20002_001,
              fill = extant_swd_binary_text)) +
   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
                outlier.colour = NULL) +
@@ -9140,9 +9151,9 @@ earnings_boxplot
 
 # median household income
 income_boxplot <-
-  ggplot(ks_analysis_all_income,
+  ggplot(ks_income_specific,
          aes(x = extant_swd_binary_text,
-             y = ks_analysis_all_income$income_house_median_B19013_001,
+             y = ks_income_specific$income_house_median_B19013_001,
              fill = extant_swd_binary_text)) +
   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
                outlier.colour = NULL) +
@@ -9164,9 +9175,9 @@ income_boxplot
 
 # % with no health insurance
 health_insurance_boxplot <-
-  ggplot(ks_analysis_all_income,
+  ggplot(ks_income_specific,
          aes(x = extant_swd_binary_text,
-             y = ks_analysis_all_income$no_health_insurance_percent_B27010_017_033_050_066*100,
+             y = ks_income_specific$no_health_insurance_percent_B27010_017_033_050_066*100,
              fill = extant_swd_binary_text)) +
   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
                outlier.colour = NULL) +
@@ -9187,9 +9198,9 @@ health_insurance_boxplot
 
 # % limited-English households
 lim_eng_boxplot <-
-  ggplot(ks_analysis_all_income,
+  ggplot(ks_income_specific,
          aes(x = extant_swd_binary_text,
-             y = ks_analysis_all_income$limited_english_percent_C16002_004_007_010_013_001*100,
+             y = ks_income_specific$limited_english_percent_C16002_004_007_010_013_001*100,
              fill = extant_swd_binary_text)) +
   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
                outlier.colour = NULL) +
@@ -9210,9 +9221,9 @@ lim_eng_boxplot
 
 # % renter-occupied households
 renter_boxplot <-
-  ggplot(ks_analysis_all_income,
+  ggplot(ks_income_specific,
          aes(x = extant_swd_binary_text,
-             y = ks_analysis_all_income$renter_occupy_percent_B25003_003_001*100,
+             y = ks_income_specific$renter_occupy_percent_B25003_003_001*100,
              fill = extant_swd_binary_text)) +
   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
                outlier.colour = NULL) +
@@ -9232,9 +9243,9 @@ renter_boxplot
 
 # % unemployed
 unemploy_boxplot <-
-  ggplot(ks_analysis_all_income,
+  ggplot(ks_income_specific,
          aes(x = extant_swd_binary_text,
-             y = ks_analysis_all_income$unemployed_percent_B23025_005_003*100,
+             y = ks_income_specific$unemployed_percent_B23025_005_003*100,
              fill = extant_swd_binary_text)) +
   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
                outlier.colour = NULL) +
@@ -9255,9 +9266,9 @@ unemploy_boxplot
 
 # % in poverty
 poverty_boxplot <-
-  ggplot(ks_analysis_all_income,
+  ggplot(ks_income_specific,
          aes(x = extant_swd_binary_text,
-             y = ks_analysis_all_income$poverty_below_100_percent_C17002_002_003_001*100,
+             y = ks_income_specific$poverty_below_100_percent_C17002_002_003_001*100,
              fill = extant_swd_binary_text)) +
   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
                outlier.colour = NULL) +
@@ -9278,9 +9289,9 @@ poverty_boxplot
 
 # % high school education
 education_boxplot <-
-  ggplot(ks_analysis_all_income,
+  ggplot(ks_income_specific,
          aes(x = extant_swd_binary_text,
-             y = ks_analysis_all_income$education_high_school_plus_percent_B15003_017_to_025*100,
+             y = ks_income_specific$education_high_school_plus_percent_B15003_017_to_025*100,
              fill = extant_swd_binary_text)) +
   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
                outlier.colour = NULL) +
@@ -9301,9 +9312,9 @@ education_boxplot
 
 # % NHW
 white_boxplot <-
-  ggplot(ks_analysis_all_income,
+  ggplot(ks_income_specific,
          aes(x = extant_swd_binary_text,
-             y = ks_analysis_all_income$white_non_hisp_lat_percent_B03002_003_001*100,
+             y = ks_income_specific$white_non_hisp_lat_percent_B03002_003_001*100,
              fill = extant_swd_binary_text)) +
   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
                outlier.colour = NULL) +
@@ -9324,9 +9335,9 @@ white_boxplot
 
 # % native american
 aian_boxplot <-
-  ggplot(ks_analysis_all_income,
+  ggplot(ks_income_specific,
          aes(x = extant_swd_binary_text,
-             y = ks_analysis_all_income$aian_percent_any_race_B02010_001*100,
+             y = ks_income_specific$aian_percent_any_race_B02010_001*100,
              fill = extant_swd_binary_text)) +
   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
                outlier.colour = NULL) +
@@ -9347,9 +9358,9 @@ aian_boxplot
 
 # % hispanic/latinx
 hisp_lat_boxplot <-
-  ggplot(ks_analysis_all_income,
+  ggplot(ks_income_specific,
          aes(x = extant_swd_binary_text,
-             y = ks_analysis_all_income$hisp_lat_percent_B03002_012_001*100,
+             y = ks_income_specific$hisp_lat_percent_B03002_012_001*100,
              fill = extant_swd_binary_text)) +
   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
                outlier.colour = NULL) +
@@ -9370,9 +9381,9 @@ hisp_lat_boxplot
 
 # % black
 black_boxplot <-
-  ggplot(ks_analysis_all_income,
+  ggplot(ks_income_specific,
          aes(x = extant_swd_binary_text,
-             y = ks_analysis_all_income$black_percent_B03002_004_001*100,
+             y = ks_income_specific$black_percent_B03002_004_001*100,
              fill = extant_swd_binary_text)) +
   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
                outlier.colour = NULL) +
@@ -9394,9 +9405,9 @@ black_boxplot
 
 # % female
 female_boxplot <-
-  ggplot(ks_analysis_all_income,
+  ggplot(ks_income_specific,
          aes(x = extant_swd_binary_text,
-             y = ks_analysis_all_income$female_percent_B01001_026_001*100,
+             y = ks_income_specific$female_percent_B01001_026_001*100,
              fill = extant_swd_binary_text)) +
   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
                outlier.colour = NULL) +
@@ -9419,9 +9430,9 @@ female_boxplot
 
 # population density
 pop_dense_boxplot <-
-  ggplot(ks_analysis_all_income,
+  ggplot(ks_income_specific,
          aes(x = extant_swd_binary_text,
-             y = ks_analysis_all_income$pop_dense_B01001_001_ALAND,
+             y = ks_income_specific$pop_dense_B01001_001_ALAND,
              fill = extant_swd_binary_text)) +
   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
                outlier.colour = NULL) +
@@ -9444,9 +9455,9 @@ pop_dense_boxplot
 
 # total population
 pop_boxplot <-
-  ggplot(ks_analysis_all_income,
+  ggplot(ks_income_specific,
          aes(x = extant_swd_binary_text,
-             y = ks_analysis_all_income$pop_tot_B01001_001,
+             y = ks_income_specific$pop_tot_B01001_001,
              fill = extant_swd_binary_text)) +
   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
                outlier.colour = NULL) +
@@ -9468,9 +9479,9 @@ pop_boxplot
 
 # water area
 water_boxplot <-
-  ggplot(ks_analysis_all_income,
+  ggplot(ks_income_specific,
          aes(x = extant_swd_binary_text,
-             y = ks_analysis_all_income$AWATER_KM,
+             y = ks_income_specific$AWATER_KM,
              fill = extant_swd_binary_text)) +
   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
                outlier.colour = NULL) +
@@ -9492,9 +9503,9 @@ water_boxplot
 
 # land area
 land_boxplot <-
-  ggplot(ks_analysis_all_income,
+  ggplot(ks_income_specific,
          aes(x = extant_swd_binary_text,
-             y = ks_analysis_all_income$ALAND_KM,
+             y = ks_income_specific$ALAND_KM,
              fill = extant_swd_binary_text)) +
   geom_boxplot(alpha=0.7, fill = c("slateblue1", "springgreen1"),
                outlier.colour = NULL) +
@@ -10262,87 +10273,87 @@ multiplot(pop_boxplot,
 pop_levene <- 
   leveneTest(pop_tot_B01001_001 ~ 
                extant_swd_binary_text, 
-             data = ks_analysis_all_income)
+             data = ks_income_specific)
 pop_dense_levene <-  
   leveneTest(pop_dense_B01001_001_ALAND ~ 
                extant_swd_binary_text, 
-             data = ks_analysis_all_income)
+             data = ks_income_specific)
 female_levene <-  
   leveneTest(female_percent_B01001_026_001 ~ 
                extant_swd_binary_text, 
-             data = ks_analysis_all_income)
+             data = ks_income_specific)
 age_18_levene <-  
   leveneTest(age_0_to_17_percent_B01001 ~ 
                extant_swd_binary_text, 
-             data = ks_analysis_all_income)
+             data = ks_income_specific)
 age_65_levene <-  
   leveneTest(age_65_plus_percent_B01001 ~ 
                extant_swd_binary_text, 
-             data = ks_analysis_all_income)
+             data = ks_income_specific)
 aian_levene <-  
   leveneTest(aian_percent_any_race_B02010_001 ~ 
                extant_swd_binary_text, 
-             data = ks_analysis_all_income)
+             data = ks_income_specific)
 hisp_lat_levene <-  
   leveneTest(hisp_lat_percent_B03002_012_001 ~ 
                extant_swd_binary_text, 
-             data = ks_analysis_all_income)
+             data = ks_income_specific)
 white_levene <-  
   leveneTest(white_non_hisp_lat_percent_B03002_003_001 ~ 
                extant_swd_binary_text, 
-             data = ks_analysis_all_income)
+             data = ks_income_specific)
 education_levene <-  
   leveneTest(education_high_school_plus_percent_B15003_017_to_025 ~ 
                extant_swd_binary_text, 
-             data = ks_analysis_all_income)
+             data = ks_income_specific)
 lim_eng_levene <-  
   leveneTest(limited_english_percent_C16002_004_007_010_013_001 ~ 
                extant_swd_binary_text, 
-             data = ks_analysis_all_income)
+             data = ks_income_specific)
 health_insurance_levene <-  
   leveneTest(no_health_insurance_percent_B27010_017_033_050_066 ~ 
                extant_swd_binary_text, 
-             data = ks_analysis_all_income)
+             data = ks_income_specific)
 renter_levene <-  
   leveneTest(renter_occupy_percent_B25003_003_001 ~ 
                extant_swd_binary_text, 
-             data = ks_analysis_all_income)
+             data = ks_income_specific)
 unemploy_levene <-  
   leveneTest(unemployed_percent_B23025_005_003 ~ 
                extant_swd_binary_text, 
-             data = ks_analysis_all_income)
+             data = ks_income_specific)
 poverty_levene <-  
   leveneTest(poverty_below_100_percent_C17002_002_003_001 ~ 
                extant_swd_binary_text, 
-             data = ks_analysis_all_income)
+             data = ks_income_specific)
 earnings_levene <-  
   leveneTest(earnings_median_B20002_001 ~ 
                extant_swd_binary_text, 
-             data = ks_analysis_all_income)
+             data = ks_income_specific)
 income_levene <-  
   leveneTest(income_house_median_B19013_001 ~ 
                extant_swd_binary_text, 
-             data = ks_analysis_all_income)
+             data = ks_income_specific)
 home_value_levene <-  
   leveneTest(house_value_median_B25077_001 ~ 
                extant_swd_binary_text, 
-             data = ks_analysis_all_income)
+             data = ks_income_specific)
 ice_levene <-  
   leveneTest(house_value_median_B25077_001 ~ 
                extant_swd_binary_text, 
-             data = ks_analysis_all_income)
+             data = ks_income_specific)
 land_levene <-  
   leveneTest(ALAND_KM ~ 
                extant_swd_binary_text, 
-             data = ks_analysis_all_income)
+             data = ks_income_specific)
 water_levene <-  
   leveneTest(AWATER_KM ~ 
                extant_swd_binary_text, 
-             data = ks_analysis_all_income)
+             data = ks_income_specific)
 horizontal_levene <-  
   leveneTest(horizontal_count ~ 
                extant_swd_binary_text, 
-             data = ks_analysis_all_income)
+             data = ks_income_specific)
 
 # list_of_levenes <- 
 #   c(pop_levene,
@@ -10485,116 +10496,116 @@ counts_by_urban <-
 
 pop_t_test_all_income <-
   t.test(pop_tot_B01001_001 ~ extant_swd_binary,
-         data = ks_analysis_all_income)
+         data = ks_income_specific)
 pop_t_test_all_income
 
 pop_dense_t_test_all_income <- 
   t.test(pop_dense_B01001_001_ALAND ~ extant_swd_binary,
-         data = ks_analysis_all_income)
+         data = ks_income_specific)
 pop_dense_t_test_all_income
   
 female_t_test_all_income <-
   t.test(female_percent_B01001_026_001 ~ extant_swd_binary,
-         data = ks_analysis_all_income)
+         data = ks_income_specific)
 female_t_test_all_income
 
 age_18_t_test_all_income <- 
   t.test(age_0_to_17_percent_B01001 ~ extant_swd_binary,
-         data = ks_analysis_all_income)
+         data = ks_income_specific)
 age_18_t_test_all_income
 
 age_65_t_test_all_income <- 
   t.test(age_65_plus_percent_B01001 ~ extant_swd_binary,
-         data = ks_analysis_all_income)
+         data = ks_income_specific)
 age_65_t_test_all_income
 
 aian_t_test_all_income <- 
   t.test(aian_percent_any_race_B02010_001 ~ extant_swd_binary,
-         data = ks_analysis_all_income)
+         data = ks_income_specific)
 aian_t_test_all_income
 
 hisp_lat_t_test_all_income <- 
   t.test(hisp_lat_percent_B03002_012_001 ~ extant_swd_binary,
-         data = ks_analysis_all_income)
+         data = ks_income_specific)
 hisp_lat_t_test_all_income
 
 black_t_test_all_income <- 
   t.test(black_percent_B03002_004_001 ~ extant_swd_binary,
-         data = ks_analysis_all_income)
+         data = ks_income_specific)
 black_t_test_all_income
 
 white_t_test_all_income <- 
   t.test(white_non_hisp_lat_percent_B03002_003_001 ~ extant_swd_binary,
-         data = ks_analysis_all_income)
+         data = ks_income_specific)
 white_t_test_all_income
 
 education_t_test_all_income <-
   t.test(education_high_school_plus_percent_B15003_017_to_025 ~ 
            extant_swd_binary,
-         data = ks_analysis_all_income)
+         data = ks_income_specific)
 education_t_test_all_income
 
 lim_eng_t_test_all_income <- 
   t.test(limited_english_percent_C16002_004_007_010_013_001 ~ 
            extant_swd_binary,
-         data = ks_analysis_all_income)
+         data = ks_income_specific)
 lim_eng_t_test_all_income
 
 health_ins_t_test_all_income <-
   t.test(no_health_insurance_percent_B27010_017_033_050_066 ~ 
            extant_swd_binary,
-         data = ks_analysis_all_income)
+         data = ks_income_specific)
 health_ins_t_test_all_income
 
 renter_t_test_all_income <- 
   t.test(renter_occupy_percent_B25003_003_001 ~ 
            extant_swd_binary,
-         data = ks_analysis_all_income)
+         data = ks_income_specific)
 renter_t_test_all_income
 
 unemploy_t_test_all_income <- 
   t.test(unemployed_percent_B23025_005_003 ~ extant_swd_binary,
-         data = ks_analysis_all_income)
+         data = ks_income_specific)
 unemploy_t_test_all_income
 
 poverty_t_test_all_income <- 
   t.test(poverty_below_100_percent_C17002_002_003_001 ~ extant_swd_binary,
-         data = ks_analysis_all_income)
+         data = ks_income_specific)
 poverty_t_test_all_income
 
 earnings_t_test_all_income <- 
   t.test(earnings_median_B20002_001 ~ extant_swd_binary,
-         data = ks_analysis_all_income)
+         data = ks_income_specific)
 earnings_t_test_all_income
 
 income_t_test_all_income <- 
   t.test(income_house_median_B19013_001 ~ extant_swd_binary,
-         data = ks_analysis_all_income)
+         data = ks_income_specific)
 income_t_test_all_income
 
 home_value_t_test_all_income <- 
   t.test(house_value_median_B25077_001 ~ extant_swd_binary,
-         data = ks_analysis_all_income)
+         data = ks_income_specific)
 home_value_t_test_all_income
 
 ice_t_test_all_income <- 
   t.test(ice_B19001 ~ extant_swd_binary,
-         data = ks_analysis_all_income)
+         data = ks_income_specific)
 ice_t_test_all_income
 
 land_t_test_all_income <- 
   t.test(ALAND_KM ~ extant_swd_binary,
-         data = ks_analysis_all_income)
+         data = ks_income_specific)
 land_t_test_all_income
 
 water_t_test_all_income <- 
   t.test(AWATER_KM ~ extant_swd_binary,
-         data = ks_analysis_all_income)
+         data = ks_income_specific)
 water_t_test_all_income
 
 horizontal_t_test_all_income <- 
   t.test(horizontal_count ~ extant_swd_binary,
-         data = ks_analysis_all_income)
+         data = ks_income_specific)
 horizontal_t_test_all_income
 
 ```
@@ -10964,7 +10975,7 @@ write.csv(p_values_corrections_t_test_no_urbans,
 ```
 
 
-```{r summary statistics populated block groups}
+```{r BROKEN summary statistics populated block groups, eval=FALSE, include=FALSE}
 # calculate basic summary statistics
 
 # select variables to summarise
@@ -11142,11 +11153,11 @@ write.csv(ks_stats_with_wells_populated_ordered,
 ```
 
 
-```{r summary statistics block groups with income only}
+```{r BROKEN summary statistics block groups with income only, eval=FALSE, include=FALSE}
 
 # calculate basic summary statistics   # select variables to summarise
 summary_statistics_income_only <- 
-  ks_analysis_all_income %>% 
+  ks_income_specific %>% 
   dplyr::select("ALAND_KM",
          "AWATER_KM",
          "pop_tot_B01001_001",
@@ -11191,7 +11202,7 @@ write.csv(ks_stats_tidy_income_only,
 # summary statistics for individual groups
 
 summary_statistics_no_wells_income_only <- 
-  ks_analysis_all_income %>% 
+  ks_income_specific %>% 
   dplyr::select("ALAND_KM",
          "AWATER_KM",
          "pop_tot_B01001_001",
@@ -11236,7 +11247,7 @@ write.csv(ks_stats_no_wells_income_only,
 
 # summary statistics with wells
 summary_statistics_with_wells_income_only <- 
-  ks_analysis_all_income %>% 
+  ks_income_specific %>% 
   dplyr::select("ALAND_KM",
          "AWATER_KM",
          "pop_tot_B01001_001",
@@ -11282,7 +11293,7 @@ write.csv(ks_stats_with_wells_income_only,
 ```
 
 
-```{r summary statistics populated no urban, eval=FALSE, include=FALSE}
+```{r BROKEN summary statistics populated no urban, eval=FALSE, include=FALSE}
 # calculate basic summary statistics
 # select variables to summarise
 summary_statistics_no_urban <- 
@@ -11488,11 +11499,11 @@ write.csv(p_values_corrections_t_tests_no_urban,
 
 
 
-```{r bivariate analyses data setup}
+```{r BROKEN bivariate analyses data setup, eval=FALSE, include=FALSE}
 
 # make dataset with just analysis variables
-ks_analysis_all_income_for_loops <- 
-  ks_analysis_all_income[c(
+ks_income_specific_for_loops <- 
+  ks_income_specific[c(
     "GEOID",
     "extant_swd_binary",
     "pop_tot_B01001_001",
@@ -11518,225 +11529,225 @@ ks_analysis_all_income_for_loops <-
 ```
 
 
-```{r mann-whitney u tests block groups with all income only}
+```{r BROKEN mann-whitney u tests block groups with all income only, eval=FALSE, include=FALSE}
 
 # total population
 pop_wilcox <- 
-  wilcox.test(ks_analysis_all_income$pop_tot_B01001_001[
-    which(ks_analysis_all_income$extant_swd_binary == 0)], 
-    ks_analysis_all_income$pop_tot_B01001_001[
-      which(ks_analysis_all_income$extant_swd_binary == 1)], 
+  wilcox.test(ks_income_specific$pop_tot_B01001_001[
+    which(ks_income_specific$extant_swd_binary == 0)], 
+    ks_income_specific$pop_tot_B01001_001[
+      which(ks_income_specific$extant_swd_binary == 1)], 
               paired = FALSE, 
               alternative = "t")
 pop_wilcox
 
 # population density
 pop_dense_wilcox <- 
-  wilcox.test(ks_analysis_all_income$pop_dense_B01001_001_ALAND[
-    which(ks_analysis_all_income$extant_swd_binary == 0)],  
-    ks_analysis_all_income$pop_dense_B01001_001_ALAND[
-                which(ks_analysis_all_income$extant_swd_binary == 1)],
-              data = ks_analysis_all_income, 
+  wilcox.test(ks_income_specific$pop_dense_B01001_001_ALAND[
+    which(ks_income_specific$extant_swd_binary == 0)],  
+    ks_income_specific$pop_dense_B01001_001_ALAND[
+                which(ks_income_specific$extant_swd_binary == 1)],
+              data = ks_income_specific, 
               paired = FALSE, 
               alternative = "t")
 pop_dense_wilcox
 
 # female %
 female_wilcox <- 
-  wilcox.test(ks_analysis_all_income$female_percent_B01001_026_001[
-    which(ks_analysis_all_income$extant_swd_binary == 0)],  
-    ks_analysis_all_income$female_percent_B01001_026_001[
-      which(ks_analysis_all_income$extant_swd_binary == 1)],
-    data = ks_analysis_all_income, 
+  wilcox.test(ks_income_specific$female_percent_B01001_026_001[
+    which(ks_income_specific$extant_swd_binary == 0)],  
+    ks_income_specific$female_percent_B01001_026_001[
+      which(ks_income_specific$extant_swd_binary == 1)],
+    data = ks_income_specific, 
     paired = FALSE, 
     alternative = "t")
 female_wilcox
 
 # native American
 aian_wilcox <- 
-  wilcox.test(ks_analysis_all_income$aian_percent_any_race_B02010_001[
-    which(ks_analysis_all_income$extant_swd_binary == 0)],  
-    ks_analysis_all_income$aian_percent_any_race_B02010_001[
-                which(ks_analysis_all_income$extant_swd_binary == 1)],  
-              data = ks_analysis_all_income, 
+  wilcox.test(ks_income_specific$aian_percent_any_race_B02010_001[
+    which(ks_income_specific$extant_swd_binary == 0)],  
+    ks_income_specific$aian_percent_any_race_B02010_001[
+                which(ks_income_specific$extant_swd_binary == 1)],  
+              data = ks_income_specific, 
               paired = FALSE, 
               alternative = "t")
 aian_wilcox
 
 # hisp/lat
 hisp_lat_wilcox <- 
-  wilcox.test(ks_analysis_all_income$hisp_lat_percent_B03002_012_001[
-    which(ks_analysis_all_income$extant_swd_binary == 0)],
-    ks_analysis_all_income$hisp_lat_percent_B03002_012_001[
-                which(ks_analysis_all_income$extant_swd_binary == 1)], 
-              data = ks_analysis_all_income, 
+  wilcox.test(ks_income_specific$hisp_lat_percent_B03002_012_001[
+    which(ks_income_specific$extant_swd_binary == 0)],
+    ks_income_specific$hisp_lat_percent_B03002_012_001[
+                which(ks_income_specific$extant_swd_binary == 1)], 
+              data = ks_income_specific, 
               paired = FALSE, 
               alternative = "t")
 hisp_lat_wilcox
 
 # white
 white_wilcox <- 
-  wilcox.test(ks_analysis_all_income$white_non_hisp_lat_percent_B03002_003_001[which(ks_analysis_all_income$extant_swd_binary == 0)],
-              ks_analysis_all_income$white_non_hisp_lat_percent_B03002_003_001[which(ks_analysis_all_income$extant_swd_binary == 1)], 
-              data = ks_analysis_all_income, 
+  wilcox.test(ks_income_specific$white_non_hisp_lat_percent_B03002_003_001[which(ks_income_specific$extant_swd_binary == 0)],
+              ks_income_specific$white_non_hisp_lat_percent_B03002_003_001[which(ks_income_specific$extant_swd_binary == 1)], 
+              data = ks_income_specific, 
               paired = FALSE, 
               alternative = "t")
 white_wilcox
 
 # age 0-17
 age_18_wilcox <- 
-  wilcox.test(ks_analysis_all_income$age_0_to_17_percent_B01001[
-    which(ks_analysis_all_income$extant_swd_binary == 0)], 
-    ks_analysis_all_income$age_0_to_17_percent_B01001[
-      which(ks_analysis_all_income$extant_swd_binary == 1)], 
-              data = ks_analysis_all_income, 
+  wilcox.test(ks_income_specific$age_0_to_17_percent_B01001[
+    which(ks_income_specific$extant_swd_binary == 0)], 
+    ks_income_specific$age_0_to_17_percent_B01001[
+      which(ks_income_specific$extant_swd_binary == 1)], 
+              data = ks_income_specific, 
               paired = FALSE, 
               alternative = "t")
 age_18_wilcox
 
 # age 65+
 age_65_wilcox <- 
-  wilcox.test(ks_analysis_all_income$age_65_plus_percent_B01001[
-    which(ks_analysis_all_income$extant_swd_binary == 0)], 
-    ks_analysis_all_income$age_65_plus_percent_B01001[
-      which(ks_analysis_all_income$extant_swd_binary == 1)], 
-              data = ks_analysis_all_income, 
+  wilcox.test(ks_income_specific$age_65_plus_percent_B01001[
+    which(ks_income_specific$extant_swd_binary == 0)], 
+    ks_income_specific$age_65_plus_percent_B01001[
+      which(ks_income_specific$extant_swd_binary == 1)], 
+              data = ks_income_specific, 
               paired = FALSE, 
               alternative = "t")
 age_65_wilcox 
 
 # education
 educ_wilcox <- 
-  wilcox.test(ks_analysis_all_income$education_high_school_plus_percent_B15003_017_to_025[
-    which(ks_analysis_all_income$extant_swd_binary == 0)], 
-              ks_analysis_all_income$education_high_school_plus_percent_B15003_017_to_025[
-                which(ks_analysis_all_income$extant_swd_binary == 1)], 
-              data = ks_analysis_all_income, 
+  wilcox.test(ks_income_specific$education_high_school_plus_percent_B15003_017_to_025[
+    which(ks_income_specific$extant_swd_binary == 0)], 
+              ks_income_specific$education_high_school_plus_percent_B15003_017_to_025[
+                which(ks_income_specific$extant_swd_binary == 1)], 
+              data = ks_income_specific, 
               paired = FALSE, 
               alternative = "t")
 educ_wilcox
 
 # limited english
 eng_wilcox <- 
-  wilcox.test(ks_analysis_all_income$limited_english_percent_C16002_004_007_010_013_001[
-    which(ks_analysis_all_income$extant_swd_binary == 0)], 
-    ks_analysis_all_income$limited_english_percent_C16002_004_007_010_013_001[
-                which(ks_analysis_all_income$extant_swd_binary == 1)], 
-              data = ks_analysis_all_income, 
+  wilcox.test(ks_income_specific$limited_english_percent_C16002_004_007_010_013_001[
+    which(ks_income_specific$extant_swd_binary == 0)], 
+    ks_income_specific$limited_english_percent_C16002_004_007_010_013_001[
+                which(ks_income_specific$extant_swd_binary == 1)], 
+              data = ks_income_specific, 
               paired = FALSE, 
               alternative = "t")
 eng_wilcox
 
 # no health insurance
 health_ins_wilcox <- 
-  wilcox.test(ks_analysis_all_income$no_health_insurance_percent_B27010_017_033_050_066[
-    which(ks_analysis_all_income$extant_swd_binary == 0)], 
-    ks_analysis_all_income$no_health_insurance_percent_B27010_017_033_050_066[
-                which(ks_analysis_all_income$extant_swd_binary == 1)], 
-              data = ks_analysis_all_income, 
+  wilcox.test(ks_income_specific$no_health_insurance_percent_B27010_017_033_050_066[
+    which(ks_income_specific$extant_swd_binary == 0)], 
+    ks_income_specific$no_health_insurance_percent_B27010_017_033_050_066[
+                which(ks_income_specific$extant_swd_binary == 1)], 
+              data = ks_income_specific, 
               paired = FALSE, 
               alternative = "t")
 health_ins_wilcox
 
 # renter
 rent_wilcox <- 
-  wilcox.test(ks_analysis_all_income$renter_occupy_percent_B25003_003_001[
-    which(ks_analysis_all_income$extant_swd_binary == 0)], 
-    ks_analysis_all_income$renter_occupy_percent_B25003_003_001[
-                which(ks_analysis_all_income$extant_swd_binary == 1)], 
-              data = ks_analysis_all_income, 
+  wilcox.test(ks_income_specific$renter_occupy_percent_B25003_003_001[
+    which(ks_income_specific$extant_swd_binary == 0)], 
+    ks_income_specific$renter_occupy_percent_B25003_003_001[
+                which(ks_income_specific$extant_swd_binary == 1)], 
+              data = ks_income_specific, 
               paired = FALSE, 
               alternative = "t")
 rent_wilcox
 
 # unemployed
 unemploy_wilcox <- 
-  wilcox.test(ks_analysis_all_income$unemployed_percent_B23025_005_003[
-    which(ks_analysis_all_income$extant_swd_binary == 0)], 
-    ks_analysis_all_income$unemployed_percent_B23025_005_003[
-                which(ks_analysis_all_income$extant_swd_binary == 1)], 
-              data = ks_analysis_all_income, 
+  wilcox.test(ks_income_specific$unemployed_percent_B23025_005_003[
+    which(ks_income_specific$extant_swd_binary == 0)], 
+    ks_income_specific$unemployed_percent_B23025_005_003[
+                which(ks_income_specific$extant_swd_binary == 1)], 
+              data = ks_income_specific, 
               paired = FALSE, 
               alternative = "t")
 unemploy_wilcox
 
 # poverty
 pov_wilcox <- 
-  wilcox.test(ks_analysis_all_income$poverty_below_100_percent_C17002_002_003_001[
-    which(ks_analysis_all_income$extant_swd_binary == 0)], 
-    ks_analysis_all_income$poverty_below_100_percent_C17002_002_003_001[
-                which(ks_analysis_all_income$extant_swd_binary == 1)], 
-              data = ks_analysis_all_income, 
+  wilcox.test(ks_income_specific$poverty_below_100_percent_C17002_002_003_001[
+    which(ks_income_specific$extant_swd_binary == 0)], 
+    ks_income_specific$poverty_below_100_percent_C17002_002_003_001[
+                which(ks_income_specific$extant_swd_binary == 1)], 
+              data = ks_income_specific, 
               paired = FALSE, 
               alternative = "t")
 pov_wilcox
 
 # earnings
 earn_wilcox <- 
-  wilcox.test(ks_analysis_all_income$earnings_median_B20002_001[
-    which(ks_analysis_all_income$extant_swd_binary == 0)], 
-    ks_analysis_all_income$earnings_median_B20002_001[
-      which(ks_analysis_all_income$extant_swd_binary == 1)], 
-              data = ks_analysis_all_income, 
+  wilcox.test(ks_income_specific$earnings_median_B20002_001[
+    which(ks_income_specific$extant_swd_binary == 0)], 
+    ks_income_specific$earnings_median_B20002_001[
+      which(ks_income_specific$extant_swd_binary == 1)], 
+              data = ks_income_specific, 
               paired = FALSE, 
               alternative = "t")
 earn_wilcox
 
 # household income
 income_wilcox <- 
-  wilcox.test(ks_analysis_all_income$income_house_median_B19013_001[
-    which(ks_analysis_all_income$extant_swd_binary == 0)], 
-    ks_analysis_all_income$income_house_median_B19013_001[
-                which(ks_analysis_all_income$extant_swd_binary == 1)], 
-              data = ks_analysis_all_income, 
+  wilcox.test(ks_income_specific$income_house_median_B19013_001[
+    which(ks_income_specific$extant_swd_binary == 0)], 
+    ks_income_specific$income_house_median_B19013_001[
+                which(ks_income_specific$extant_swd_binary == 1)], 
+              data = ks_income_specific, 
               paired = FALSE, 
               alternative = "t")
 income_wilcox
 
 # home value
 home_value_wilcox <- 
-  wilcox.test(ks_analysis_all_income$house_value_median_B25077_001[
-    which(ks_analysis_all_income$extant_swd_binary == 0)], 
-    ks_analysis_all_income$house_value_median_B25077_001[
-                which(ks_analysis_all_income$extant_swd_binary == 1)], 
-              data = ks_analysis_all_income, 
+  wilcox.test(ks_income_specific$house_value_median_B25077_001[
+    which(ks_income_specific$extant_swd_binary == 0)], 
+    ks_income_specific$house_value_median_B25077_001[
+                which(ks_income_specific$extant_swd_binary == 1)], 
+              data = ks_income_specific, 
               paired = FALSE, 
               alternative = "t")
 home_value_wilcox
 
 # ice
 ice_wilcox <- 
-  wilcox.test(ks_analysis_all_income$ice_B19001[
-    which(ks_analysis_all_income$extant_swd_binary == 0)], 
-    ks_analysis_all_income$ice_B19001[
-      which(ks_analysis_all_income$extant_swd_binary == 1)], 
-    data = ks_analysis_all_income, 
+  wilcox.test(ks_income_specific$ice_B19001[
+    which(ks_income_specific$extant_swd_binary == 0)], 
+    ks_income_specific$ice_B19001[
+      which(ks_income_specific$extant_swd_binary == 1)], 
+    data = ks_income_specific, 
     paired = FALSE, 
     alternative = "t")
 ice_wilcox
 
 # land area
 land_wilcox <- 
-  wilcox.test(ks_analysis_all_income$ALAND_KM[which(ks_analysis_all_income$extant_swd_binary == 0)], 
-              ks_analysis_all_income$ALAND_KM[which(ks_analysis_all_income$extant_swd_binary == 1)], 
-              data = ks_analysis_all_income, 
+  wilcox.test(ks_income_specific$ALAND_KM[which(ks_income_specific$extant_swd_binary == 0)], 
+              ks_income_specific$ALAND_KM[which(ks_income_specific$extant_swd_binary == 1)], 
+              data = ks_income_specific, 
               paired = FALSE, 
               alternative = "t")
 land_wilcox
 
 # water area
 water_wilcox <- 
-  wilcox.test(ks_analysis_all_income$AWATER_KM[which(ks_analysis_all_income$extant_swd_binary == 0)], 
-              ks_analysis_all_income$AWATER_KM[which(ks_analysis_all_income$extant_swd_binary == 1)], 
-              data = ks_analysis_all_income, 
+  wilcox.test(ks_income_specific$AWATER_KM[which(ks_income_specific$extant_swd_binary == 0)], 
+              ks_income_specific$AWATER_KM[which(ks_income_specific$extant_swd_binary == 1)], 
+              data = ks_income_specific, 
               paired = FALSE, 
               alternative = "t")
 water_wilcox
 
 water_wilcox <- 
-  wilcox.test(ks_analysis_all_income$AWATER_KM[which(ks_analysis_all_income$extant_swd_binary == 0)], 
-              ks_analysis_all_income$AWATER_KM[which(ks_analysis_all_income$extant_swd_binary == 1)], 
-              data = ks_analysis_all_income, 
+  wilcox.test(ks_income_specific$AWATER_KM[which(ks_income_specific$extant_swd_binary == 0)], 
+              ks_income_specific$AWATER_KM[which(ks_income_specific$extant_swd_binary == 1)], 
+              data = ks_income_specific, 
               paired = FALSE, 
               alternative = "t")
 water_wilcox
@@ -11803,85 +11814,85 @@ write.csv(p_values_wilcox,
 
 ## logistic regression and summary statistics
 
-```{r loess plots for all income, eval=FALSE, include=FALSE}
+```{r BROKEN loess plots for all income, eval=FALSE, include=FALSE}
 
 pop_loess <- 
-  logitloess(ks_analysis_all_income$pop_tot_B01001_001, 
-             ks_analysis_all_income$extant_swd_binary, 
+  logitloess(ks_income_specific$pop_tot_B01001_001, 
+             ks_income_specific$extant_swd_binary, 
              dat = "ks_analysis_populated",
              "Population", "Population")
 
 pop_dense_loess <- 
-  logitloess(ks_analysis_all_income$pop_dense_B01001_001_ALAND, 
-             ks_analysis_all_income$extant_swd_binary, 
+  logitloess(ks_income_specific$pop_dense_B01001_001_ALAND, 
+             ks_income_specific$extant_swd_binary, 
              "Population Density", 
              expression(paste("Population/km"^"2")))
              
 female_loess <- 
-  logitloess(ks_analysis_all_income$female_percent_B01001_026_001*100, 
-             ks_analysis_all_income$extant_swd_binary, 
+  logitloess(ks_income_specific$female_percent_B01001_026_001*100, 
+             ks_income_specific$extant_swd_binary, 
              "Female", 
              "% female")
 age_18_loess <- 
-  logitloess(ks_analysis_all_income$age_0_to_17_percent_B01001*100, 
-             ks_analysis_all_income$extant_swd_binary, 
+  logitloess(ks_income_specific$age_0_to_17_percent_B01001*100, 
+             ks_income_specific$extant_swd_binary, 
              "Age < 18", 
              "% < age 18")
 age_65_loess <- 
-  logitloess(ks_analysis_all_income$age_65_plus_percent_B01001*100, 
-             ks_analysis_all_income$extant_swd_binary, 
+  logitloess(ks_income_specific$age_65_plus_percent_B01001*100, 
+             ks_income_specific$extant_swd_binary, 
              "Age > 65", 
              "% > age 65")
 aian_loess <- 
-  logitloess(ks_analysis_all_income$aian_percent_any_race_B02010_001*100, 
-             ks_analysis_all_income$extant_swd_binary, 
+  logitloess(ks_income_specific$aian_percent_any_race_B02010_001*100, 
+             ks_income_specific$extant_swd_binary, 
              "Native American", 
              "% American Indian or Alaksa Native")
 hisp_loess <- 
-  logitloess(ks_analysis_all_income$hisp_lat_percent_B03002_012_001*100, 
-             ks_analysis_all_income$extant_swd_binary, 
+  logitloess(ks_income_specific$hisp_lat_percent_B03002_012_001*100, 
+             ks_income_specific$extant_swd_binary, 
              "Hispanic or Latinx", 
              "% Hispanic or Latinx, any race")
 white_loess <- 
-  logitloess(ks_analysis_all_income$white_non_hisp_lat_percent_B03002_003_001*100, 
-             ks_analysis_all_income$extant_swd_binary, 
+  logitloess(ks_income_specific$white_non_hisp_lat_percent_B03002_003_001*100, 
+             ks_income_specific$extant_swd_binary, 
              "White Alone", 
              "% white alone, not Hispanic or Latinx")
 education_loess <- 
-  logitloess(ks_analysis_all_income$education_high_school_plus_percent_B15003_017_to_025*100, 
-             ks_analysis_all_income$extant_swd_binary, 
+  logitloess(ks_income_specific$education_high_school_plus_percent_B15003_017_to_025*100, 
+             ks_income_specific$extant_swd_binary, 
              "High School Education", 
              "% high school graduate or equivalent")
 lim_eng_loess <- 
-  logitloess(ks_analysis_all_income$limited_english_percent_C16002_004_007_010_013_001*100, 
-             ks_analysis_all_income$extant_swd_binary, 
+  logitloess(ks_income_specific$limited_english_percent_C16002_004_007_010_013_001*100, 
+             ks_income_specific$extant_swd_binary, 
              "Limited-English Households", 
              "% of household with limited English")
 health_insurance_loess <- 
-  logitloess(ks_analysis_all_income$no_health_insurance_percent_B27010_017_033_050_066*100, 
-             ks_analysis_all_income$extant_swd_binary, 
+  logitloess(ks_income_specific$no_health_insurance_percent_B27010_017_033_050_066*100, 
+             ks_income_specific$extant_swd_binary, 
              "Health Insurance Coverage", 
              "% with no health insurance coverage")
 renter_loess <- 
-  logitloess(ks_analysis_all_income$renter_occupy_percent_B25003_003_001*100, 
-             ks_analysis_all_income$extant_swd_binary, 
+  logitloess(ks_income_specific$renter_occupy_percent_B25003_003_001*100, 
+             ks_income_specific$extant_swd_binary, 
              "Renter Occupancy", "% of housing units renter occupied")
 unemploy_loess <- 
-  logitloess(ks_analysis_all_income$unemployed_percent_B23025_005_003*100, 
-             ks_analysis_all_income$extant_swd_binary, 
+  logitloess(ks_income_specific$unemployed_percent_B23025_005_003*100, 
+             ks_income_specific$extant_swd_binary, 
              "Unemployment", 
              "% unemployed")
 poverty_loess <- 
-  logitloess(ks_analysis_all_income$poverty_below_100_percent_C17002_002_003_001*100, 
-             ks_analysis_all_income$extant_swd_binary, 
+  logitloess(ks_income_specific$poverty_below_100_percent_C17002_002_003_001*100, 
+             ks_income_specific$extant_swd_binary, 
              "Poverty", 
              "% in poverty")
 poverty_loess
 
 # make dataframe of complete earnings cases
 ks_earnings_cases <- 
-  ks_analysis_all_income[
-    which(!is.na(ks_analysis_all_income$earnings_median_B20002_001)),]
+  ks_income_specific[
+    which(!is.na(ks_income_specific$earnings_median_B20002_001)),]
 
 earnings_loess <- 
   logitloess(ks_earnings_cases$earnings_median_B20002_001,
@@ -11892,15 +11903,15 @@ earnings_loess <-
 earnings_loess
 
 income_loess <- 
-  logitloess(ks_analysis_all_income$income_house_median_B19013_001, 
-             ks_analysis_all_income$extant_swd_binary, 
+  logitloess(ks_income_specific$income_house_median_B19013_001, 
+             ks_income_specific$extant_swd_binary, 
              "Household Income", 
              "Median household income ($)")
 
 # make dataframe of complete home value cases
 home_value_cases <- 
-  ks_analysis_all_income[
-    which(!is.na(ks_analysis_all_income$house_value_median_B25077_001)),]
+  ks_income_specific[
+    which(!is.na(ks_income_specific$house_value_median_B25077_001)),]
 
 home_value_loess <- 
   logitloess(home_value_cases$house_value_median_B25077_001, 
@@ -11910,25 +11921,25 @@ home_value_loess <-
            home_value_cases)
 
 ice_loess <- 
-  logitloess(ks_analysis_all_income$ice_B19001, 
-             ks_analysis_all_income$extant_swd_binary, 
+  logitloess(ks_income_specific$ice_B19001, 
+             ks_income_specific$extant_swd_binary, 
              "Income concentration\nat the extremes", 
              "Income concentration at the extremes")
 
 land_loess <- 
-  logitloess(ks_analysis_all_income$ALAND_KM, 
-             ks_analysis_all_income$extant_swd_binary, 
+  logitloess(ks_income_specific$ALAND_KM, 
+             ks_income_specific$extant_swd_binary, 
              "Land Area", 
              expression(paste("Land area (km"^"2",")")))
 
 water_loess <- 
-  logitloess(ks_analysis_all_income$AWATER_KM, 
-             ks_analysis_all_income$extant_swd_binary, 
+  logitloess(ks_income_specific$AWATER_KM, 
+             ks_income_specific$extant_swd_binary, 
              "Water Area", 
              expression(paste("Water area (km"^"2",")")))
   
 blank_loess <- 
-  ggplot(ks_analysis_all_income, aes(x = pop_tot_B01001_001, 
+  ggplot(ks_income_specific, aes(x = pop_tot_B01001_001, 
                          y = house_value_median_B25077_001)) + 
   theme_bw() + 
   theme(panel.border = element_blank(), 
@@ -11940,7 +11951,7 @@ blank_loess <-
 blank_loess
 
 # earnings_predict <- 
-#   predict(loess(ks_analysis_all_income$extant_swd_binary ~ ks_analysis_all_income$earnings_median_B20002_001))
+#   predict(loess(ks_income_specific$extant_swd_binary ~ ks_income_specific$earnings_median_B20002_001))
 
 # plot all the loess plots
 par(mfrow = c(1,1))
@@ -11972,7 +11983,7 @@ multiplot(pop_loess,
 ```
 
 
-```{r ADD Ns loess plots for all populated, eval=FALSE, include=FALSE}
+```{r BROKEN ADD Ns loess plots for all populated, eval=FALSE, include=FALSE}
 
 pop_loess <- 
   logitloess(ks_analysis_populated$pop_tot_B01001_001, 
@@ -12216,29 +12227,6 @@ multiplot(pop_loess,
 ```{r univariate logistic regressions}
 
 # list the dependent variable names
-dependent_variable_names <- 
-  c("pop_tot_B01001_001", 
-    "pop_dense_B01001_001_ALAND", 
-    "female_percent_B01001_026_001", 
-    "age_0_to_17_percent_B01001", 
-    "age_65_plus_percent_B01001",   
-    "aian_percent_any_race_B02010_001",   
-    "hisp_lat_percent_B03002_012_001", 
-    "black_percent_B03002_004_001",
-    "white_non_hisp_lat_percent_B03002_003_001",   
-    "education_high_school_plus_percent_B15003_017_to_025",   
-    "limited_english_percent_C16002_004_007_010_013_001",   
-    "no_health_insurance_percent_B27010_017_033_050_066",   
-    "renter_occupy_percent_B25003_003_001",   
-    "unemployed_percent_B23025_005_003",   
-    "poverty_below_100_percent_C17002_002_003_001",  
-    "earnings_median_B20002_001", 
-    "income_house_median_B19013_001",   
-    "house_value_median_B25077_001",  
-    "ice_ten_B19001",  
-    "prod_count",
-    "ALAND_KM",  
-    "AWATER_KM")
 
 revised_dependent_variable_names <- 
   c("pop_tot_hundreds_B01001_001", 
@@ -12427,7 +12415,7 @@ write_csv(univariable_logistic_table_tibble,
 ```
 
 
-```{r box tidwell goodness of fit statistics}
+```{r BROKEN box tidwell goodness of fit statistics, eval=FALSE, include=FALSE}
 
 # box tidwell for linearity of logit
 
@@ -12703,7 +12691,7 @@ options(warn = 1)   # force warnings to apply to specific model
 hl_gof_matrix <- 
   mapply(hl_gof_inator, 
          univariable_logistic_models_glm, 
-         dependent_variable_names)
+         revised_dependent_variable_names)
 
 hl_gof_list <- 
   as.list(data.frame(t(hl_gof_matrix)))
@@ -12901,7 +12889,7 @@ univariable_logistic_models_glm$pop_dense_B01001_001_ALAND$deviance
 ```
 
 
-```{r area under curve}
+```{r NOT FINISHED area under curve}
 # area under the curve
 
 # gold standard for p likelihood ratio?
@@ -13148,21 +13136,6 @@ univariable_profile_ci_est_tibble <-
   dplyr::rename(profile_ci_est_low = conf.low, 
          profile_ci_est_high = conf.high)
   
-```
-
-
-```{r diagnostics for logistic regression}
-
-HosmerLemeshowTest(
-  fit = fitted(univariable_logistic_models_glm$pop_tot_B01001_001), 
-  obs = univariable_logistic_models_glm$pop_tot_B01001_001$data$extant_swd_binary, 
-  X = as.matrix(univariable_logistic_models_glm$pop_tot_B01001_001$data$pop_tot_B01001_001))
-
-
-
-
-
-
 ```
 
 
@@ -14199,7 +14172,7 @@ predictions_from_gam <-
 ```
 
 
-```{r little gam models}
+```{r little gam models, eval=FALSE, include=FALSE}
 
 pop_dense_gam <- gam(extant_swd_binary ~ 
         s(pop_dense_hundreds_B01001_001_ALAND, k = 11), 
@@ -14213,7 +14186,7 @@ pop_dense_gam <- gam(extant_swd_binary ~
 
 
 
-```{r logistic gam rural only}
+```{r logistic gam rural only, eval=FALSE, include=FALSE}
 
 max_pop_dense_with_wells <- 
   ks_analysis_populated %>% 
@@ -14277,12 +14250,10 @@ plot(big_gam_model,
 # getting confidence intervals
 big_gam_k_5$fit
 
-
-
 ```
 
 
-```{r logistic regression main full model, eval=FALSE, include=FALSE}
+```{r logistic regression main full model}
 
 logistic_model_revised_full <- 
    stats::glm(extant_swd_binary ~ 
@@ -14336,11 +14307,11 @@ test_for_automatic_selection <-
 #   bestglm(test_for_automatic_selection, IC = "AIC", family = binomial)
 # bestBIC <-
 #   bestglm(test_for_automatic_selection, IC = "BIC", family = binomial)
-
-save(bestAIC, 
-          file = "bestAIC.rdata")
-save(bestBIC, 
-          file = "bestBIC.rdata")
+# 
+# save(bestAIC, 
+#           file = "bestAIC.rdata")
+# save(bestBIC, 
+#           file = "bestBIC.rdata")
 
 load(file = "bestAIC.rdata")
 load(file = "bestBIC.rdata")
@@ -14450,7 +14421,7 @@ write_csv(bic_log_tibble_for_thesis,
 ```
 
 
-```{r logistic regression ice full model, eval=FALSE, include=FALSE}
+```{r logistic regression ice full model}
 
 logistic_model_ice_revised_full <- 
    stats::glm(extant_swd_binary ~ 
@@ -14499,16 +14470,16 @@ logistic_ice_matrix <-
 ice_test_for_automatic_selection <- 
   as.data.frame(logistic_ice_matrix)
 
-# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
-ice_bestAIC <-
-  bestglm(ice_test_for_automatic_selection, IC = "AIC", family = binomial)
-ice_bestBIC <-
-  bestglm(ice_test_for_automatic_selection, IC = "BIC", family = binomial)
-
-save(ice_bestAIC, 
-          file = "ice_bestAIC.rdata")
-save(ice_bestBIC, 
-          file = "ice_bestBIC.rdata")
+# # DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+# ice_bestAIC <-
+#   bestglm(ice_test_for_automatic_selection, IC = "AIC", family = binomial)
+# ice_bestBIC <-
+#   bestglm(ice_test_for_automatic_selection, IC = "BIC", family = binomial)
+# 
+# save(ice_bestAIC, 
+#           file = "ice_bestAIC.rdata")
+# save(ice_bestBIC, 
+#           file = "ice_bestBIC.rdata")
 
 load(file = "ice_bestAIC.rdata")
 load(file = "ice_bestBIC.rdata")
@@ -14618,7 +14589,7 @@ write_csv(ice_bic_log_tibble_for_thesis,
 ```
 
 
-```{r logistic regression home value full model, eval=FALSE, include=FALSE}
+```{r logistic regression home value full model}
 
 logistic_model_house_revised_full <- 
    stats::glm(extant_swd_binary ~ 
@@ -14673,10 +14644,10 @@ house_bestAIC <-
 house_bestBIC <-
   bestglm(house_test_for_automatic_selection, IC = "BIC", family = binomial)
 
-save(house_bestAIC, 
+save(house_bestAIC,
           file = "house_bestAIC.rdata")
-save(house_bestBIC, 
-          file = "house_bestAIC.rdata")
+save(house_bestBIC,
+          file = "house_bestBIC.rdata")
 
 load(file = "house_bestAIC.rdata")
 load(file = "house_bestBIC.rdata")
@@ -14786,7 +14757,7 @@ write_csv(house_bic_log_tibble_for_thesis,
 ```
 
 
-```{r logistic regression poverty full model, eval=FALSE, include=FALSE}
+```{r logistic regression poverty full model}
 
 logistic_model_poverty_revised_full <- 
    stats::glm(extant_swd_binary ~ 
@@ -14835,16 +14806,16 @@ logistic_poverty_matrix <-
 poverty_test_for_automatic_selection <- 
   as.data.frame(logistic_poverty_matrix)
 
-# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
-poverty_bestAIC <-
-  bestglm(poverty_test_for_automatic_selection, IC = "AIC", family = binomial)
-poverty_bestBIC <-
-  bestglm(poverty_test_for_automatic_selection, IC = "BIC", family = binomial)
-
-save(poverty_bestAIC, 
-          file = "poverty_bestAIC.rdata")
-save(poverty_bestBIC, 
-          file = "poverty_bestBIC.rdata")
+# # DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+# poverty_bestAIC <-
+#   bestglm(poverty_test_for_automatic_selection, IC = "AIC", family = binomial)
+# poverty_bestBIC <-
+#   bestglm(poverty_test_for_automatic_selection, IC = "BIC", family = binomial)
+# 
+# save(poverty_bestAIC, 
+#           file = "poverty_bestAIC.rdata")
+# save(poverty_bestBIC, 
+#           file = "poverty_bestBIC.rdata")
 
 load(file = "poverty_bestAIC.rdata")
 load(file = "poverty_bestBIC.rdata")
@@ -14954,7 +14925,7 @@ write_csv(poverty_bic_log_tibble_for_thesis,
 ```
 
 
-```{r logistic regression earnings full model, eval=FALSE, include=FALSE}
+```{r logistic regression earnings full model}
 
 logistic_model_earnings_revised_full <- 
    stats::glm(extant_swd_binary ~ 
@@ -15003,16 +14974,16 @@ logistic_earnings_matrix <-
 earnings_test_for_automatic_selection <- 
   as.data.frame(logistic_earnings_matrix)
 
-# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
-earnings_bestAIC <-
-  bestglm(earnings_test_for_automatic_selection, IC = "AIC", family = binomial)
-earnings_bestBIC <-
-  bestglm(earnings_test_for_automatic_selection, IC = "BIC", family = binomial)
-
-save(earnings_bestAIC, 
-          file = "earnings_bestAIC.rdata")
-save(earnings_bestBIC, 
-          file = "earnings_bestBIC.rdata")
+# # DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+# earnings_bestAIC <-
+#   bestglm(earnings_test_for_automatic_selection, IC = "AIC", family = binomial)
+# earnings_bestBIC <-
+#   bestglm(earnings_test_for_automatic_selection, IC = "BIC", family = binomial)
+# 
+# save(earnings_bestAIC, 
+#           file = "earnings_bestAIC.rdata")
+# save(earnings_bestBIC, 
+#           file = "earnings_bestBIC.rdata")
 
 load(file = "earnings_bestAIC.rdata")
 load(file = "earnings_bestBIC.rdata")
@@ -15026,13 +14997,11 @@ write.csv(earnings_bestBIC$BestModels,
           file = "earnings_bestBIC.csv")
 
 # pull AICS and BICs
-stats::AIC(# big_gam_k_5, 
-           logistic_model_earnings_revised_full, 
+stats::AIC(logistic_model_earnings_revised_full, 
            earnings_bestAIC$BestModel, 
            earnings_bestBIC$BestModel)
 
-stats::BIC(# big_gam_k_5, 
-           logistic_model_earnings_revised_full, 
+stats::BIC(logistic_model_earnings_revised_full, 
            earnings_bestAIC$BestModel, 
            earnings_bestBIC$BestModel)
 
@@ -15121,19 +15090,14 @@ write_csv(earnings_bic_log_tibble_for_thesis,
 
 ```
 
-
-
 ## spatial evaluation
 
-
-
 ```{r evaluating spatiality}
-summary(logistic_model_revised_best_AIC)
 
-plot(logistic_model_revised_best_AIC)
+summary(bestAIC$BestModel)
 
 residual_best_aic <- 
-  rstandard(logistic_model_revised_best_AIC)
+  rstandard(bestAIC$BestModel)
 
 spatial_residuals <- 
   tibble(GEOID = ks_income_specific$GEOID, 
@@ -15141,14 +15105,14 @@ spatial_residuals <-
             longitude = ks_income_specific$INTPTLON, 
             latitude = ks_income_specific$INTPTLAT)
 
-spatial_residuals
-
 # project spatial data into North_America_Albers_Equal_Area_Conic (EPSG:102008)
 
-spatial_residuals = st_read(spatial_residuals, 
-                            options = c("X_POSSIBLE_NAMES = longitude",
-                                        "Y_POSSIBLE_NAMES= latitude"), 
-                            4269)
+# spatial_residuals_geo <- st_as(spatial_residuals, 
+#                             options = c("X_POSSIBLE_NAMES" = longitude",
+#                                         "Y_POSSIBLE_NAMES = latitude"), 
+#                             crs = 4269)
+# 
+# trees_sf <- st_as_sf(trees, coords = c("longitude", "latitude"), crs = 4326)
 
 
 
@@ -16445,32 +16409,15 @@ write_csv(single_column_magic_univariable_rural_tibble,
 ```
 
 
-```{r rural logistic regression main full model, eval=FALSE, include=FALSE}
+```{r rural logistic regression income full model, eval=FALSE, include=FALSE}
 
+# make rural income_specific dataset
 ks_rural_income_specific <- 
   ks_analysis_rural %>% 
   filter(!is.na(income_house_median_ten_thousands_B19013_001))
-  
-rural_logistic_model_revised_full <- 
-   stats::glm(extant_swd_binary ~ 
-        pop_dense_hundreds_B01001_001_ALAND + 
-        female_true_percent_B01001_026_001 + 
-        age_0_to_17_true_percent_B01001 + 
-        age_65_plus_true_percent_B01001 + 
-        white_non_hisp_lat_true_percent_B03002_003_001 + 
-        education_high_school_plus_true_percent_B15003_017_to_025 + 
-        no_health_insurance_true_percent_B27010_017_033_050_066 + 
-        renter_occupy_true_percent_B25003_003_001 + 
-        unemployed_true_percent_B23025_005_003 + 
-        income_house_median_ten_thousands_B19013_001 + 
-        prod_count + 
-        AWATER_KM, 
-      data = ks_rural_income_specific, 
-      family = binomial)
 
-summary(rural_logistic_model_revised_full)
-
-logistic_model_revised_full_dep_names <- 
+# make list of dependent variable names
+rural_income_dep_names <- 
         c("pop_dense_hundreds_B01001_001_ALAND", 
         "female_true_percent_B01001_026_001", 
         "age_0_to_17_true_percent_B01001", 
@@ -16484,181 +16431,19 @@ logistic_model_revised_full_dep_names <-
         "prod_count",
         "AWATER_KM")
 
-rural_logistic_model_extant_swd_binary_at_end <- 
+# make tibble of all variables used for analyses
+ks_rural_income_specific_limited_variables <- 
   ks_rural_income_specific %>% 
-  dplyr::select(logistic_model_revised_full_dep_names, 
-                extant_swd_binary) 
-
-
-#### automated choice of best fit ####
-
-rural_logistic_matrix <- 
-  data.matrix(rural_logistic_model_extant_swd_binary_at_end)
-
-rural_test_for_automatic_selection <- 
-  as.data.frame(rural_logistic_matrix)
-
-# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
-rural_bestAIC <-
-  bestglm(rural_test_for_automatic_selection, IC = "AIC", family = binomial)
-rural_bestBIC <-
-  bestglm(rural_test_for_automatic_selection, IC = "BIC", family = binomial)
-
-save(rural_bestAIC, 
-          file = "rural_bestAIC.rdata")
-save(rural_bestBIC, 
-          file = "rural_bestBIC.rdata")
-
-load(file = "rural_bestAIC.rdata")
-load(file = "rural_bestBIC.rdata")
-
-bestAIC$BestModel
-bestBIC$BestModel
-
-write.csv(rural_bestAIC$BestModels, 
-          file = "rural_bestAIC.csv")
-write.csv(rural_bestBIC$BestModels, 
-          file = "rural_bestBIC.csv")
-
-# pull AICS and BICs
-stats::AIC(# big_gam_k_5, 
-           rural_logistic_model_revised_full, 
-           rural_bestAIC$BestModel, 
-           rural_bestBIC$BestModel)
-
-stats::BIC(# big_gam_k_5, 
-           rural_logistic_model_revised_full, 
-           rural_bestAIC$BestModel, 
-           rural_bestBIC$BestModel)
-
-
-#### pull logistic data for tables in thesis ####
-
-nrow(ks_rural_income_specific)
-
-# get profile confidence intervals
-rural_big_log_profile_confidence_intervals <- 
-  profilinator(rural_logistic_model_revised_full)
-
-# remove intercept
-rural_big_log_profile_confidence_intervals_no_intercept <-
-  rural_big_log_profile_confidence_intervals[-(1:1),]
-
-# get and exponentiate estimate
-rural_big_log_estimate_exp <- 
-  exp(rural_logistic_model_revised_full$coefficients)
-
-# make tibble
-rural_big_log_tibble_for_thesis <- 
-  names(rural_big_log_estimate_exp) %>% 
-  as_tibble() %>% 
-  cbind(rural_big_log_estimate_exp) %>% 
-  as_tibble() %>% 
-  filter(value != "(Intercept)") %>% 
-  bind_cols(rural_big_log_profile_confidence_intervals_no_intercept) %>% 
-  mutate_if(is.numeric, round, digits = 2)
-
-# put everything in one column for copy-pasting
-single_column_magic_rural_big_log_tibble <- 
-  rural_big_log_tibble_for_thesis %>% 
-  mutate(rural_big_log_estimate_exp	= formatC(rural_big_log_estimate_exp, 
-                              format = "f", 
-                              digits = 2),
-         conf.low	= formatC(conf.low, 
-                                           format = "f", 
-                                           digits = 2),
-         conf.high = formatC(conf.high, 
-                                            format = "f", 
-                                            digits = 2), 
-         magic_column = paste0(rural_big_log_estimate_exp, 
-                              " (", 
-                              conf.low, 
-                              "–", 
-                              conf.high, 
-                              ")"))
+  dplyr::select(rural_income_dep_names, 
+         extant_swd_binary)
   
-# write table to disk
-write_csv(single_column_magic_rural_big_log_tibble, 
-          path = "single_column_magic_rural_big_log_tibble.csv")
+# count nas in income-specific model
+ks_rural_income_specific_limited_variables %>% 
+  is.na() %>% 
+  colSums() 
 
-
-#### AIC tibble ####
-
-# get profile confidence intervals
-rural_aic_log_profile_confidence_intervals <- 
-  profilinator(rural_bestAIC$BestModel)
-
-# remove intercept
-rural_aic_log_profile_confidence_intervals_no_intercept <-
-  rural_aic_log_profile_confidence_intervals[-(1:1),]
-
-# get and exponentiate estimate
-rural_aic_log_estimate_exp <- 
-  exp(rural_bestAIC$BestModel$coefficients)
-
-rural_aic_log_tibble_for_thesis <- 
-  names(rural_aic_log_estimate_exp) %>% 
-  as_tibble() %>% 
-  cbind(rural_aic_log_estimate_exp) %>% 
-  as_tibble() %>% 
-  filter(value != "(Intercept)") %>% 
-  bind_cols(rural_aic_log_profile_confidence_intervals_no_intercept) %>% 
-  mutate_if(is.numeric, round, digits = 2)
-
-
-# put everything in one column for copy-pasting
-single_column_magic_rural_aic_tibble <- 
-  pretty_columninator(rural_aic_log_tibble_for_thesis, 
-                      odds_ratio = 
-                        rural_aic_log_tibble_for_thesis$rural_aic_log_estimate_exp, 
-                      low_ci = rural_aic_log_tibble_for_thesis$conf.low, 
-                      high_ci = rural_aic_log_tibble_for_thesis$conf.high)
-  
-# write table to disk
-write_csv(single_column_magic_rural_aic_tibble, 
-          path = "single_column_magic_rural_aic_tibble.csv")
-
-
-#### BIC tibble ####
-
-# get profile confidence intervals
-rural_bic_log_profile_confidence_intervals <- 
-  profilinator(rural_bestBIC$BestModel)
-
-# remove intercept
-rural_bic_log_profile_confidence_intervals_no_intercept <-
-  rural_bic_log_profile_confidence_intervals[-(1:1),]
-
-# get and exponentiate estimate
-rural_bic_log_estimate_exp <- 
-  exp(rural_bestBIC$BestModel$coefficients)
-
-rural_bic_log_tibble_for_thesis <- 
-  names(rural_bic_log_estimate_exp) %>% 
-  as_tibble() %>% 
-  cbind(rural_bic_log_estimate_exp) %>% 
-  as_tibble() %>% 
-  filter(value != "(Intercept)") %>% 
-  bind_cols(rural_bic_log_profile_confidence_intervals_no_intercept) %>% 
-  mutate_if(is.numeric, round, digits = 2)
-
-# put everything in one column for copy-pasting
-single_column_magic_rural_bic_tibble <- 
-  pretty_columninator(rural_bic_log_tibble_for_thesis, 
-                      odds_ratio = 
-                        rural_bic_log_tibble_for_thesis$rural_bic_log_estimate_exp, 
-                      low_ci = rural_bic_log_tibble_for_thesis$conf.low, 
-                      high_ci = rural_bic_log_tibble_for_thesis$conf.high)
-  
-# write table to disk
-write_csv(single_column_magic_rural_bic_tibble, 
-          path = "single_column_magic_rural_bic_tibble.csv")
-```
-
-
-```{r rural logistic regression ice full model, eval=FALSE, include=FALSE}
-
-logistic_model_ice_revised_full <- 
+# run big logistic
+rural_logistic_model_income_revised_full <- 
    stats::glm(extant_swd_binary ~ 
         pop_dense_hundreds_B01001_001_ALAND + 
         female_true_percent_B01001_026_001 + 
@@ -16669,15 +16454,199 @@ logistic_model_ice_revised_full <-
         no_health_insurance_true_percent_B27010_017_033_050_066 + 
         renter_occupy_true_percent_B25003_003_001 + 
         unemployed_true_percent_B23025_005_003 + 
-        ice_ten_B19001 + 
+        income_house_median_ten_thousands_B19013_001 + 
         prod_count + 
         AWATER_KM, 
-      data = ks_ice_specific, 
+      data = ks_rural_income_specific_limited_variables, 
       family = binomial)
 
-summary(logistic_model_ice_revised_full)
+# show model summary
+summary(rural_logistic_model_income_revised_full)
 
-logistic_model_ice_revised_full_dep_names <- 
+
+#### automated choice of best fit ####
+
+# make data matrix for bestglm function
+rural_logistic_income_matrix <- 
+  data.matrix(ks_rural_income_specific_limited_variables)
+
+rural_income_test_for_automatic_selection <- 
+  as.data.frame(rural_logistic_income_matrix)
+
+# # run the automated selections
+# # DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+# rural_income_bestAIC <-
+#   bestglm(rural_income_test_for_automatic_selection, IC = "AIC", family = binomial)
+# rural_income_bestBIC <-
+#   bestglm(rural_income_test_for_automatic_selection, IC = "BIC", family = binomial)
+
+# save result of the above as rdata and csv
+save(rural_income_bestAIC, 
+          file = "rural_income_bestAIC.rdata")
+save(rural_income_bestBIC, 
+          file = "rural_income_bestBIC.rdata")
+write.csv(rural_income_bestAIC$BestModels, 
+          file = "rural_income_bestAIC.csv")
+write.csv(rural_income_bestBIC$BestModels, 
+          file = "rural_income_bestBIC.csv")
+
+# load results of the above
+load(file = "rural_income_bestAIC.rdata")
+load(file = "rural_income_bestBIC.rdata")
+
+# display the best models
+rural_income_bestAIC$BestModel
+rural_income_bestBIC$BestModel
+
+# show aics and bics for three model variants
+rural_income_aics <- stats::AIC(rural_logistic_model_income_revised_full, 
+           rural_income_bestAIC$BestModel, 
+           rural_income_bestBIC$BestModel)
+
+rural_income_bics <- stats::BIC(rural_logistic_model_income_revised_full, 
+           rural_income_bestAIC$BestModel, 
+           rural_income_bestBIC$BestModel)
+
+# make table of aics and bics
+rural_income_aic_bic_stats <- 
+  dplyr::bind_rows(rural_income_aics, 
+                   rural_income_bics)
+
+save(rural_income_aic_bic_stats, 
+     file = "rural_income_aic_bic_stats.rdata")
+write_csv(rural_income_aic_bic_stats, 
+     path = "rural_income_aic_bic_stats.csv")
+
+
+
+#### pull logistic data for tables in thesis ####
+
+#### full model table ####
+nrow(ks_rural_income_specific_limited_variables)
+
+# get profile confidence intervals
+rural_income_big_log_profile_confidence_intervals <- 
+  profilinator(rural_logistic_model_income_revised_full)
+
+# remove intercept
+rural_income_big_log_profile_confidence_intervals_no_intercept <-
+  rural_income_big_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+exp_estimate <- 
+  exp(rural_logistic_model_income_revised_full$coefficients)
+
+# pull together tibble of estimates and confidence intervals
+rural_income_big_log_tibble_for_thesis <- 
+  names(exp_estimate) %>% 
+  as_tibble() %>% 
+  cbind(exp_estimate) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(rural_income_big_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+# put everything in one column for copy-pasting
+rural_income_main_final_tibble <- 
+  pretty_columninator(rural_income_big_log_tibble_for_thesis, 
+                      odds_ratio = rural_income_big_log_tibble_for_thesis$exp_estimate, 
+                      low_ci = rural_income_big_log_tibble_for_thesis$conf.low, 
+                      high_ci = rural_income_big_log_tibble_for_thesis$conf.high)
+  
+# save write table to disk
+save(rural_income_main_final_tibble, 
+     file = "rural_income_main_final_tibble.rdata")
+write_csv(rural_income_main_final_tibble, 
+          path = "rural_income_main_final_tibble.csv")
+
+
+#### AIC-optimized model table ####
+
+# get profile confidence intervals
+rural_income_aic_log_profile_confidence_intervals <- 
+  profilinator(rural_income_bestAIC$BestModel)
+
+# remove intercept
+rural_income_aic_log_profile_confidence_intervals_no_intercept <-
+  rural_income_aic_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+exp_estimate <- 
+  exp(rural_income_bestAIC$BestModel$coefficients)
+
+# pull together tibble of estimates and confidence intervals
+rural_income_aic_log_tibble_for_thesis <- 
+  names(exp_estimate) %>% 
+  as_tibble() %>% 
+  cbind(exp_estimate) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(rural_income_aic_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+# put everything in one column for copy-pasting
+rural_income_aic_final_tibble <- 
+  pretty_columninator(rural_income_aic_log_tibble_for_thesis, 
+                      odds_ratio = rural_income_aic_log_tibble_for_thesis$exp_estimate, 
+                      low_ci = rural_income_aic_log_tibble_for_thesis$conf.low, 
+                      high_ci = rural_income_aic_log_tibble_for_thesis$conf.high)
+  
+# write table to disk
+save(rural_income_aic_final_tibble, 
+     file = "rural_income_aic_final_tibble.rdata")
+write_csv(rural_income_aic_final_tibble, 
+          path = "rural_income_aic_final_tibble.csv")
+
+
+#### BIC-optimized model table ####
+
+# get profile confidence intervals
+rural_income_bic_log_profile_confidence_intervals <- 
+  profilinator(rural_income_bestBIC$BestModel)
+
+# remove intercept
+rural_income_bic_log_profile_confidence_intervals_no_intercept <-
+  rural_income_bic_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+exp_estimate <- 
+  exp(rural_income_bestBIC$BestModel$coefficients)
+
+# pull together tibble of estimates and confidence intervals
+rural_income_bic_log_tibble_for_thesis <- 
+  names(exp_estimate) %>% 
+  as_tibble() %>% 
+  cbind(exp_estimate) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(rural_income_bic_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+# put everything in one column for copy-pasting
+rural_income_bic_final_tibble <- 
+  pretty_columninator(rural_income_bic_log_tibble_for_thesis, 
+                      odds_ratio = rural_income_bic_log_tibble_for_thesis$exp_estimate, 
+                      low_ci = rural_income_bic_log_tibble_for_thesis$conf.low, 
+                      high_ci = rural_income_bic_log_tibble_for_thesis$conf.high)
+  
+# save and write table to disk
+save(rural_income_bic_final_tibble, 
+          file = "rural_income_bic_final_tibble.rdata")
+write_csv(rural_income_bic_final_tibble, 
+          path = "rural_income_bic_final_tibble.csv")
+
+```
+
+
+```{r rural logistic regression ice full model, eval=FALSE, include=FALSE}
+
+# make rural ice_specific dataset
+ks_rural_ice_specific <- 
+  ks_analysis_rural %>% 
+  filter(!is.na(ice_ten_B19001))
+
+# make list of dependent variable names
+rural_ice_dep_names <- 
         c("pop_dense_hundreds_B01001_001_ALAND", 
         "female_true_percent_B01001_026_001", 
         "age_0_to_17_true_percent_B01001", 
@@ -16691,142 +16660,19 @@ logistic_model_ice_revised_full_dep_names <-
         "prod_count",
         "AWATER_KM")
 
-logistic_model_ice_extant_swd_binary_at_end <- 
-  ks_ice_specific %>% 
-  dplyr::select(logistic_model_ice_revised_full_dep_names, 
-                extant_swd_binary) 
+# make tibble of all variables used for analyses
+ks_rural_ice_specific_limited_variables <- 
+  ks_rural_ice_specific %>% 
+  dplyr::select(rural_ice_dep_names, 
+         extant_swd_binary)
+  
+# count nas in ice-specific model
+ks_rural_ice_specific_limited_variables %>% 
+  is.na() %>% 
+  colSums() 
 
-
-#### automated choice of best fit ####
-
-logistic_ice_matrix <- 
-  data.matrix(logistic_model_ice_extant_swd_binary_at_end)
-
-ice_test_for_automatic_selection <- 
-  as.data.frame(logistic_ice_matrix)
-
-# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
-ice_bestAIC <-
-  bestglm(ice_test_for_automatic_selection, IC = "AIC", family = binomial)
-ice_bestBIC <-
-  bestglm(ice_test_for_automatic_selection, IC = "BIC", family = binomial)
-
-save(ice_bestAIC, 
-          file = "ice_bestAIC.rdata")
-save(ice_bestBIC, 
-          file = "ice_bestBIC.rdata")
-
-load(file = "ice_bestAIC.rdata")
-load(file = "ice_bestBIC.rdata")
-
-ice_bestAIC$BestModel
-ice_bestBIC$BestModel
-
-write.csv(ice_bestAIC$BestModels, 
-          file = "ice_bestAIC.csv")
-write.csv(ice_bestBIC$BestModels, 
-          file = "ice_bestBIC.csv")
-
-# pull AICS and BICs
-stats::AIC(# big_gam_k_5, 
-           logistic_model_ice_revised_full, 
-           ice_bestAIC$BestModel, 
-           ice_bestBIC$BestModel)
-
-stats::BIC(# big_gam_k_5, 
-           logistic_model_ice_revised_full, 
-           ice_bestAIC$BestModel, 
-           ice_bestBIC$BestModel)
-
-
-#### pull logistic data for tables in thesis ####
-
-nrow(ks_ice_specific)
-
-# get profile confidence intervals
-ice_big_log_profile_confidence_intervals <- 
-  profilinator(logistic_model_ice_revised_full)
-
-# remove intercept
-ice_big_log_profile_confidence_intervals_no_intercept <-
-  ice_big_log_profile_confidence_intervals[-(1:1),]
-
-# get and exponentiate estimate
-ice_big_log_estimate_exp <- 
-  exp(logistic_model_ice_revised_full$coefficients)
-
-ice_big_log_tibble_for_thesis <- 
-  names(ice_big_log_estimate_exp) %>% 
-  as_tibble() %>% 
-  cbind(ice_big_log_estimate_exp) %>% 
-  as_tibble() %>% 
-  filter(value != "(Intercept)") %>% 
-  bind_cols(ice_big_log_profile_confidence_intervals_no_intercept) %>% 
-  mutate_if(is.numeric, round, digits = 2)
-
-write_csv(ice_big_log_tibble_for_thesis, 
-          path = "ice_big_log_tibble_for_thesis.csv")
-
-
-#### AIC tibble ####
-
-# get profile confidence intervals
-ice_aic_log_profile_confidence_intervals <- 
-  profilinator(ice_bestAIC$BestModel)
-
-# remove intercept
-ice_aic_log_profile_confidence_intervals_no_intercept <-
-  ice_aic_log_profile_confidence_intervals[-(1:1),]
-
-# get and exponentiate estimate
-ice_aic_log_estimate_exp <- 
-  exp(ice_bestAIC$BestModel$coefficients)
-
-ice_aic_log_tibble_for_thesis <- 
-  names(ice_aic_log_estimate_exp) %>% 
-  as_tibble() %>% 
-  cbind(ice_aic_log_estimate_exp) %>% 
-  as_tibble() %>% 
-  filter(value != "(Intercept)") %>% 
-  bind_cols(ice_aic_log_profile_confidence_intervals_no_intercept) %>% 
-  mutate_if(is.numeric, round, digits = 2)
-
-write_csv(ice_aic_log_tibble_for_thesis, 
-          path = "ice_aic_log_tibble_for_thesis.csv")
-
-
-#### BIC tibble ####
-
-# get profile confidence intervals
-ice_bic_log_profile_confidence_intervals <- 
-  profilinator(ice_bestBIC$BestModel)
-
-# remove intercept
-ice_bic_log_profile_confidence_intervals_no_intercept <-
-  ice_bic_log_profile_confidence_intervals[-(1:1),]
-
-# get and exponentiate estimate
-ice_bic_log_estimate_exp <- 
-  exp(ice_bestBIC$BestModel$coefficients)
-
-ice_bic_log_tibble_for_thesis <- 
-  names(ice_bic_log_estimate_exp) %>% 
-  as_tibble() %>% 
-  cbind(ice_bic_log_estimate_exp) %>% 
-  as_tibble() %>% 
-  filter(value != "(Intercept)") %>% 
-  bind_cols(ice_bic_log_profile_confidence_intervals_no_intercept) %>% 
-  mutate_if(is.numeric, round, digits = 2)
-
-write_csv(ice_bic_log_tibble_for_thesis, 
-          path = "ice_bic_log_tibble_for_thesis.csv")
-
-```
-
-
-```{r rural logistic regression home value full model, eval=FALSE, include=FALSE}
-
-logistic_model_house_revised_full <- 
+# run big logistic
+rural_logistic_model_ice_revised_full <- 
    stats::glm(extant_swd_binary ~ 
         pop_dense_hundreds_B01001_001_ALAND + 
         female_true_percent_B01001_026_001 + 
@@ -16837,15 +16683,199 @@ logistic_model_house_revised_full <-
         no_health_insurance_true_percent_B27010_017_033_050_066 + 
         renter_occupy_true_percent_B25003_003_001 + 
         unemployed_true_percent_B23025_005_003 + 
-        house_value_median_ten_thousands_B25077_001 + 
+        ice_ten_B19001 + 
         prod_count + 
-        AWATER_KM,
-      data = ks_house_specific, 
+        AWATER_KM, 
+      data = ks_rural_ice_specific_limited_variables, 
       family = binomial)
 
-summary(logistic_model_house_revised_full)
+# show model summary
+summary(rural_logistic_model_ice_revised_full)
 
-logistic_model_house_revised_full_dep_names <- 
+
+#### automated choice of best fit ####
+
+# make data matrix for bestglm function
+rural_logistic_ice_matrix <- 
+  data.matrix(ks_rural_ice_specific_limited_variables)
+
+rural_ice_test_for_automatic_selection <- 
+  as.data.frame(rural_logistic_ice_matrix)
+
+# # run the automated selections
+# # DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+# rural_ice_bestAIC <-
+#   bestglm(rural_ice_test_for_automatic_selection, IC = "AIC", family = binomial)
+# rural_ice_bestBIC <-
+#   bestglm(rural_ice_test_for_automatic_selection, IC = "BIC", family = binomial)
+
+# save result of the above as rdata and csv
+save(rural_ice_bestAIC, 
+          file = "rural_ice_bestAIC.rdata")
+save(rural_ice_bestBIC, 
+          file = "rural_ice_bestBIC.rdata")
+write.csv(rural_ice_bestAIC$BestModels, 
+          file = "rural_ice_bestAIC.csv")
+write.csv(rural_ice_bestBIC$BestModels, 
+          file = "rural_ice_bestBIC.csv")
+
+# load results of the above
+load(file = "rural_ice_bestAIC.rdata")
+load(file = "rural_ice_bestBIC.rdata")
+
+# display the best models
+rural_ice_bestAIC$BestModel
+rural_ice_bestBIC$BestModel
+
+# show aics and bics for three model variants
+rural_ice_aics <- stats::AIC(rural_logistic_model_ice_revised_full, 
+           rural_ice_bestAIC$BestModel, 
+           rural_ice_bestBIC$BestModel)
+
+rural_ice_bics <- stats::BIC(rural_logistic_model_ice_revised_full, 
+           rural_ice_bestAIC$BestModel, 
+           rural_ice_bestBIC$BestModel)
+
+# make table of aics and bics
+rural_ice_aic_bic_stats <- 
+  dplyr::bind_rows(rural_ice_aics, 
+                   rural_ice_bics)
+
+save(rural_ice_aic_bic_stats, 
+     file = "rural_ice_aic_bic_stats.rdata")
+write_csv(rural_ice_aic_bic_stats, 
+     path = "rural_ice_aic_bic_stats.csv")
+
+
+
+#### pull logistic data for tables in thesis ####
+
+#### full model table ####
+nrow(ks_rural_ice_specific_limited_variables)
+
+# get profile confidence intervals
+rural_ice_big_log_profile_confidence_intervals <- 
+  profilinator(rural_logistic_model_ice_revised_full)
+
+# remove intercept
+rural_ice_big_log_profile_confidence_intervals_no_intercept <-
+  rural_ice_big_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+exp_estimate <- 
+  exp(rural_logistic_model_ice_revised_full$coefficients)
+
+# pull together tibble of estimates and confidence intervals
+rural_ice_big_log_tibble_for_thesis <- 
+  names(exp_estimate) %>% 
+  as_tibble() %>% 
+  cbind(exp_estimate) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(rural_ice_big_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+# put everything in one column for copy-pasting
+rural_ice_main_final_tibble <- 
+  pretty_columninator(rural_ice_big_log_tibble_for_thesis, 
+                      odds_ratio = rural_ice_big_log_tibble_for_thesis$exp_estimate, 
+                      low_ci = rural_ice_big_log_tibble_for_thesis$conf.low, 
+                      high_ci = rural_ice_big_log_tibble_for_thesis$conf.high)
+  
+# save write table to disk
+save(rural_ice_main_final_tibble, 
+     file = "rural_ice_main_final_tibble.rdata")
+write_csv(rural_ice_main_final_tibble, 
+          path = "rural_ice_main_final_tibble.csv")
+
+
+#### AIC-optimized model table ####
+
+# get profile confidence intervals
+rural_ice_aic_log_profile_confidence_intervals <- 
+  profilinator(rural_ice_bestAIC$BestModel)
+
+# remove intercept
+rural_ice_aic_log_profile_confidence_intervals_no_intercept <-
+  rural_ice_aic_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+exp_estimate <- 
+  exp(rural_ice_bestAIC$BestModel$coefficients)
+
+# pull together tibble of estimates and confidence intervals
+rural_ice_aic_log_tibble_for_thesis <- 
+  names(exp_estimate) %>% 
+  as_tibble() %>% 
+  cbind(exp_estimate) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(rural_ice_aic_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+# put everything in one column for copy-pasting
+rural_ice_aic_final_tibble <- 
+  pretty_columninator(rural_ice_aic_log_tibble_for_thesis, 
+                      odds_ratio = rural_ice_aic_log_tibble_for_thesis$exp_estimate, 
+                      low_ci = rural_ice_aic_log_tibble_for_thesis$conf.low, 
+                      high_ci = rural_ice_aic_log_tibble_for_thesis$conf.high)
+  
+# write table to disk
+save(rural_ice_aic_final_tibble, 
+     file = "rural_ice_aic_final_tibble.rdata")
+write_csv(rural_ice_aic_final_tibble, 
+          path = "rural_ice_aic_final_tibble.csv")
+
+
+#### BIC-optimized model table ####
+
+# get profile confidence intervals
+rural_ice_bic_log_profile_confidence_intervals <- 
+  profilinator(rural_ice_bestBIC$BestModel)
+
+# remove intercept
+rural_ice_bic_log_profile_confidence_intervals_no_intercept <-
+  rural_ice_bic_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+exp_estimate <- 
+  exp(rural_ice_bestBIC$BestModel$coefficients)
+
+# pull together tibble of estimates and confidence intervals
+rural_ice_bic_log_tibble_for_thesis <- 
+  names(exp_estimate) %>% 
+  as_tibble() %>% 
+  cbind(exp_estimate) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(rural_ice_bic_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+# put everything in one column for copy-pasting
+rural_ice_bic_final_tibble <- 
+  pretty_columninator(rural_ice_bic_log_tibble_for_thesis, 
+                      odds_ratio = rural_ice_bic_log_tibble_for_thesis$exp_estimate, 
+                      low_ci = rural_ice_bic_log_tibble_for_thesis$conf.low, 
+                      high_ci = rural_ice_bic_log_tibble_for_thesis$conf.high)
+  
+# save and write table to disk
+save(rural_ice_bic_final_tibble, 
+          file = "rural_ice_bic_final_tibble.rdata")
+write_csv(rural_ice_bic_final_tibble, 
+          path = "rural_ice_bic_final_tibble.csv")
+
+```
+
+
+```{r rural logistic regression home value full model, eval=FALSE, include=FALSE}
+
+# make rural house-specific dataset
+ks_rural_house_specific <- 
+  ks_analysis_rural %>% 
+  filter(!is.na(house_value_median_ten_thousands_B25077_001))
+
+# make list of dependent variable names
+rural_house_dep_names <- 
         c("pop_dense_hundreds_B01001_001_ALAND", 
         "female_true_percent_B01001_026_001", 
         "age_0_to_17_true_percent_B01001", 
@@ -16859,142 +16889,19 @@ logistic_model_house_revised_full_dep_names <-
         "prod_count",
         "AWATER_KM")
 
-logistic_model_house_extant_swd_binary_at_end <- 
-  ks_house_specific %>% 
-  dplyr::select(logistic_model_house_revised_full_dep_names, 
-                extant_swd_binary) 
+# make tibble of all variables used for analyses
+ks_rural_house_specific_limited_variables <- 
+  ks_rural_house_specific %>% 
+  dplyr::select(rural_house_dep_names, 
+         extant_swd_binary)
+  
+# count nas in house-specific model
+ks_rural_house_specific_limited_variables %>% 
+  is.na() %>% 
+  colSums() 
 
-
-#### automated chohouse of best fit ####
-
-logistic_house_matrix <- 
-  data.matrix(logistic_model_house_extant_swd_binary_at_end)
-
-house_test_for_automatic_selection <- 
-  as.data.frame(logistic_house_matrix)
-
-# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
-house_bestAIC <-
-  bestglm(house_test_for_automatic_selection, IC = "AIC", family = binomial)
-house_bestBIC <-
-  bestglm(house_test_for_automatic_selection, IC = "BIC", family = binomial)
-
-save(house_bestAIC, 
-          file = "house_bestAIC.rdata")
-save(house_bestBIC, 
-          file = "house_bestAIC.rdata")
-
-load(file = "house_bestAIC.rdata")
-load(file = "house_bestBIC.rdata")
-
-house_bestAIC$BestModel
-house_bestBIC$BestModel
-
-write.csv(house_bestAIC$BestModels, 
-          file = "house_bestBIC.csv")
-write.csv(house_bestBIC$BestModels, 
-          file = "house_bestBIC.csv")
-
-# pull AICS and BICs
-stats::AIC(# big_gam_k_5, 
-           logistic_model_house_revised_full, 
-           house_bestAIC$BestModel, 
-           house_bestBIC$BestModel)
-
-stats::BIC(# big_gam_k_5, 
-           logistic_model_house_revised_full, 
-           house_bestAIC$BestModel, 
-           house_bestBIC$BestModel)
-
-
-#### pull logistic data for tables in thesis ####
-
-nrow(ks_house_specific)
-
-# get profile confidence intervals
-house_big_log_profile_confidence_intervals <- 
-  profilinator(logistic_model_house_revised_full)
-
-# remove intercept
-house_big_log_profile_confidence_intervals_no_intercept <-
-  house_big_log_profile_confidence_intervals[-(1:1),]
-
-# get and exponentiate estimate
-house_big_log_estimate_exp <- 
-  exp(logistic_model_house_revised_full$coefficients)
-
-house_big_log_tibble_for_thesis <- 
-  names(house_big_log_estimate_exp) %>% 
-  as_tibble() %>% 
-  cbind(house_big_log_estimate_exp) %>% 
-  as_tibble() %>% 
-  filter(value != "(Intercept)") %>% 
-  bind_cols(house_big_log_profile_confidence_intervals_no_intercept) %>% 
-  mutate_if(is.numeric, round, digits = 2)
-
-write_csv(house_big_log_tibble_for_thesis, 
-          path = "house_big_log_tibble_for_thesis.csv")
-
-
-#### AIC tibble ####
-
-# get profile confidence intervals
-house_aic_log_profile_confidence_intervals <- 
-  profilinator(house_bestAIC$BestModel)
-
-# remove intercept
-house_aic_log_profile_confidence_intervals_no_intercept <-
-  house_aic_log_profile_confidence_intervals[-(1:1),]
-
-# get and exponentiate estimate
-house_aic_log_estimate_exp <- 
-  exp(house_bestAIC$BestModel$coefficients)
-
-house_aic_log_tibble_for_thesis <- 
-  names(house_aic_log_estimate_exp) %>% 
-  as_tibble() %>% 
-  cbind(house_aic_log_estimate_exp) %>% 
-  as_tibble() %>% 
-  filter(value != "(Intercept)") %>% 
-  bind_cols(house_aic_log_profile_confidence_intervals_no_intercept) %>% 
-  mutate_if(is.numeric, round, digits = 2)
-
-write_csv(house_aic_log_tibble_for_thesis, 
-          path = "house_aic_log_tibble_for_thesis.csv")
-
-
-#### BIC tibble ####
-
-# get profile confidence intervals
-house_bic_log_profile_confidence_intervals <- 
-  profilinator(house_bestBIC$BestModel)
-
-# remove intercept
-house_bic_log_profile_confidence_intervals_no_intercept <-
-  house_bic_log_profile_confidence_intervals[-(1:1),]
-
-# get and exponentiate estimate
-house_bic_log_estimate_exp <- 
-  exp(house_bestBIC$BestModel$coefficients)
-
-house_bic_log_tibble_for_thesis <- 
-  names(house_bic_log_estimate_exp) %>% 
-  as_tibble() %>% 
-  cbind(house_bic_log_estimate_exp) %>% 
-  as_tibble() %>% 
-  filter(value != "(Intercept)") %>% 
-  bind_cols(house_bic_log_profile_confidence_intervals_no_intercept) %>% 
-  mutate_if(is.numeric, round, digits = 2)
-
-write_csv(house_bic_log_tibble_for_thesis, 
-          path = "house_bic_log_tibble_for_thesis.csv")
-
-```
-
-
-```{r rural logistic regression poverty full model, eval=FALSE, include=FALSE}
-
-logistic_model_poverty_revised_full <- 
+# run big logistic
+rural_logistic_model_house_revised_full <- 
    stats::glm(extant_swd_binary ~ 
         pop_dense_hundreds_B01001_001_ALAND + 
         female_true_percent_B01001_026_001 + 
@@ -17005,15 +16912,199 @@ logistic_model_poverty_revised_full <-
         no_health_insurance_true_percent_B27010_017_033_050_066 + 
         renter_occupy_true_percent_B25003_003_001 + 
         unemployed_true_percent_B23025_005_003 + 
-        poverty_below_100_true_percent_C17002_002_003_001 + 
+        house_value_median_ten_thousands_B25077_001 + 
         prod_count + 
-        AWATER_KM,
-      data = ks_poverty_specific, 
+        AWATER_KM, 
+      data = ks_rural_house_specific_limited_variables, 
       family = binomial)
 
-summary(logistic_model_poverty_revised_full)
+# show model summary
+summary(rural_logistic_model_house_revised_full)
 
-logistic_model_poverty_revised_full_dep_names <- 
+
+#### automated choice of best fit ####
+
+# make data matrix for bestglm function
+rural_logistic_house_matrix <- 
+  data.matrix(ks_rural_house_specific_limited_variables)
+
+rural_house_test_for_automatic_selection <- 
+  as.data.frame(rural_logistic_house_matrix)
+
+# # run the automated selections
+# # DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+# rural_house_bestAIC <-
+#   bestglm(rural_house_test_for_automatic_selection, IC = "AIC", family = binomial)
+# rural_house_bestBIC <-
+#   bestglm(rural_house_test_for_automatic_selection, IC = "BIC", family = binomial)
+
+# save result of the above as rdata and csv
+save(rural_house_bestAIC, 
+          file = "rural_house_bestAIC.rdata")
+save(rural_house_bestBIC, 
+          file = "rural_house_bestBIC.rdata")
+write.csv(rural_house_bestAIC$BestModels, 
+          file = "rural_house_bestAIC.csv")
+write.csv(rural_house_bestBIC$BestModels, 
+          file = "rural_house_bestBIC.csv")
+
+# load results of the above
+load(file = "rural_house_bestAIC.rdata")
+load(file = "rural_house_bestBIC.rdata")
+
+# display the best models
+rural_house_bestAIC$BestModel
+rural_house_bestBIC$BestModel
+
+# show aics and bics for three model variants
+rural_house_aics <- stats::AIC(rural_logistic_model_house_revised_full, 
+           rural_house_bestAIC$BestModel, 
+           rural_house_bestBIC$BestModel)
+
+rural_house_bics <- stats::BIC(rural_logistic_model_house_revised_full, 
+           rural_house_bestAIC$BestModel, 
+           rural_house_bestBIC$BestModel)
+
+# make table of aics and bics
+rural_house_aic_bic_stats <- 
+  dplyr::bind_rows(rural_house_aics, 
+                   rural_house_bics)
+
+save(rural_house_aic_bic_stats, 
+     file = "rural_house_aic_bic_stats.rdata")
+write_csv(rural_house_aic_bic_stats, 
+     path = "rural_house_aic_bic_stats.csv")
+
+
+
+#### pull logistic data for tables in thesis ####
+
+#### full model table ####
+nrow(ks_rural_house_specific_limited_variables)
+
+# get profile confidence intervals
+rural_house_big_log_profile_confidence_intervals <- 
+  profilinator(rural_logistic_model_house_revised_full)
+
+# remove intercept
+rural_house_big_log_profile_confidence_intervals_no_intercept <-
+  rural_house_big_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+exp_estimate <- 
+  exp(rural_logistic_model_house_revised_full$coefficients)
+
+# pull together tibble of estimates and confidence intervals
+rural_house_big_log_tibble_for_thesis <- 
+  names(exp_estimate) %>% 
+  as_tibble() %>% 
+  cbind(exp_estimate) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(rural_house_big_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+# put everything in one column for copy-pasting
+rural_house_main_final_tibble <- 
+  pretty_columninator(rural_house_big_log_tibble_for_thesis, 
+                      odds_ratio = rural_house_big_log_tibble_for_thesis$exp_estimate, 
+                      low_ci = rural_house_big_log_tibble_for_thesis$conf.low, 
+                      high_ci = rural_house_big_log_tibble_for_thesis$conf.high)
+  
+# save write table to disk
+save(rural_house_main_final_tibble, 
+     file = "rural_house_main_final_tibble.rdata")
+write_csv(rural_house_main_final_tibble, 
+          path = "rural_house_main_final_tibble.csv")
+
+
+#### AIC-optimized model table ####
+
+# get profile confidence intervals
+rural_house_aic_log_profile_confidence_intervals <- 
+  profilinator(rural_house_bestAIC$BestModel)
+
+# remove intercept
+rural_house_aic_log_profile_confidence_intervals_no_intercept <-
+  rural_house_aic_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+exp_estimate <- 
+  exp(rural_house_bestAIC$BestModel$coefficients)
+
+# pull together tibble of estimates and confidence intervals
+rural_house_aic_log_tibble_for_thesis <- 
+  names(exp_estimate) %>% 
+  as_tibble() %>% 
+  cbind(exp_estimate) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(rural_house_aic_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+# put everything in one column for copy-pasting
+rural_house_aic_final_tibble <- 
+  pretty_columninator(rural_house_aic_log_tibble_for_thesis, 
+                      odds_ratio = rural_house_aic_log_tibble_for_thesis$exp_estimate, 
+                      low_ci = rural_house_aic_log_tibble_for_thesis$conf.low, 
+                      high_ci = rural_house_aic_log_tibble_for_thesis$conf.high)
+  
+# write table to disk
+save(rural_house_aic_final_tibble, 
+     file = "rural_house_aic_final_tibble.rdata")
+write_csv(rural_house_aic_final_tibble, 
+          path = "rural_house_aic_final_tibble.csv")
+
+
+#### BIC-optimized model table ####
+
+# get profile confidence intervals
+rural_house_bic_log_profile_confidence_intervals <- 
+  profilinator(rural_house_bestBIC$BestModel)
+
+# remove intercept
+rural_house_bic_log_profile_confidence_intervals_no_intercept <-
+  rural_house_bic_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+exp_estimate <- 
+  exp(rural_house_bestBIC$BestModel$coefficients)
+
+# pull together tibble of estimates and confidence intervals
+rural_house_bic_log_tibble_for_thesis <- 
+  names(exp_estimate) %>% 
+  as_tibble() %>% 
+  cbind(exp_estimate) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(rural_house_bic_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+# put everything in one column for copy-pasting
+rural_house_bic_final_tibble <- 
+  pretty_columninator(rural_house_bic_log_tibble_for_thesis, 
+                      odds_ratio = rural_house_bic_log_tibble_for_thesis$exp_estimate, 
+                      low_ci = rural_house_bic_log_tibble_for_thesis$conf.low, 
+                      high_ci = rural_house_bic_log_tibble_for_thesis$conf.high)
+  
+# save and write table to disk
+save(rural_house_bic_final_tibble, 
+          file = "rural_house_bic_final_tibble.rdata")
+write_csv(rural_house_bic_final_tibble, 
+          path = "rural_house_bic_final_tibble.csv")
+
+```
+
+
+```{r rural logistic regression poverty full model, eval=FALSE, include=FALSE}
+
+# make rural poverty_specific dataset
+ks_rural_poverty_specific <- 
+  ks_analysis_rural %>% 
+  filter(!is.na(poverty_below_100_true_percent_C17002_002_003_001))
+
+# make list of dependent variable names
+rural_poverty_dep_names <- 
         c("pop_dense_hundreds_B01001_001_ALAND", 
         "female_true_percent_B01001_026_001", 
         "age_0_to_17_true_percent_B01001", 
@@ -17027,142 +17118,19 @@ logistic_model_poverty_revised_full_dep_names <-
         "prod_count",
         "AWATER_KM")
 
-logistic_model_poverty_extant_swd_binary_at_end <- 
-  ks_poverty_specific %>% 
-  dplyr::select(logistic_model_poverty_revised_full_dep_names, 
-                extant_swd_binary) 
+# make tibble of all variables used for analyses
+ks_rural_poverty_specific_limited_variables <- 
+  ks_rural_poverty_specific %>% 
+  dplyr::select(rural_poverty_dep_names, 
+         extant_swd_binary)
+  
+# count nas in poverty-specific model
+ks_rural_poverty_specific_limited_variables %>% 
+  is.na() %>% 
+  colSums() 
 
-
-#### automated chopoverty of best fit ####
-
-logistic_poverty_matrix <- 
-  data.matrix(logistic_model_poverty_extant_swd_binary_at_end)
-
-poverty_test_for_automatic_selection <- 
-  as.data.frame(logistic_poverty_matrix)
-
-# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
-poverty_bestAIC <-
-  bestglm(poverty_test_for_automatic_selection, IC = "AIC", family = binomial)
-poverty_bestBIC <-
-  bestglm(poverty_test_for_automatic_selection, IC = "BIC", family = binomial)
-
-save(poverty_bestAIC, 
-          file = "poverty_bestAIC.rdata")
-save(poverty_bestBIC, 
-          file = "poverty_bestBIC.rdata")
-
-load(file = "poverty_bestAIC.rdata")
-load(file = "poverty_bestBIC.rdata")
-
-poverty_bestAIC$BestModel
-poverty_bestBIC$BestModel
-
-write.csv(poverty_bestAIC$BestModels, 
-          file = "poverty_bestAIC.csv")
-write.csv(poverty_bestBIC$BestModels, 
-          file = "poverty_bestBIC.csv")
-
-# pull AICS and BICs
-stats::AIC(# big_gam_k_5, 
-           logistic_model_poverty_revised_full, 
-           poverty_bestAIC$BestModel, 
-           poverty_bestBIC$BestModel)
-
-stats::BIC(# big_gam_k_5, 
-           logistic_model_poverty_revised_full, 
-           poverty_bestAIC$BestModel, 
-           poverty_bestBIC$BestModel)
-
-
-#### pull logistic data for tables in thesis ####
-
-nrow(ks_poverty_specific)
-
-# get profile confidence intervals
-poverty_big_log_profile_confidence_intervals <- 
-  profilinator(logistic_model_poverty_revised_full)
-
-# remove intercept
-poverty_big_log_profile_confidence_intervals_no_intercept <-
-  poverty_big_log_profile_confidence_intervals[-(1:1),]
-
-# get and exponentiate estimate
-poverty_big_log_estimate_exp <- 
-  exp(logistic_model_poverty_revised_full$coefficients)
-
-poverty_big_log_tibble_for_thesis <- 
-  names(poverty_big_log_estimate_exp) %>% 
-  as_tibble() %>% 
-  cbind(poverty_big_log_estimate_exp) %>% 
-  as_tibble() %>% 
-  filter(value != "(Intercept)") %>% 
-  bind_cols(poverty_big_log_profile_confidence_intervals_no_intercept) %>% 
-  mutate_if(is.numeric, round, digits = 2)
-
-write_csv(poverty_big_log_tibble_for_thesis, 
-          path = "poverty_big_log_tibble_for_thesis.csv")
-
-
-#### AIC tibble ####
-
-# get profile confidence intervals
-poverty_aic_log_profile_confidence_intervals <- 
-  profilinator(poverty_bestAIC$BestModel)
-
-# remove intercept
-poverty_aic_log_profile_confidence_intervals_no_intercept <-
-  poverty_aic_log_profile_confidence_intervals[-(1:1),]
-
-# get and exponentiate estimate
-poverty_aic_log_estimate_exp <- 
-  exp(poverty_bestAIC$BestModel$coefficients)
-
-poverty_aic_log_tibble_for_thesis <- 
-  names(poverty_aic_log_estimate_exp) %>% 
-  as_tibble() %>% 
-  cbind(poverty_aic_log_estimate_exp) %>% 
-  as_tibble() %>% 
-  filter(value != "(Intercept)") %>% 
-  bind_cols(poverty_aic_log_profile_confidence_intervals_no_intercept) %>% 
-  mutate_if(is.numeric, round, digits = 2)
-
-write_csv(poverty_aic_log_tibble_for_thesis, 
-          path = "poverty_aic_log_tibble_for_thesis.csv")
-
-
-#### BIC tibble ####
-
-# get profile confidence intervals
-poverty_bic_log_profile_confidence_intervals <- 
-  profilinator(poverty_bestBIC$BestModel)
-
-# remove intercept
-poverty_bic_log_profile_confidence_intervals_no_intercept <-
-  poverty_bic_log_profile_confidence_intervals[-(1:1),]
-
-# get and exponentiate estimate
-poverty_bic_log_estimate_exp <- 
-  exp(poverty_bestBIC$BestModel$coefficients)
-
-poverty_bic_log_tibble_for_thesis <- 
-  names(poverty_bic_log_estimate_exp) %>% 
-  as_tibble() %>% 
-  cbind(poverty_bic_log_estimate_exp) %>% 
-  as_tibble() %>% 
-  filter(value != "(Intercept)") %>% 
-  bind_cols(poverty_bic_log_profile_confidence_intervals_no_intercept) %>% 
-  mutate_if(is.numeric, round, digits = 2)
-
-write_csv(poverty_bic_log_tibble_for_thesis, 
-          path = "poverty_bic_log_tibble_for_thesis.csv")
-
-```
-
-
-```{r rural logistic regression earnings full model, eval=FALSE, include=FALSE}
-
-logistic_model_earnings_revised_full <- 
+# run big logistic
+rural_logistic_model_poverty_revised_full <- 
    stats::glm(extant_swd_binary ~ 
         pop_dense_hundreds_B01001_001_ALAND + 
         female_true_percent_B01001_026_001 + 
@@ -17173,15 +17141,199 @@ logistic_model_earnings_revised_full <-
         no_health_insurance_true_percent_B27010_017_033_050_066 + 
         renter_occupy_true_percent_B25003_003_001 + 
         unemployed_true_percent_B23025_005_003 + 
-        earnings_median_ten_thousands_B20002_001 + 
+        poverty_below_100_true_percent_C17002_002_003_001 + 
         prod_count + 
-        AWATER_KM,
-      data = ks_earnings_specific, 
+        AWATER_KM, 
+      data = ks_rural_poverty_specific_limited_variables, 
       family = binomial)
 
-summary(logistic_model_earnings_revised_full)
+# show model summary
+summary(rural_logistic_model_poverty_revised_full)
 
-logistic_model_earnings_revised_full_dep_names <- 
+
+#### automated choice of best fit ####
+
+# make data matrix for bestglm function
+rural_logistic_poverty_matrix <- 
+  data.matrix(ks_rural_poverty_specific_limited_variables)
+
+rural_poverty_test_for_automatic_selection <- 
+  as.data.frame(rural_logistic_poverty_matrix)
+
+# # run the automated selections
+# # DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+# rural_poverty_bestAIC <-
+#   bestglm(rural_poverty_test_for_automatic_selection, IC = "AIC", family = binomial)
+# rural_poverty_bestBIC <-
+#   bestglm(rural_poverty_test_for_automatic_selection, IC = "BIC", family = binomial)
+
+# save result of the above as rdata and csv
+save(rural_poverty_bestAIC, 
+          file = "rural_poverty_bestAIC.rdata")
+save(rural_poverty_bestBIC, 
+          file = "rural_poverty_bestBIC.rdata")
+write.csv(rural_poverty_bestAIC$BestModels, 
+          file = "rural_poverty_bestAIC.csv")
+write.csv(rural_poverty_bestBIC$BestModels, 
+          file = "rural_poverty_bestBIC.csv")
+
+# load results of the above
+load(file = "rural_poverty_bestAIC.rdata")
+load(file = "rural_poverty_bestBIC.rdata")
+
+# display the best models
+rural_poverty_bestAIC$BestModel
+rural_poverty_bestBIC$BestModel
+
+# show aics and bics for three model variants
+rural_poverty_aics <- stats::AIC(rural_logistic_model_poverty_revised_full, 
+           rural_poverty_bestAIC$BestModel, 
+           rural_poverty_bestBIC$BestModel)
+
+rural_poverty_bics <- stats::BIC(rural_logistic_model_poverty_revised_full, 
+           rural_poverty_bestAIC$BestModel, 
+           rural_poverty_bestBIC$BestModel)
+
+# make table of aics and bics
+rural_poverty_aic_bic_stats <- 
+  dplyr::bind_rows(rural_poverty_aics, 
+                   rural_poverty_bics)
+
+save(rural_poverty_aic_bic_stats, 
+     file = "rural_poverty_aic_bic_stats.rdata")
+write_csv(rural_poverty_aic_bic_stats, 
+     path = "rural_poverty_aic_bic_stats.csv")
+
+
+
+#### pull logistic data for tables in thesis ####
+
+#### full model table ####
+nrow(ks_rural_poverty_specific_limited_variables)
+
+# get profile confidence intervals
+rural_poverty_big_log_profile_confidence_intervals <- 
+  profilinator(rural_logistic_model_poverty_revised_full)
+
+# remove intercept
+rural_poverty_big_log_profile_confidence_intervals_no_intercept <-
+  rural_poverty_big_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+exp_estimate <- 
+  exp(rural_logistic_model_poverty_revised_full$coefficients)
+
+# pull together tibble of estimates and confidence intervals
+rural_poverty_big_log_tibble_for_thesis <- 
+  names(exp_estimate) %>% 
+  as_tibble() %>% 
+  cbind(exp_estimate) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(rural_poverty_big_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+# put everything in one column for copy-pasting
+rural_poverty_main_final_tibble <- 
+  pretty_columninator(rural_poverty_big_log_tibble_for_thesis, 
+                      odds_ratio = rural_poverty_big_log_tibble_for_thesis$exp_estimate, 
+                      low_ci = rural_poverty_big_log_tibble_for_thesis$conf.low, 
+                      high_ci = rural_poverty_big_log_tibble_for_thesis$conf.high)
+  
+# save write table to disk
+save(rural_poverty_main_final_tibble, 
+     file = "rural_poverty_main_final_tibble.rdata")
+write_csv(rural_poverty_main_final_tibble, 
+          path = "rural_poverty_main_final_tibble.csv")
+
+
+#### AIC-optimized model table ####
+
+# get profile confidence intervals
+rural_poverty_aic_log_profile_confidence_intervals <- 
+  profilinator(rural_poverty_bestAIC$BestModel)
+
+# remove intercept
+rural_poverty_aic_log_profile_confidence_intervals_no_intercept <-
+  rural_poverty_aic_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+exp_estimate <- 
+  exp(rural_poverty_bestAIC$BestModel$coefficients)
+
+# pull together tibble of estimates and confidence intervals
+rural_poverty_aic_log_tibble_for_thesis <- 
+  names(exp_estimate) %>% 
+  as_tibble() %>% 
+  cbind(exp_estimate) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(rural_poverty_aic_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+# put everything in one column for copy-pasting
+rural_poverty_aic_final_tibble <- 
+  pretty_columninator(rural_poverty_aic_log_tibble_for_thesis, 
+                      odds_ratio = rural_poverty_aic_log_tibble_for_thesis$exp_estimate, 
+                      low_ci = rural_poverty_aic_log_tibble_for_thesis$conf.low, 
+                      high_ci = rural_poverty_aic_log_tibble_for_thesis$conf.high)
+  
+# write table to disk
+save(rural_poverty_aic_final_tibble, 
+     file = "rural_poverty_aic_final_tibble.rdata")
+write_csv(rural_poverty_aic_final_tibble, 
+          path = "rural_poverty_aic_final_tibble.csv")
+
+
+#### BIC-optimized model table ####
+
+# get profile confidence intervals
+rural_poverty_bic_log_profile_confidence_intervals <- 
+  profilinator(rural_poverty_bestBIC$BestModel)
+
+# remove intercept
+rural_poverty_bic_log_profile_confidence_intervals_no_intercept <-
+  rural_poverty_bic_log_profile_confidence_intervals[-(1:1),]
+
+# get and exponentiate estimate
+exp_estimate <- 
+  exp(rural_poverty_bestBIC$BestModel$coefficients)
+
+# pull together tibble of estimates and confidence intervals
+rural_poverty_bic_log_tibble_for_thesis <- 
+  names(exp_estimate) %>% 
+  as_tibble() %>% 
+  cbind(exp_estimate) %>% 
+  as_tibble() %>% 
+  filter(value != "(Intercept)") %>% 
+  bind_cols(rural_poverty_bic_log_profile_confidence_intervals_no_intercept) %>% 
+  mutate_if(is.numeric, round, digits = 2)
+
+# put everything in one column for copy-pasting
+rural_poverty_bic_final_tibble <- 
+  pretty_columninator(rural_poverty_bic_log_tibble_for_thesis, 
+                      odds_ratio = rural_poverty_bic_log_tibble_for_thesis$exp_estimate, 
+                      low_ci = rural_poverty_bic_log_tibble_for_thesis$conf.low, 
+                      high_ci = rural_poverty_bic_log_tibble_for_thesis$conf.high)
+  
+# save and write table to disk
+save(rural_poverty_bic_final_tibble, 
+          file = "rural_poverty_bic_final_tibble.rdata")
+write_csv(rural_poverty_bic_final_tibble, 
+          path = "rural_poverty_bic_final_tibble.csv")
+
+```
+
+
+```{r rural logistic regression earnings full model, eval=FALSE, include=FALSE}
+
+# make rural earnings_specific dataset
+ks_rural_earnings_specific <- 
+  ks_analysis_rural %>% 
+  filter(!is.na(earnings_median_ten_thousands_B20002_001))
+
+# make list of dependent variable names
+rural_earnings_dep_names <- 
         c("pop_dense_hundreds_B01001_001_ALAND", 
         "female_true_percent_B01001_026_001", 
         "age_0_to_17_true_percent_B01001", 
@@ -17195,140 +17347,211 @@ logistic_model_earnings_revised_full_dep_names <-
         "prod_count",
         "AWATER_KM")
 
-logistic_model_earnings_extant_swd_binary_at_end <- 
-  ks_earnings_specific %>% 
-  dplyr::select(logistic_model_earnings_revised_full_dep_names, 
-                extant_swd_binary) 
+# make tibble of all variables used for analyses
+ks_rural_earnings_specific_limited_variables <- 
+  ks_rural_earnings_specific %>% 
+  dplyr::select(rural_earnings_dep_names, 
+         extant_swd_binary)
+  
+# count nas in earnings-specific model
+ks_rural_earnings_specific_limited_variables %>% 
+  is.na() %>% 
+  colSums() 
+
+# run big logistic
+rural_logistic_model_earnings_revised_full <- 
+   stats::glm(extant_swd_binary ~ 
+        pop_dense_hundreds_B01001_001_ALAND + 
+        female_true_percent_B01001_026_001 + 
+        age_0_to_17_true_percent_B01001 + 
+        age_65_plus_true_percent_B01001 + 
+        white_non_hisp_lat_true_percent_B03002_003_001 + 
+        education_high_school_plus_true_percent_B15003_017_to_025 + 
+        no_health_insurance_true_percent_B27010_017_033_050_066 + 
+        renter_occupy_true_percent_B25003_003_001 + 
+        unemployed_true_percent_B23025_005_003 + 
+        earnings_median_ten_thousands_B20002_001 + 
+        prod_count + 
+        AWATER_KM, 
+      data = ks_rural_earnings_specific_limited_variables, 
+      family = binomial)
+
+# show model summary
+summary(rural_logistic_model_earnings_revised_full)
 
 
-#### automated choearnings of best fit ####
+#### automated choice of best fit ####
 
-logistic_earnings_matrix <- 
-  data.matrix(logistic_model_earnings_extant_swd_binary_at_end)
+# make data matrix for bestglm function
+rural_logistic_earnings_matrix <- 
+  data.matrix(ks_rural_earnings_specific_limited_variables)
 
-earnings_test_for_automatic_selection <- 
-  as.data.frame(logistic_earnings_matrix)
+rural_earnings_test_for_automatic_selection <- 
+  as.data.frame(rural_logistic_earnings_matrix)
 
-# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
-earnings_bestAIC <-
-  bestglm(earnings_test_for_automatic_selection, IC = "AIC", family = binomial)
-earnings_bestBIC <-
-  bestglm(earnings_test_for_automatic_selection, IC = "BIC", family = binomial)
+# # run the automated selections
+# # DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+# rural_earnings_bestAIC <-
+#   bestglm(rural_earnings_test_for_automatic_selection, IC = "AIC", family = binomial)
+# rural_earnings_bestBIC <-
+#   bestglm(rural_earnings_test_for_automatic_selection, IC = "BIC", family = binomial)
 
-save(earnings_bestAIC, 
-          file = "earnings_bestAIC.rdata")
-save(earnings_bestBIC, 
-          file = "earnings_bestBIC.rdata")
+# save result of the above as rdata and csv
+save(rural_earnings_bestAIC, 
+          file = "rural_earnings_bestAIC.rdata")
+save(rural_earnings_bestBIC, 
+          file = "rural_earnings_bestBIC.rdata")
+write.csv(rural_earnings_bestAIC$BestModels, 
+          file = "rural_earnings_bestAIC.csv")
+write.csv(rural_earnings_bestBIC$BestModels, 
+          file = "rural_earnings_bestBIC.csv")
 
-load(file = "earnings_bestAIC.rdata")
-load(file = "earnings_bestBIC.rdata")
+# load results of the above
+load(file = "rural_earnings_bestAIC.rdata")
+load(file = "rural_earnings_bestBIC.rdata")
 
-earnings_bestAIC$BestModel
-earnings_bestBIC$BestModel
+# display the best models
+rural_earnings_bestAIC$BestModel
+rural_earnings_bestBIC$BestModel
 
-write.csv(earnings_bestAIC$BestModels, 
-          file = "earnings_bestAIC.csv")
-write.csv(earnings_bestBIC$BestModels, 
-          file = "earnings_bestBIC.csv")
+# show aics and bics for three model variants
+rural_earnings_aics <- stats::AIC(rural_logistic_model_earnings_revised_full, 
+           rural_earnings_bestAIC$BestModel, 
+           rural_earnings_bestBIC$BestModel)
 
-# pull AICS and BICs
-stats::AIC(# big_gam_k_5, 
-           logistic_model_earnings_revised_full, 
-           earnings_bestAIC$BestModel, 
-           earnings_bestBIC$BestModel)
+rural_earnings_bics <- stats::BIC(rural_logistic_model_earnings_revised_full, 
+           rural_earnings_bestAIC$BestModel, 
+           rural_earnings_bestBIC$BestModel)
 
-stats::BIC(# big_gam_k_5, 
-           logistic_model_earnings_revised_full, 
-           earnings_bestAIC$BestModel, 
-           earnings_bestBIC$BestModel)
+# make table of aics and bics
+rural_earnings_aic_bic_stats <- 
+  dplyr::bind_rows(rural_earnings_aics, 
+                   rural_earnings_bics)
+
+save(rural_earnings_aic_bic_stats, 
+     file = "rural_earnings_aic_bic_stats.rdata")
+write_csv(rural_earnings_aic_bic_stats, 
+     path = "rural_earnings_aic_bic_stats.csv")
+
 
 
 #### pull logistic data for tables in thesis ####
 
-nrow(ks_earnings_specific)
+#### full model table ####
+nrow(ks_rural_earnings_specific_limited_variables)
 
 # get profile confidence intervals
-earnings_big_log_profile_confidence_intervals <- 
-  profilinator(logistic_model_earnings_revised_full)
+rural_earnings_big_log_profile_confidence_intervals <- 
+  profilinator(rural_logistic_model_earnings_revised_full)
 
 # remove intercept
-earnings_big_log_profile_confidence_intervals_no_intercept <-
-  earnings_big_log_profile_confidence_intervals[-(1:1),]
+rural_earnings_big_log_profile_confidence_intervals_no_intercept <-
+  rural_earnings_big_log_profile_confidence_intervals[-(1:1),]
 
 # get and exponentiate estimate
-earnings_big_log_estimate_exp <- 
-  exp(logistic_model_earnings_revised_full$coefficients)
+exp_estimate <- 
+  exp(rural_logistic_model_earnings_revised_full$coefficients)
 
-earnings_big_log_tibble_for_thesis <- 
-  names(earnings_big_log_estimate_exp) %>% 
+# pull together tibble of estimates and confidence intervals
+rural_earnings_big_log_tibble_for_thesis <- 
+  names(exp_estimate) %>% 
   as_tibble() %>% 
-  cbind(earnings_big_log_estimate_exp) %>% 
+  cbind(exp_estimate) %>% 
   as_tibble() %>% 
   filter(value != "(Intercept)") %>% 
-  bind_cols(earnings_big_log_profile_confidence_intervals_no_intercept) %>% 
+  bind_cols(rural_earnings_big_log_profile_confidence_intervals_no_intercept) %>% 
   mutate_if(is.numeric, round, digits = 2)
 
-write_csv(earnings_big_log_tibble_for_thesis, 
-          path = "earnings_big_log_tibble_for_thesis.csv")
+# put everything in one column for copy-pasting
+rural_earnings_main_final_tibble <- 
+  pretty_columninator(rural_earnings_big_log_tibble_for_thesis, 
+                      odds_ratio = rural_earnings_big_log_tibble_for_thesis$exp_estimate, 
+                      low_ci = rural_earnings_big_log_tibble_for_thesis$conf.low, 
+                      high_ci = rural_earnings_big_log_tibble_for_thesis$conf.high)
+  
+# save write table to disk
+save(rural_earnings_main_final_tibble, 
+     file = "rural_earnings_main_final_tibble.rdata")
+write_csv(rural_earnings_main_final_tibble, 
+          path = "rural_earnings_main_final_tibble.csv")
 
 
-#### AIC tibble ####
+#### AIC-optimized model table ####
 
 # get profile confidence intervals
-earnings_aic_log_profile_confidence_intervals <- 
-  profilinator(earnings_bestAIC$BestModel)
+rural_earnings_aic_log_profile_confidence_intervals <- 
+  profilinator(rural_earnings_bestAIC$BestModel)
 
 # remove intercept
-earnings_aic_log_profile_confidence_intervals_no_intercept <-
-  earnings_aic_log_profile_confidence_intervals[-(1:1),]
+rural_earnings_aic_log_profile_confidence_intervals_no_intercept <-
+  rural_earnings_aic_log_profile_confidence_intervals[-(1:1),]
 
 # get and exponentiate estimate
-earnings_aic_log_estimate_exp <- 
-  exp(earnings_bestAIC$BestModel$coefficients)
+exp_estimate <- 
+  exp(rural_earnings_bestAIC$BestModel$coefficients)
 
-earnings_aic_log_tibble_for_thesis <- 
-  names(earnings_aic_log_estimate_exp) %>% 
+# pull together tibble of estimates and confidence intervals
+rural_earnings_aic_log_tibble_for_thesis <- 
+  names(exp_estimate) %>% 
   as_tibble() %>% 
-  cbind(earnings_aic_log_estimate_exp) %>% 
+  cbind(exp_estimate) %>% 
   as_tibble() %>% 
   filter(value != "(Intercept)") %>% 
-  bind_cols(earnings_aic_log_profile_confidence_intervals_no_intercept) %>% 
+  bind_cols(rural_earnings_aic_log_profile_confidence_intervals_no_intercept) %>% 
   mutate_if(is.numeric, round, digits = 2)
 
-write_csv(earnings_aic_log_tibble_for_thesis, 
-          path = "earnings_aic_log_tibble_for_thesis.csv")
+# put everything in one column for copy-pasting
+rural_earnings_aic_final_tibble <- 
+  pretty_columninator(rural_earnings_aic_log_tibble_for_thesis, 
+                      odds_ratio = rural_earnings_aic_log_tibble_for_thesis$exp_estimate, 
+                      low_ci = rural_earnings_aic_log_tibble_for_thesis$conf.low, 
+                      high_ci = rural_earnings_aic_log_tibble_for_thesis$conf.high)
+  
+# write table to disk
+save(rural_earnings_aic_final_tibble, 
+     file = "rural_earnings_aic_final_tibble.rdata")
+write_csv(rural_earnings_aic_final_tibble, 
+          path = "rural_earnings_aic_final_tibble.csv")
 
 
-#### BIC tibble ####
+#### BIC-optimized model table ####
 
 # get profile confidence intervals
-earnings_bic_log_profile_confidence_intervals <- 
-  profilinator(earnings_bestBIC$BestModel)
+rural_earnings_bic_log_profile_confidence_intervals <- 
+  profilinator(rural_earnings_bestBIC$BestModel)
 
 # remove intercept
-earnings_bic_log_profile_confidence_intervals_no_intercept <-
-  earnings_bic_log_profile_confidence_intervals[-(1:1),]
+rural_earnings_bic_log_profile_confidence_intervals_no_intercept <-
+  rural_earnings_bic_log_profile_confidence_intervals[-(1:1),]
 
 # get and exponentiate estimate
-earnings_bic_log_estimate_exp <- 
-  exp(earnings_bestBIC$BestModel$coefficients)
+exp_estimate <- 
+  exp(rural_earnings_bestBIC$BestModel$coefficients)
 
-earnings_bic_log_tibble_for_thesis <- 
-  names(earnings_bic_log_estimate_exp) %>% 
+# pull together tibble of estimates and confidence intervals
+rural_earnings_bic_log_tibble_for_thesis <- 
+  names(exp_estimate) %>% 
   as_tibble() %>% 
-  cbind(earnings_bic_log_estimate_exp) %>% 
+  cbind(exp_estimate) %>% 
   as_tibble() %>% 
   filter(value != "(Intercept)") %>% 
-  bind_cols(earnings_bic_log_profile_confidence_intervals_no_intercept) %>% 
+  bind_cols(rural_earnings_bic_log_profile_confidence_intervals_no_intercept) %>% 
   mutate_if(is.numeric, round, digits = 2)
 
-write_csv(earnings_bic_log_tibble_for_thesis, 
-          path = "earnings_bic_log_tibble_for_thesis.csv")
+# put everything in one column for copy-pasting
+rural_earnings_bic_final_tibble <- 
+  pretty_columninator(rural_earnings_bic_log_tibble_for_thesis, 
+                      odds_ratio = rural_earnings_bic_log_tibble_for_thesis$exp_estimate, 
+                      low_ci = rural_earnings_bic_log_tibble_for_thesis$conf.low, 
+                      high_ci = rural_earnings_bic_log_tibble_for_thesis$conf.high)
+  
+# save and write table to disk
+save(rural_earnings_bic_final_tibble, 
+          file = "rural_earnings_bic_final_tibble.rdata")
+write_csv(rural_earnings_bic_final_tibble, 
+          path = "rural_earnings_bic_final_tibble.csv")
 
 ```
-
-
-
 
 
 # ABANDON HOPE ALL YE WHO ENTER HERE, WHERE OLD CODE GOES TO DIE
@@ -17380,7 +17603,7 @@ write_csv(earnings_bic_log_tibble_for_thesis,
 #         income_house_median_B19013_001 +  
 #         shale_presence + 
 #         horizontal_binary, 
-#       data = ks_analysis_all_income, 
+#       data = ks_income_specific, 
 #       family = binomial)
 # best_glm_run
 # 
@@ -17396,7 +17619,7 @@ write_csv(earnings_bic_log_tibble_for_thesis,
 #                             income_house_median_B19013_001 +  
 #                             shale_presence + 
 #                             horizontal_binary, 
-#                           data = ks_analysis_all_income, 
+#                           data = ks_income_specific, 
 #                           family = binomial, 
 #                           separation = "test")
 # 
@@ -17411,7 +17634,7 @@ write_csv(earnings_bic_log_tibble_for_thesis,
 #         income_house_median_B19013_001 +  
 #         shale_presence + 
 #         horizontal_binary, 
-#       data = ks_analysis_all_income, 
+#       data = ks_income_specific, 
 #       family = binomial)
 # second_best_glm_run
 
@@ -17455,7 +17678,7 @@ write_csv(earnings_bic_log_tibble_for_thesis,
 # save(ks_analysis_populated_complete, 
 #      file = "ks_analysis_populated_complete.rdata")
 # nrow(ks_analysis_dataset)
-# ks_analysis_all_income <- 
+# ks_income_specific <- 
 #   ks_analysis_populated_complete
 
 
@@ -17464,10 +17687,10 @@ write_csv(earnings_bic_log_tibble_for_thesis,
 
 
 # # number of rows with and without disposal wells for income only
-# length(ks_analysis_all_income$horizontal_count[  # n = 1807
-#   which(ks_analysis_all_income$extant_swd_binary == 0)])
-# length(ks_analysis_all_income$horizontal_count[   # n = 486
-#   which(ks_analysis_all_income$extant_swd_binary == 1)])
+# length(ks_income_specific$horizontal_count[  # n = 1807
+#   which(ks_income_specific$extant_swd_binary == 0)])
+# length(ks_income_specific$horizontal_count[   # n = 486
+#   which(ks_income_specific$extant_swd_binary == 1)])
 # # pop tot model evaluation
 # 
 # pop_tot_residuals <- 
@@ -17557,34 +17780,34 @@ write_csv(earnings_bic_log_tibble_for_thesis,
 # logistic_model_pop_tot <- 
 #   glm(extant_swd_binary ~ 
 #         pop_tot_B01001_001, 
-#       data = ks_analysis_all_income, 
+#       data = ks_income_specific, 
 #       family = binomial)
 # 
 # summary(logistic_model_pop_tot)
 #
 # # horizontal well summary statistics
-# sum(ks_analysis_all_income$horizontal_binary[  # swd
-#   which(ks_analysis_all_income$extant_swd_binary == 1)])
+# sum(ks_income_specific$horizontal_binary[  # swd
+#   which(ks_income_specific$extant_swd_binary == 1)])
 # 
-# sum(ks_analysis_all_income$horizontal_binary[   # no swd
-#   which(ks_analysis_all_income$extant_swd_binary == 0)])
+# sum(ks_income_specific$horizontal_binary[   # no swd
+#   which(ks_income_specific$extant_swd_binary == 0)])
 # 
 # # shale presence summary statistics
-# sum(ks_analysis_all_income$shale_presence[  # swd
-#   which(ks_analysis_all_income$extant_swd_binary == 1)])
+# sum(ks_income_specific$shale_presence[  # swd
+#   which(ks_income_specific$extant_swd_binary == 1)])
 # 
-# sum(ks_analysis_all_income$shale_presence[   # no swd
-#   which(ks_analysis_all_income$extant_swd_binary == 0)])
+# sum(ks_income_specific$shale_presence[   # no swd
+#   which(ks_income_specific$extant_swd_binary == 0)])
 #
 # horizontal_loess <- 
-#   logitloess(ks_analysis_all_income$horizontal_count, 
-#              ks_analysis_all_income$extant_swd_binary, 
+#   logitloess(ks_income_specific$horizontal_count, 
+#              ks_income_specific$extant_swd_binary, 
 #              "Horizontal Wells", 
 #              "Horizontal well count") 
 #
 # shale_loess <- 
-#   logitloess(ks_analysis_all_income$shale_presence, 
-#              ks_analysis_all_income$extant_swd_binary, 
+#   logitloess(ks_income_specific$shale_presence, 
+#              ks_income_specific$extant_swd_binary, 
 #              "Mississippian Lime Play", 
 #              "Presence on the play")
 #
@@ -18880,12 +19103,12 @@ write_csv(earnings_bic_log_tibble_for_thesis,
 
 
 # # chi-square test for shale presence
-# swd_shale <- sum(ks_analysis_all_income$extant_swd_binary[which(
-#   ks_analysis_all_income$shale_presence == 1)])
-# swd_no_shale <- sum(ks_analysis_all_income$extant_swd_binary[which(
-#   ks_analysis_all_income$shale_presence == 0)])
-# no_swd_shale <- sum(ks_analysis_all_income$shale_presence[which(
-#   ks_analysis_all_income$extant_swd_binary == 0)])
+# swd_shale <- sum(ks_income_specific$extant_swd_binary[which(
+#   ks_income_specific$shale_presence == 1)])
+# swd_no_shale <- sum(ks_income_specific$extant_swd_binary[which(
+#   ks_income_specific$shale_presence == 0)])
+# no_swd_shale <- sum(ks_income_specific$shale_presence[which(
+#   ks_income_specific$extant_swd_binary == 0)])
 # no_swd_no_shale <- 2293 - (swd_shale + 
 #                              swd_no_shale + 
 #                              no_swd_shale)
