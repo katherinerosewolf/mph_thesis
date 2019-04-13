@@ -65,6 +65,9 @@ library(raster)
 library(spData)
 library(spDataLarge)
 library(tidycensus)
+library(ape)
+library(tmap)
+library(viridis)
 
 
 
@@ -156,7 +159,85 @@ pretty_columninator <-
                                    ")"
              )
       )
-    }
+  }
+
+# function that calculates moran's i from spatial residuals
+moran_i_inator <- 
+  function(model_tibble, basis_dataset) {
+    # pull residuals from the best main income AIC model
+    residuals <- 
+      rstandard(model_tibble)
+
+    # make them into an sf with planar geometry
+    residuals_geo <- 
+      tibble(GEOID = basis_dataset$GEOID, 
+         residuals = residuals) %>% 
+      dplyr::left_join(ks_analysis_centroid_naaeac_planar_102008,   # add spatial data
+            by = "GEOID") %>% 
+      st_as_sf()
+    
+    # make matrix of planar coordinates
+    residual_planar_coordinates <- 
+      st_coordinates(residuals_geo) %>% 
+      as_tibble() %>% 
+      setNames(c("longitude","latitude"))
+
+    # create matrix of distance weights
+    distance_matrix <- 
+      as.matrix(dist(cbind(residual_planar_coordinates$longitude, 
+                           residual_planar_coordinates$latitude)))
+    
+    # invert it and make diagonals zero
+    distance_inverted <- 
+      1/distance_matrix
+    diag(distance_inverted) <- 0
+    
+    # calculate Moran's I
+    moran_i <- 
+      ape::Moran.I(residuals_geo$residuals, 
+                   distance_inverted)
+    return(moran_i)
+  }
+
+# residual map function
+residual_mapper <- 
+  function (logistic_model_output, source_dataset) {
+    residuals <- 
+      rstandard(logistic_model_output, type = "deviance")
+    residuals_with_geo <- 
+      tibble(GEOID = source_dataset$GEOID,   # dataset used to make residuals!
+             residual = residuals) %>% 
+  full_join(ks_analysis_all, 
+            by = "GEOID") %>% 
+  st_as_sf() %>% 
+  dplyr::select(GEOID, residual)
+    
+  # make map
+  tm_shape(residuals_with_geo) +
+  tm_fill(col = "residual", 
+              style = "cont", 
+              palette = "PRGn", 
+              midpoint = 0, 
+          colorNA = "yellow", 
+          title = "Standardized Deviance Residuals", 
+          legend.is.portrait = FALSE) + 
+  tm_layout(frame = FALSE, 
+            legend.show = TRUE, 
+            attr.outside = FALSE, 
+            attr.just = 0, 
+            legend.text.fontfamily = "Times New Roman", 
+            legend.title.fontfamily = "Times New Roman", 
+            legend.outside = TRUE,
+            legend.outside.position = c("bottom"), 
+            legend.outside.size = 0.12, 
+            legend.position = c("RIGHT", "TOP"), 
+            legend.text.size = 0.9, 
+            legend.hist.height = .01) + 
+  tm_scale_bar(breaks = c(0, 25, 50), 
+               size = 0.5, 
+               position = c("left", "BOTTOM")
+               ) 
+  }
 
 # Multiple plot function
 #
@@ -14638,11 +14719,11 @@ logistic_house_matrix <-
 house_test_for_automatic_selection <- 
   as.data.frame(logistic_house_matrix)
 
-# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
-house_bestAIC <-
-  bestglm(house_test_for_automatic_selection, IC = "AIC", family = binomial)
-house_bestBIC <-
-  bestglm(house_test_for_automatic_selection, IC = "BIC", family = binomial)
+# # DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+# house_bestAIC <-
+#   bestglm(house_test_for_automatic_selection, IC = "AIC", family = binomial)
+# house_bestBIC <-
+#   bestglm(house_test_for_automatic_selection, IC = "BIC", family = binomial)
 
 save(house_bestAIC,
           file = "house_bestAIC.rdata")
@@ -15092,30 +15173,127 @@ write_csv(earnings_bic_log_tibble_for_thesis,
 
 ## spatial evaluation
 
-```{r evaluating spatiality}
+```{r make general planar files}
 
-summary(bestAIC$BestModel)
+#### centroid planar lat/long file ####
 
-residual_best_aic <- 
+# make general lat/long file
+ks_analysis_geoid_lat_long <- 
+  tibble(GEOID = ks_analysis_all$GEOID,
+         longitude = ks_analysis_all$INTPTLON, 
+         latitude = ks_analysis_all$INTPTLAT)
+
+# make the tibble into a sf
+ks_analysis_sf <- 
+  st_as_sf(ks_analysis_geoid_lat_long, 
+           coords = c("longitude", 
+                      "latitude"), 
+           crs = 4269)   # NAD 83 CRS
+
+# project the sf into a planar coordinate system
+# North_America_Albers_Equal_Area_Conic (EPSG:102008)
+ks_analysis_centroid_naaeac_planar_102008 <- 
+  st_transform(ks_analysis_sf, 
+               102008)
+
+# save general planar lat/long file
+save(ks_analysis_centroid_naaeac_planar_102008, 
+     file = "ks_analysis_centroid_naaeac_planar_102008.rdata")
+
+
+#### make polygon planar lat/long file ####
+ks_analysis_all_naaeac_planar_102008 <- 
+  st_transform(ks_analysis_all, 
+               102008)
+```
+
+```{r calculate moran's i}
+
+# # pull residuals from the best main income AIC model
+# logistic_main_income_best_aic_residuals <- 
+#   rstandard(bestAIC$BestModel)
+# 
+# # make them into an sf with planar geometry
+# logistic_main_income_residuals_geo <- 
+#   tibble(GEOID = ks_income_specific$GEOID, 
+#          residuals = logistic_main_income_best_aic_residuals) %>% 
+#   dplyr::left_join(ks_analysis_naaeac_planar_102008,   # add spatial data
+#             by = "GEOID") %>% 
+#   st_as_sf()
+# 
+# # make matrix of planar coordinates
+# logistic_main_income_planar_coordinates <- 
+#   st_coordinates(logistic_main_income_residuals_geo) %>% 
+#   as_tibble() %>% 
+#   setNames(c("longitude","latitude"))
+# 
+# # create matrix of distance weights
+# logistic_main_income_distance_matrix <- 
+#   as.matrix(dist(cbind(logistic_main_income_planar_coordinates$longitude, 
+#                       logistic_main_income_planar_coordinates$latitude)))
+# 
+# logistic_main_income_distance_inverted <- 
+#   1/logistic_main_income_distance_matrix
+# 
+# diag(logistic_main_income_distance_inverted) <- 0
+# 
+# # calculate Moran's I
+# logistic_main_income_moran_i <- 
+#   ape::Moran.I(logistic_main_income_residuals_geo$residuals, 
+#                logistic_main_income_distance_inverted)
+
+# program a function to do the above
+moran_i_inator(bestAIC$BestModel, 
+               ks_income_specific)
+```
+
+```{r map residuals}
+
+# pull residuals from the best main income AIC model
+logistic_main_income_best_aic_residuals <-
   rstandard(bestAIC$BestModel)
 
-spatial_residuals <- 
-  tibble(GEOID = ks_income_specific$GEOID, 
-    residuals = residual_best_aic, 
-            longitude = ks_income_specific$INTPTLON, 
-            latitude = ks_income_specific$INTPTLAT)
-
-# project spatial data into North_America_Albers_Equal_Area_Conic (EPSG:102008)
-
-# spatial_residuals_geo <- st_as(spatial_residuals, 
-#                             options = c("X_POSSIBLE_NAMES" = longitude",
-#                                         "Y_POSSIBLE_NAMES = latitude"), 
-#                             crs = 4269)
-# 
-# trees_sf <- st_as_sf(trees, coords = c("longitude", "latitude"), crs = 4326)
+# link residuals to geoids
+logistic_main_income_residuals_geo <- 
+  tibble(GEOID = ks_income_specific$GEOID,   # dataset used to make residuals!
+         residual = logistic_main_income_best_aic_residuals) %>% 
+  full_join(ks_analysis_all, 
+            by = "GEOID") %>% 
+  st_as_sf() %>% 
+  dplyr::select(GEOID, residual)
 
 
 
+test_map <- residual_mapper(bestAIC$BestModel, ks_income_specific)
+test_map
+
+
+real_map <- 
+tm_shape(logistic_main_income_residuals_geo) +
+  tm_fill(col = "residual", 
+              style = "cont", 
+              palette = "PRGn", 
+              midpoint = 0, 
+          colorNA = "yellow", 
+          title = "Standardized Deviance Residuals", 
+          legend.is.portrait = FALSE) + 
+  tm_layout(frame = FALSE, 
+            legend.show = TRUE, 
+            attr.outside = FALSE, 
+            attr.just = 0, 
+            legend.text.fontfamily = "Times New Roman", 
+            legend.title.fontfamily = "Times New Roman", 
+            legend.outside = TRUE,
+            legend.outside.position = c("bottom"), 
+            legend.outside.size = 0.12, 
+            legend.position = c("RIGHT", "TOP"), 
+            legend.text.size = 0.9, 
+            legend.hist.height = .01) + 
+  tm_scale_bar(breaks = c(0, 25, 50), 
+               size = 0.5, 
+               position = c("left", "BOTTOM")
+               ) 
+real_map
 
 
 logistic_model_revised_full_dep_names <- 
@@ -15128,31 +15306,6 @@ logistic_model_revised_full_dep_names <-
 
 
 ```
-
-
-```{r moran's i}
-# # isolate extant swd wells
-# ks_extant_swd_working <- 
-#   ks_swd_working[which(ks_swd_working$extant_swd == 1),]
-# 
-# ks_extant_swd_working$KID <- 
-#   as.character(ks_extant_swd_working$KID)
-# 
-# ks_extant_swd_for_moran <- 
-#   ks_extant_swd_working[,c("KID", "LATITUDE", "LONGITUDE")]
-# 
-# coordinates(ks_extant_swd_for_moran) <-   # tell R that they're lat/longs
-#   c("LONGITUDE", "LATITUDE")
-# 
-# proj4string(ks_extant_swd_for_moran) <-   # set projection to NAD 1927
-#   CRS("+init=epsg:4267")
-# 
-# # make weight matrix
-# weights <- 1/as.matrix(dist(coordinates(ks_extant_swd_for_moran)))
-# diag(weights) <- 0
-# moran.test(ks_extant_swd_for_moran$lead,mat2listw(w))
-```
-
 
 ## Poissons
 
@@ -17558,7 +17711,26 @@ write_csv(rural_earnings_bic_final_tibble,
 
 ```{r dead code, eval=FALSE, include=FALSE}
 
-
+# # isolate extant swd wells
+# ks_extant_swd_working <- 
+#   ks_swd_working[which(ks_swd_working$extant_swd == 1),]
+# 
+# ks_extant_swd_working$KID <- 
+#   as.character(ks_extant_swd_working$KID)
+# 
+# ks_extant_swd_for_moran <- 
+#   ks_extant_swd_working[,c("KID", "LATITUDE", "LONGITUDE")]
+# 
+# coordinates(ks_extant_swd_for_moran) <-   # tell R that they're lat/longs
+#   c("LONGITUDE", "LATITUDE")
+# 
+# proj4string(ks_extant_swd_for_moran) <-   # set projection to NAD 1927
+#   CRS("+init=epsg:4267")
+# 
+# # make weight matrix
+# weights <- 1/as.matrix(dist(coordinates(ks_extant_swd_for_moran)))
+# diag(weights) <- 0
+# moran.test(ks_extant_swd_for_moran$lead,mat2listw(w))
   
 # stats::BIC(logistic_model_revised_full)
 # 
