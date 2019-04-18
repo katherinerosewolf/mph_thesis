@@ -3726,7 +3726,7 @@ write.csv(ks_analysis_dataset,
 ```
 
 
-```{r make the little datasets from the big one}
+```{r make the little datasets from the big one, eval=FALSE, include=FALSE}
 # load dataset to start from here
 load(file = "ks_analysis_dataset.rdata")
 
@@ -3793,7 +3793,7 @@ write.csv(urban_tract_map,
 ```
 
 
-```{r make general planar files}
+```{r make general planar files, eval=FALSE, include=FALSE}
 
 #### centroid planar lat/long file ####
 
@@ -3856,9 +3856,9 @@ write_csv(ks_analysis_all_polygon_planar,
 ```
 
 
-```{r make little datasets with planar coordinates}
+```{r make little datasets with planar coordinates, eval=FALSE, include=FALSE}
 
-# full data (non_rural)
+# income (non_rural)
 ks_income_specific <-
   ks_analysis_all %>%
   dplyr::select(GEOID,
@@ -3883,7 +3883,34 @@ ks_income_specific <-
   left_join(ks_all_planar_coordinates_by_GEOID, 
             by = "GEOID")
 save(ks_income_specific,
-     file = "ks_income_specfic.rdata")
+     file = "ks_income_specific.rdata")
+
+# household value dataset of complete cases with only main analysis variables minus income
+ks_house_specific <-
+  ks_analysis_all %>%
+  dplyr::select(GEOID,
+                extant_swd_binary,
+        pop_dense_hundreds_B01001_001_ALAND,
+        female_true_percent_B01001_026_001,
+        age_0_to_17_true_percent_B01001,
+        age_65_plus_true_percent_B01001,
+        white_non_hisp_lat_true_percent_B03002_003_001,
+        education_high_school_plus_true_percent_B15003_017_to_025,
+        no_health_insurance_true_percent_B27010_017_033_050_066,
+        renter_occupy_true_percent_B25003_003_001,
+        unemployed_true_percent_B23025_005_003,
+        house_value_median_ten_thousands_B25077_001,
+        prod_count,
+        INTPTLAT,
+        INTPTLON,
+        pop_cent_lat,
+        pop_cent_long) %>%
+  drop_na() %>% 
+  na.omit() %>% 
+  left_join(ks_all_planar_coordinates_by_GEOID, 
+            by = "GEOID")
+save(ks_house_specific,
+     file = "ks_house_specific.rdata")
 
 # ICE-based dataset of complete cases with only main analysis variables minus income
 ks_ice_specific <-
@@ -3910,7 +3937,7 @@ ks_ice_specific <-
   left_join(ks_all_planar_coordinates_by_GEOID, 
             by = "GEOID")
 save(ks_ice_specific,
-     file = "ks_ice_specfic.rdata")
+     file = "ks_ice_specific.rdata")
 
 
 # poverty-based dataset of complete cases with only main analysis variables minus income
@@ -3938,34 +3965,7 @@ ks_poverty_specific <-
   left_join(ks_all_planar_coordinates_by_GEOID, 
             by = "GEOID")
 save(ks_poverty_specific,
-     file = "ks_poverty_specfic.rdata")
-
-# household value dataset of complete cases with only main analysis variables minus income
-ks_house_specific <-
-  ks_analysis_all %>%
-  dplyr::select(GEOID,
-                extant_swd_binary,
-        pop_dense_hundreds_B01001_001_ALAND,
-        female_true_percent_B01001_026_001,
-        age_0_to_17_true_percent_B01001,
-        age_65_plus_true_percent_B01001,
-        white_non_hisp_lat_true_percent_B03002_003_001,
-        education_high_school_plus_true_percent_B15003_017_to_025,
-        no_health_insurance_true_percent_B27010_017_033_050_066,
-        renter_occupy_true_percent_B25003_003_001,
-        unemployed_true_percent_B23025_005_003,
-        house_value_median_ten_thousands_B25077_001,
-        prod_count,
-        INTPTLAT,
-        INTPTLON,
-        pop_cent_lat,
-        pop_cent_long) %>%
-  drop_na() %>% 
-  na.omit() %>% 
-  left_join(ks_all_planar_coordinates_by_GEOID, 
-            by = "GEOID")
-save(ks_house_specific,
-     file = "ks_house_specfic.rdata")
+     file = "ks_poverty_specific.rdata")
 
 # earnings dataset of complete cases with only main analysis variables minus income
 ks_earnings_specific <-
@@ -3992,11 +3992,12 @@ ks_earnings_specific <-
   left_join(ks_all_planar_coordinates_by_GEOID, 
             by = "GEOID")
 save(ks_earnings_specific,
-     file = "ks_earnings_specfic.rdata")
+     file = "ks_earnings_specific.rdata")
 
 
 
 #### rural datasets ####
+# rural income
 ks_rural_income_specific <- 
   ks_analysis_rural %>% 
    dplyr::select(GEOID,
@@ -4023,32 +4024,7 @@ ks_rural_income_specific <-
 save(ks_rural_income_specific, 
      file = "ks_rural_income_specific.rdata")
 
-ks_rural_ice_specific <- 
-  ks_analysis_rural %>% 
-  dplyr::select(GEOID,
-                extant_swd_binary,
-        pop_dense_hundreds_B01001_001_ALAND,
-        female_true_percent_B01001_026_001,
-        age_0_to_17_true_percent_B01001,
-        age_65_plus_true_percent_B01001,
-        white_non_hisp_lat_true_percent_B03002_003_001,
-        education_high_school_plus_true_percent_B15003_017_to_025,
-        no_health_insurance_true_percent_B27010_017_033_050_066,
-        renter_occupy_true_percent_B25003_003_001,
-        unemployed_true_percent_B23025_005_003,
-        ice_ten_B19001,
-        prod_count,
-        INTPTLAT,
-        INTPTLON,
-        pop_cent_lat,
-        pop_cent_long) %>%
-  drop_na() %>% 
-  na.omit() %>% 
-  left_join(ks_all_planar_coordinates_by_GEOID, 
-            by = "GEOID")
-save(ks_rural_ice_specific, 
-     file = "ks_rural_ice_specific.rdata")
-
+# rural house
 ks_rural_house_specific <- 
   ks_analysis_rural %>%   
   dplyr::select(GEOID,
@@ -4075,6 +4051,34 @@ ks_rural_house_specific <-
 save(ks_rural_house_specific, 
      file = "ks_rural_house_specific.rdata")
 
+# rural ice
+ks_rural_ice_specific <- 
+  ks_analysis_rural %>% 
+  dplyr::select(GEOID,
+                extant_swd_binary,
+        pop_dense_hundreds_B01001_001_ALAND,
+        female_true_percent_B01001_026_001,
+        age_0_to_17_true_percent_B01001,
+        age_65_plus_true_percent_B01001,
+        white_non_hisp_lat_true_percent_B03002_003_001,
+        education_high_school_plus_true_percent_B15003_017_to_025,
+        no_health_insurance_true_percent_B27010_017_033_050_066,
+        renter_occupy_true_percent_B25003_003_001,
+        unemployed_true_percent_B23025_005_003,
+        ice_ten_B19001,
+        prod_count,
+        INTPTLAT,
+        INTPTLON,
+        pop_cent_lat,
+        pop_cent_long) %>%
+  drop_na() %>% 
+  na.omit() %>% 
+  left_join(ks_all_planar_coordinates_by_GEOID, 
+            by = "GEOID")
+save(ks_rural_ice_specific, 
+     file = "ks_rural_ice_specific.rdata")
+
+# rural poverty
 ks_rural_poverty_specific <- 
   ks_analysis_rural %>% 
  dplyr::select(GEOID,
@@ -4101,6 +4105,7 @@ ks_rural_poverty_specific <-
 save(ks_rural_poverty_specific, 
      file = "ks_rural_poverty_specific.rdata")
 
+# rural earnings
 ks_rural_earnings_specific <- 
   ks_analysis_rural %>% 
    dplyr::select(GEOID,
@@ -13578,9 +13583,7 @@ logistic_model_revised_full_dep_names <-
 logistic_model_extant_swd_binary_at_end <- 
   ks_income_specific %>% 
   dplyr::select(logistic_model_revised_full_dep_names, 
-                extant_swd_binary) %>% 
-  st_drop_geometry()
-
+                extant_swd_binary)
 
 #### automated choice of best fit ####
 
@@ -13590,16 +13593,16 @@ logistic_matrix <-
 test_for_automatic_selection <- 
   as.data.frame(logistic_matrix)
 
-# # DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
-# bestAIC <-
-#   bestglm(test_for_automatic_selection, IC = "AIC", family = binomial)
-# bestBIC <-
-#   bestglm(test_for_automatic_selection, IC = "BIC", family = binomial)
-# 
-# save(bestAIC,
-#           file = "bestAIC.rdata")
-# save(bestBIC,
-#           file = "bestBIC.rdata")
+# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+bestAIC <-
+  bestglm(test_for_automatic_selection, IC = "AIC", family = binomial)
+bestBIC <-
+  bestglm(test_for_automatic_selection, IC = "BIC", family = binomial)
+
+save(bestAIC,
+          file = "bestAIC.rdata")
+save(bestBIC,
+          file = "bestBIC.rdata")
 
 load(file = "bestAIC.rdata")
 load(file = "bestBIC.rdata")
@@ -13764,9 +13767,7 @@ logistic_model_house_revised_full_dep_names <-
 logistic_model_house_extant_swd_binary_at_end <- 
   ks_house_specific %>% 
   dplyr::select(logistic_model_house_revised_full_dep_names, 
-                extant_swd_binary) %>% 
-  st_drop_geometry()
-
+                extant_swd_binary)
 
 #### automated choice of best fit ####
 
@@ -13776,16 +13777,16 @@ logistic_house_matrix <-
 house_test_for_automatic_selection <- 
   as.data.frame(logistic_house_matrix)
 
-# # DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
-# house_bestAIC <-
-#   bestglm(house_test_for_automatic_selection, IC = "AIC", family = binomial)
-# house_bestBIC <-
-#   bestglm(house_test_for_automatic_selection, IC = "BIC", family = binomial)
-# 
-# save(house_bestAIC,
-#           file = "house_bestAIC.rdata")
-# save(house_bestBIC,
-#           file = "house_bestBIC.rdata")
+# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+house_bestAIC <-
+  bestglm(house_test_for_automatic_selection, IC = "AIC", family = binomial)
+house_bestBIC <-
+  bestglm(house_test_for_automatic_selection, IC = "BIC", family = binomial)
+
+save(house_bestAIC,
+          file = "house_bestAIC.rdata")
+save(house_bestBIC,
+          file = "house_bestBIC.rdata")
 
 load(file = "house_bestAIC.rdata")
 load(file = "house_bestBIC.rdata")
@@ -13940,8 +13941,7 @@ logistic_model_ice_revised_full_dep_names <-
 logistic_model_ice_extant_swd_binary_at_end <- 
   ks_ice_specific %>% 
   dplyr::select(logistic_model_ice_revised_full_dep_names, 
-                extant_swd_binary) %>% 
-  st_drop_geometry()
+                extant_swd_binary)
 
 
 #### automated choice of best fit ####
@@ -13952,16 +13952,16 @@ logistic_ice_matrix <-
 ice_test_for_automatic_selection <- 
   as.data.frame(logistic_ice_matrix)
 
-# # DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
-# ice_bestAIC <-
-#   bestglm(ice_test_for_automatic_selection, IC = "AIC", family = binomial)
-# ice_bestBIC <-
-#   bestglm(ice_test_for_automatic_selection, IC = "BIC", family = binomial)
-# 
-# save(ice_bestAIC,
-#           file = "ice_bestAIC.rdata")
-# save(ice_bestBIC,
-#           file = "ice_bestBIC.rdata")
+# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+ice_bestAIC <-
+  bestglm(ice_test_for_automatic_selection, IC = "AIC", family = binomial)
+ice_bestBIC <-
+  bestglm(ice_test_for_automatic_selection, IC = "BIC", family = binomial)
+
+save(ice_bestAIC,
+          file = "ice_bestAIC.rdata")
+save(ice_bestBIC,
+          file = "ice_bestBIC.rdata")
 
 load(file = "ice_bestAIC.rdata")
 load(file = "ice_bestBIC.rdata")
@@ -14116,8 +14116,7 @@ logistic_model_poverty_revised_full_dep_names <-
 logistic_model_poverty_extant_swd_binary_at_end <- 
   ks_poverty_specific %>% 
   dplyr::select(logistic_model_poverty_revised_full_dep_names, 
-                extant_swd_binary) %>% 
-  st_drop_geometry()
+                extant_swd_binary)
 
 
 #### automated choice of best fit ####
@@ -14128,16 +14127,16 @@ logistic_poverty_matrix <-
 poverty_test_for_automatic_selection <- 
   as.data.frame(logistic_poverty_matrix)
 
-# # DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
-# poverty_bestAIC <-
-#   bestglm(poverty_test_for_automatic_selection, IC = "AIC", family = binomial)
-# poverty_bestBIC <-
-#   bestglm(poverty_test_for_automatic_selection, IC = "BIC", family = binomial)
-# 
-# save(poverty_bestAIC,
-#           file = "poverty_bestAIC.rdata")
-# save(poverty_bestBIC,
-#           file = "poverty_bestBIC.rdata")
+# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+poverty_bestAIC <-
+  bestglm(poverty_test_for_automatic_selection, IC = "AIC", family = binomial)
+poverty_bestBIC <-
+  bestglm(poverty_test_for_automatic_selection, IC = "BIC", family = binomial)
+
+save(poverty_bestAIC,
+          file = "poverty_bestAIC.rdata")
+save(poverty_bestBIC,
+          file = "poverty_bestBIC.rdata")
 
 load(file = "poverty_bestAIC.rdata")
 load(file = "poverty_bestBIC.rdata")
@@ -14291,8 +14290,7 @@ logistic_model_earnings_revised_full_dep_names <-
 logistic_model_earnings_extant_swd_binary_at_end <- 
   ks_earnings_specific %>% 
   dplyr::select(logistic_model_earnings_revised_full_dep_names, 
-                extant_swd_binary) %>% 
-  st_drop_geometry()
+                extant_swd_binary)
 
 
 #### automated choearnings of best fit ####
@@ -14303,16 +14301,16 @@ logistic_earnings_matrix <-
 earnings_test_for_automatic_selection <- 
   as.data.frame(logistic_earnings_matrix)
 
-# # DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
-# earnings_bestAIC <-
-#   bestglm(earnings_test_for_automatic_selection, IC = "AIC", family = binomial)
-# earnings_bestBIC <-
-#   bestglm(earnings_test_for_automatic_selection, IC = "BIC", family = binomial)
-# 
-# save(earnings_bestAIC,
-#           file = "earnings_bestAIC.rdata")
-# save(earnings_bestBIC,
-#           file = "earnings_bestBIC.rdata")
+# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+earnings_bestAIC <-
+  bestglm(earnings_test_for_automatic_selection, IC = "AIC", family = binomial)
+earnings_bestBIC <-
+  bestglm(earnings_test_for_automatic_selection, IC = "BIC", family = binomial)
+
+save(earnings_bestAIC,
+          file = "earnings_bestAIC.rdata")
+save(earnings_bestBIC,
+          file = "earnings_bestBIC.rdata")
 
 load(file = "earnings_bestAIC.rdata")
 load(file = "earnings_bestBIC.rdata")
@@ -14336,8 +14334,6 @@ stats::BIC(logistic_model_earnings_revised_full,
 
 
 #### pull logistic data for tables in thesis ####
-
-nrow(ks_earnings_specific)
 
 # get profile confidence intervals
 earnings_big_log_profile_confidence_intervals <- 
@@ -15167,22 +15163,22 @@ rural_logistic_income_matrix <-
 rural_income_test_for_automatic_selection <- 
   as.data.frame(rural_logistic_income_matrix)
 
-# # run the automated selections
-# # DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
-# rural_income_bestAIC <-
-#   bestglm(rural_income_test_for_automatic_selection, IC = "AIC", family = binomial)
-# rural_income_bestBIC <-
-#   bestglm(rural_income_test_for_automatic_selection, IC = "BIC", family = binomial)
-# 
-# # save result of the above as rdata and csv
-# save(rural_income_bestAIC, 
-#           file = "rural_income_bestAIC.rdata")
-# save(rural_income_bestBIC, 
-#           file = "rural_income_bestBIC.rdata")
-# write.csv(rural_income_bestAIC$BestModels, 
-#           file = "rural_income_bestAIC.csv")
-# write.csv(rural_income_bestBIC$BestModels, 
-#           file = "rural_income_bestBIC.csv")
+# run the automated selections
+# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+rural_income_bestAIC <-
+  bestglm(rural_income_test_for_automatic_selection, IC = "AIC", family = binomial)
+rural_income_bestBIC <-
+  bestglm(rural_income_test_for_automatic_selection, IC = "BIC", family = binomial)
+
+# save result of the above as rdata and csv
+save(rural_income_bestAIC,
+          file = "rural_income_bestAIC.rdata")
+save(rural_income_bestBIC,
+          file = "rural_income_bestBIC.rdata")
+write.csv(rural_income_bestAIC$BestModels,
+          file = "rural_income_bestAIC.csv")
+write.csv(rural_income_bestBIC$BestModels,
+          file = "rural_income_bestBIC.csv")
 
 # load results of the above
 load(file = "rural_income_bestAIC.rdata")
@@ -15389,22 +15385,22 @@ rural_logistic_ice_matrix <-
 rural_ice_test_for_automatic_selection <- 
   as.data.frame(rural_logistic_ice_matrix)
 
-# # run the automated selections
-# # DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
-# rural_ice_bestAIC <-
-#   bestglm(rural_ice_test_for_automatic_selection, IC = "AIC", family = binomial)
-# rural_ice_bestBIC <-
-#   bestglm(rural_ice_test_for_automatic_selection, IC = "BIC", family = binomial)
-# 
-# # save result of the above as rdata and csv
-# save(rural_ice_bestAIC, 
-#           file = "rural_ice_bestAIC.rdata")
-# save(rural_ice_bestBIC, 
-#           file = "rural_ice_bestBIC.rdata")
-# write.csv(rural_ice_bestAIC$BestModels, 
-#           file = "rural_ice_bestAIC.csv")
-# write.csv(rural_ice_bestBIC$BestModels, 
-#           file = "rural_ice_bestBIC.csv")
+# run the automated selections
+# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+rural_ice_bestAIC <-
+  bestglm(rural_ice_test_for_automatic_selection, IC = "AIC", family = binomial)
+rural_ice_bestBIC <-
+  bestglm(rural_ice_test_for_automatic_selection, IC = "BIC", family = binomial)
+
+# save result of the above as rdata and csv
+save(rural_ice_bestAIC,
+          file = "rural_ice_bestAIC.rdata")
+save(rural_ice_bestBIC,
+          file = "rural_ice_bestBIC.rdata")
+write.csv(rural_ice_bestAIC$BestModels,
+          file = "rural_ice_bestAIC.csv")
+write.csv(rural_ice_bestBIC$BestModels,
+          file = "rural_ice_bestBIC.csv")
 
 # load results of the above
 load(file = "rural_ice_bestAIC.rdata")
@@ -15611,22 +15607,22 @@ rural_logistic_house_matrix <-
 rural_house_test_for_automatic_selection <- 
   as.data.frame(rural_logistic_house_matrix)
 
-# # run the automated selections
-# # DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
-# rural_house_bestAIC <-
-#   bestglm(rural_house_test_for_automatic_selection, IC = "AIC", family = binomial)
-# rural_house_bestBIC <-
-#   bestglm(rural_house_test_for_automatic_selection, IC = "BIC", family = binomial)
-# 
-# # save result of the above as rdata and csv
-# save(rural_house_bestAIC, 
-#           file = "rural_house_bestAIC.rdata")
-# save(rural_house_bestBIC, 
-#           file = "rural_house_bestBIC.rdata")
-# write.csv(rural_house_bestAIC$BestModels, 
-#           file = "rural_house_bestAIC.csv")
-# write.csv(rural_house_bestBIC$BestModels, 
-#           file = "rural_house_bestBIC.csv")
+# run the automated selections
+# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+rural_house_bestAIC <-
+  bestglm(rural_house_test_for_automatic_selection, IC = "AIC", family = binomial)
+rural_house_bestBIC <-
+  bestglm(rural_house_test_for_automatic_selection, IC = "BIC", family = binomial)
+
+# save result of the above as rdata and csv
+save(rural_house_bestAIC,
+          file = "rural_house_bestAIC.rdata")
+save(rural_house_bestBIC,
+          file = "rural_house_bestBIC.rdata")
+write.csv(rural_house_bestAIC$BestModels,
+          file = "rural_house_bestAIC.csv")
+write.csv(rural_house_bestBIC$BestModels,
+          file = "rural_house_bestBIC.csv")
 
 # load results of the above
 load(file = "rural_house_bestAIC.rdata")
@@ -15834,21 +15830,21 @@ rural_poverty_test_for_automatic_selection <-
   as.data.frame(rural_logistic_poverty_matrix)
 
 # run the automated selections
-# # DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
-# rural_poverty_bestAIC <-
-#   bestglm(rural_poverty_test_for_automatic_selection, IC = "AIC", family = binomial)
-# rural_poverty_bestBIC <-
-#   bestglm(rural_poverty_test_for_automatic_selection, IC = "BIC", family = binomial)
-# 
-# # save result of the above as rdata and csv
-# save(rural_poverty_bestAIC, 
-#           file = "rural_poverty_bestAIC.rdata")
-# save(rural_poverty_bestBIC, 
-#           file = "rural_poverty_bestBIC.rdata")
-# write.csv(rural_poverty_bestAIC$BestModels, 
-#           file = "rural_poverty_bestAIC.csv")
-# write.csv(rural_poverty_bestBIC$BestModels, 
-#           file = "rural_poverty_bestBIC.csv")
+# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+rural_poverty_bestAIC <-
+  bestglm(rural_poverty_test_for_automatic_selection, IC = "AIC", family = binomial)
+rural_poverty_bestBIC <-
+  bestglm(rural_poverty_test_for_automatic_selection, IC = "BIC", family = binomial)
+
+# save result of the above as rdata and csv
+save(rural_poverty_bestAIC,
+          file = "rural_poverty_bestAIC.rdata")
+save(rural_poverty_bestBIC,
+          file = "rural_poverty_bestBIC.rdata")
+write.csv(rural_poverty_bestAIC$BestModels,
+          file = "rural_poverty_bestAIC.csv")
+write.csv(rural_poverty_bestBIC$BestModels,
+          file = "rural_poverty_bestBIC.csv")
 
 # load results of the above
 load(file = "rural_poverty_bestAIC.rdata")
@@ -16055,22 +16051,22 @@ rural_logistic_earnings_matrix <-
 rural_earnings_test_for_automatic_selection <- 
   as.data.frame(rural_logistic_earnings_matrix)
 
-# # run the automated selections
-# # DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
-# rural_earnings_bestAIC <-
-#   bestglm(rural_earnings_test_for_automatic_selection, IC = "AIC", family = binomial)
-# rural_earnings_bestBIC <-
-#   bestglm(rural_earnings_test_for_automatic_selection, IC = "BIC", family = binomial)
+# run the automated selections
+# DO NOT RUN AGAIN UNLESS YOU WANT TO WAIT 15 MINUTES
+rural_earnings_bestAIC <-
+  bestglm(rural_earnings_test_for_automatic_selection, IC = "AIC", family = binomial)
+rural_earnings_bestBIC <-
+  bestglm(rural_earnings_test_for_automatic_selection, IC = "BIC", family = binomial)
 
-# # save result of the above as rdata and csv
-# save(rural_earnings_bestAIC, 
-#           file = "rural_earnings_bestAIC.rdata")
-# save(rural_earnings_bestBIC, 
-#           file = "rural_earnings_bestBIC.rdata")
-# write.csv(rural_earnings_bestAIC$BestModels, 
-#           file = "rural_earnings_bestAIC.csv")
-# write.csv(rural_earnings_bestBIC$BestModels, 
-#           file = "rural_earnings_bestBIC.csv")
+# save result of the above as rdata and csv
+save(rural_earnings_bestAIC,
+          file = "rural_earnings_bestAIC.rdata")
+save(rural_earnings_bestBIC,
+          file = "rural_earnings_bestBIC.rdata")
+write.csv(rural_earnings_bestAIC$BestModels,
+          file = "rural_earnings_bestAIC.csv")
+write.csv(rural_earnings_bestBIC$BestModels,
+          file = "rural_earnings_bestBIC.csv")
 
 # load results of the above
 load(file = "rural_earnings_bestAIC.rdata")
@@ -17666,7 +17662,7 @@ income_gam <-
         s(white_non_hisp_lat_true_percent_B03002_003_001, k = 5) + 
         s(education_high_school_plus_true_percent_B15003_017_to_025, k = 5) +         
         s(no_health_insurance_true_percent_B27010_017_033_050_066, k = 5) + 
-        s(renter_occupy_percent_B25003_003_001, k = 5) + 
+        s(renter_occupy_true_percent_B25003_003_001, k = 5) + 
         s(unemployed_true_percent_B23025_005_003, k = 5) + 
         s(income_house_median_ten_thousands_B19013_001, k = 5) + 
         s(prod_count, k = 5) +
@@ -17716,7 +17712,6 @@ pretty_columninator <-
   }
 
 
-
 # put things in tables
 
 
@@ -17757,7 +17752,7 @@ house_gam <-
         s(white_non_hisp_lat_true_percent_B03002_003_001, k = 5) + 
         s(education_high_school_plus_true_percent_B15003_017_to_025, k = 5) +         
         s(no_health_insurance_true_percent_B27010_017_033_050_066, k = 5) + 
-        s(renter_occupy_percent_B25003_003_001, k = 5) + 
+        s(renter_occupy_true_percent_B25003_003_001, k = 5) + 
         s(unemployed_true_percent_B23025_005_003, k = 5) + 
         s(house_value_median_ten_thousands_B25077_001, k = 5) + 
         s(prod_count, k = 5) +
@@ -17818,7 +17813,7 @@ ice_gam <-
         s(white_non_hisp_lat_true_percent_B03002_003_001, k = 5) + 
         s(education_high_school_plus_true_percent_B15003_017_to_025, k = 5) +         
         s(no_health_insurance_true_percent_B27010_017_033_050_066, k = 5) + 
-        s(renter_occupy_percent_B25003_003_001, k = 5) + 
+        s(renter_occupy_true_percent_B25003_003_001, k = 5) + 
         s(unemployed_true_percent_B23025_005_003, k = 5) + 
         s(ice_ten_B19001, k = 5) + 
         s(prod_count, k = 5) +
@@ -18302,7 +18297,6 @@ write_csv(rural_earnings_gam_tibble_paper,
 
 ```
 
-
 ## spatial evaluation
 
 ```{r calculate moran's i}
@@ -18312,10 +18306,8 @@ write_csv(rural_earnings_gam_tibble_paper,
 ## income
 
 # full
-income_log_moran_i <- moran_i_inator(logistic_model_revised_full, 
+moran_i_inator(logistic_model_revised_full, 
                ks_income_specific)
-
-income_log_moran_i$p.value
 
 # aic
 moran_i_inator(bestAIC$BestModel, 
@@ -18386,7 +18378,7 @@ moran_i_inator(earnings_bestBIC$BestModel,
 
 #### rural non-spatial models
 
-## income
+## rural income
 
 # full
 moran_i_inator(rural_logistic_model_income_revised_full, 
@@ -18400,7 +18392,7 @@ moran_i_inator(rural_income_bestAIC$BestModel,
 moran_i_inator(rural_income_bestBIC$BestModel, 
                ks_rural_income_specific)
 
-## house
+## rural house
 
 # full
 moran_i_inator(rural_logistic_model_house_revised_full, 
@@ -18459,9 +18451,9 @@ moran_i_inator(rural_earnings_bestBIC$BestModel,
 
 #### main models with spatial terms
 
-summary(house_gam)
-
 ## income
+
+summary(rural_earnings_linear_xy_gam)
 
 # full
 moran_i_inator(income_linear_xy_gam, 
@@ -18751,6 +18743,135 @@ moran_i_inator(rural_earnings_gam,
 
 
 ```{r aics and bics}
+
+AIC(rural_logistic_model_income_revised_full, 
+    rural_income_bestAIC$BestModel, 
+    rural_income_bestBIC$BestModel, 
+    rural_income_linear_xy_gam, 
+    rural_income_linear_aic_xy_gam, 
+    rural_income_linear_bic_xy_gam, 
+    rural_income_gam)
+
+BIC(rural_logistic_model_income_revised_full, 
+    rural_income_bestAIC$BestModel, 
+    rural_income_bestBIC$BestModel, 
+    rural_income_linear_xy_gam, 
+    rural_income_linear_aic_xy_gam, 
+    rural_income_linear_bic_xy_gam, 
+    rural_income_gam)
+
+
+
+AIC(logistic_model_house_revised_full, 
+    house_bestAIC$BestModel, 
+    house_bestBIC$BestModel, 
+    house_linear_xy_gam, 
+    house_linear_aic_xy_gam, 
+    house_linear_bic_xy_gam, 
+    house_gam)
+
+BIC(logistic_model_house_revised_full, 
+    house_bestAIC$BestModel, 
+    house_bestBIC$BestModel, 
+    house_linear_xy_gam, 
+    house_linear_aic_xy_gam, 
+    house_linear_bic_xy_gam, 
+    house_gam)
+
+
+
+AIC(logistic_model_ice_revised_full, 
+    ice_bestAIC$BestModel, 
+    ice_bestBIC$BestModel, 
+    ice_linear_xy_gam, 
+    ice_linear_aic_xy_gam, 
+    ice_linear_bic_xy_gam, 
+    ice_gam)
+
+BIC(logistic_model_ice_revised_full, 
+    ice_bestAIC$BestModel, 
+    ice_bestBIC$BestModel, 
+    ice_linear_xy_gam, 
+    ice_linear_aic_xy_gam, 
+    ice_linear_bic_xy_gam, 
+    ice_gam)
+
+
+AIC(logistic_model_poverty_revised_full, 
+    poverty_bestAIC$BestModel, 
+    poverty_bestBIC$BestModel, 
+    poverty_linear_xy_gam, 
+    poverty_linear_aic_xy_gam, 
+    poverty_linear_bic_xy_gam, 
+    poverty_gam)
+
+BIC(logistic_model_poverty_revised_full, 
+    poverty_bestAIC$BestModel, 
+    poverty_bestBIC$BestModel, 
+    poverty_linear_xy_gam, 
+    poverty_linear_aic_xy_gam, 
+    poverty_linear_bic_xy_gam, 
+    poverty_gam)
+
+
+AIC(logistic_model_earnings_revised_full, 
+    earnings_bestAIC$BestModel, 
+    earnings_bestBIC$BestModel, 
+    earnings_linear_xy_gam, 
+    earnings_linear_aic_xy_gam, 
+    earnings_linear_bic_xy_gam, 
+    earnings_gam)
+
+BIC(logistic_model_earnings_revised_full, 
+    earnings_bestAIC$BestModel, 
+    earnings_bestBIC$BestModel, 
+    earnings_linear_xy_gam, 
+    earnings_linear_aic_xy_gam, 
+    earnings_linear_bic_xy_gam, 
+    earnings_gam)
+
+AIC(rural_logistic_model_house_revised_full, 
+    rural_house_bestAIC$BestModel, 
+    rural_house_bestBIC$BestModel, 
+    rural_house_linear_xy_gam, 
+    rural_house_linear_aic_xy_gam, 
+    rural_house_linear_bic_xy_gam, 
+    rural_house_gam)
+
+BIC(rural_logistic_model_house_revised_full, 
+    rural_house_bestAIC$BestModel, 
+    rural_house_bestBIC$BestModel, 
+    rural_house_linear_xy_gam, 
+    rural_house_linear_aic_xy_gam, 
+    rural_house_linear_bic_xy_gam, 
+    rural_house_gam)
+
+
+
+AIC(rural_logistic_model_ice_revised_full, 
+    rural_ice_bestAIC$BestModel, 
+    rural_ice_bestBIC$BestModel, 
+    rural_ice_linear_xy_gam, 
+    rural_ice_linear_aic_xy_gam, 
+    rural_ice_linear_bic_xy_gam, 
+    rural_ice_gam)
+
+BIC(rural_logistic_model_ice_revised_full, 
+    rural_ice_bestAIC$BestModel, 
+    rural_ice_bestBIC$BestModel, 
+    rural_ice_linear_xy_gam, 
+    rural_ice_linear_aic_xy_gam, 
+    rural_ice_linear_bic_xy_gam, 
+    rural_ice_gam)
+
+    
+# aic
+moran_i_inator(bestAIC$BestModel, 
+               ks_income_specific)
+
+# bic
+moran_i_inator(bestBIC$BestModel, 
+               ks_income_specific)
 
 AIC(income_gam, 
     house_gam, 
@@ -19576,7 +19697,7 @@ zinb_primary_dataset <-
         white_non_hisp_lat_true_percent_B03002_003_001,  
         education_high_school_plus_true_percent_B15003_017_to_025,  
         no_health_insurance_true_percent_B27010_017_033_050_066,  
-        renter_occupy_percent_B25003_003_001,  
+        renter_occupy_true_percent_B25003_003_001,  
         unemployed_true_percent_B23025_005_003,  
         income_house_median_ten_thousands_B19013_001,  
         prod_count,  
@@ -19593,7 +19714,7 @@ big_zinb <-
              white_non_hisp_lat_true_percent_B03002_003_001 +  
              education_high_school_plus_true_percent_B15003_017_to_025 +
              no_health_insurance_true_percent_B27010_017_033_050_066 +  
-             renter_occupy_percent_B25003_003_001 +  
+             renter_occupy_true_percent_B25003_003_001 +  
              unemployed_true_percent_B23025_005_003 +  
              income_house_median_ten_thousands_B19013_001 +  
              prod_count +  
@@ -19641,7 +19762,7 @@ big_nb_no_selection <-
         white_non_hisp_lat_true_percent_B03002_003_001 +  
         education_high_school_plus_true_percent_B15003_017_to_025 +
         no_health_insurance_true_percent_B27010_017_033_050_066 +  
-        renter_occupy_percent_B25003_003_001 +  
+        renter_occupy_true_percent_B25003_003_001 +  
         unemployed_true_percent_B23025_005_003 +  
         income_house_median_ten_thousands_B19013_001 +  
         prod_count +  
@@ -19759,7 +19880,7 @@ insurance_zinb <- zeroinfl(extant_swd_count ~
 little_zinb_list["young"] <- young_zinb
 
 rent_zinb <- zeroinfl(extant_swd_count ~ 
-                             renter_occupy_percent_B25003_003_001, 
+                             renter_occupy_true_percent_B25003_003_001, 
                            data = zinb_primary_dataset, 
                            dist = "negbin")
 little_zinb_list["young"] <- young_zinb
@@ -19892,7 +20013,7 @@ big_gam_model <-
         s(white_non_hisp_lat_true_percent_B03002_003_001) + 
         s(education_high_school_plus_true_percent_B15003_017_to_025) + 
         s(no_health_insurance_true_percent_B27010_017_033_050_066) + 
-        s(renter_occupy_percent_B25003_003_001) + 
+        s(renter_occupy_true_percent_B25003_003_001) + 
         s(unemployed_true_percent_B23025_005_003) + 
         s(income_house_median_ten_thousands_B19013_001) + 
         s(prod_count), 
@@ -19930,7 +20051,7 @@ big_gam_no_rent <-
         s(white_non_hisp_lat_true_percent_B03002_003_001) + 
         s(education_high_school_plus_true_percent_B15003_017_to_025) + 
         s(no_health_insurance_true_percent_B27010_017_033_050_066) + 
-        # s(renter_occupy_percent_B25003_003_001) + 
+        # s(renter_occupy_true_percent_B25003_003_001) + 
         s(unemployed_true_percent_B23025_005_003) + 
         s(income_house_median_ten_thousands_B19013_001) + 
         s(prod_count) + 
@@ -19966,7 +20087,7 @@ big_gam_no_rent_white <-
         # s(white_non_hisp_lat_true_percent_B03002_003_001) + 
         s(education_high_school_plus_true_percent_B15003_017_to_025) + 
         s(no_health_insurance_true_percent_B27010_017_033_050_066) + 
-        # s(renter_occupy_percent_B25003_003_001) + 
+        # s(renter_occupy_true_percent_B25003_003_001) + 
         s(unemployed_true_percent_B23025_005_003) + 
         s(income_house_median_ten_thousands_B19013_001) + 
         s(prod_count) + 
@@ -20002,7 +20123,7 @@ big_gam_no_rent_white_health <-
         # s(white_non_hisp_lat_true_percent_B03002_003_001) + 
         s(education_high_school_plus_true_percent_B15003_017_to_025) + 
         # s(no_health_insurance_true_percent_B27010_017_033_050_066) + 
-        # s(renter_occupy_percent_B25003_003_001) + 
+        # s(renter_occupy_true_percent_B25003_003_001) + 
         s(unemployed_true_percent_B23025_005_003) + 
         s(income_house_median_ten_thousands_B19013_001) + 
         s(prod_count) + 
@@ -20039,7 +20160,7 @@ big_gam_no_rent_white_health_youth <-
         # s(white_non_hisp_lat_true_percent_B03002_003_001) + 
         s(education_high_school_plus_true_percent_B15003_017_to_025) + 
         # s(no_health_insurance_true_percent_B27010_017_033_050_066) + 
-        # s(renter_occupy_percent_B25003_003_001) + 
+        # s(renter_occupy_true_percent_B25003_003_001) + 
         s(unemployed_true_percent_B23025_005_003) + 
         s(income_house_median_ten_thousands_B19013_001) + 
         s(prod_count) + 
@@ -20075,7 +20196,7 @@ big_gam_no_rent_white_health_youth_education <-
         # s(white_non_hisp_lat_true_percent_B03002_003_001) + 
         # s(education_high_school_plus_true_percent_B15003_017_to_025) + 
         # s(no_health_insurance_true_percent_B27010_017_033_050_066) + 
-        # s(renter_occupy_percent_B25003_003_001) + 
+        # s(renter_occupy_true_percent_B25003_003_001) + 
         s(unemployed_true_percent_B23025_005_003) + 
         s(income_house_median_ten_thousands_B19013_001) + 
         s(prod_count) + 
@@ -20111,7 +20232,7 @@ big_gam_no_rent_white_health_youth_education_income <-
         # s(white_non_hisp_lat_true_percent_B03002_003_001) + 
         # s(education_high_school_plus_true_percent_B15003_017_to_025) + 
         # s(no_health_insurance_true_percent_B27010_017_033_050_066) + 
-        # s(renter_occupy_percent_B25003_003_001) + 
+        # s(renter_occupy_true_percent_B25003_003_001) + 
         s(unemployed_true_percent_B23025_005_003) + 
         # s(income_house_median_ten_thousands_B19013_001) + 
         s(prod_count) + 
@@ -20148,7 +20269,7 @@ big_gam_no_rent_white_health_youth_education_income_old <-
         # s(white_non_hisp_lat_true_percent_B03002_003_001) + 
         # s(education_high_school_plus_true_percent_B15003_017_to_025) + 
         # s(no_health_insurance_true_percent_B27010_017_033_050_066) + 
-        # s(renter_occupy_percent_B25003_003_001) + 
+        # s(renter_occupy_true_percent_B25003_003_001) + 
         s(unemployed_true_percent_B23025_005_003) + 
         # s(income_house_median_ten_thousands_B19013_001) + 
         s(prod_count) + 
@@ -20186,7 +20307,7 @@ big_gam_no_rent_white_health_youth_education_income_old_water <-
         # s(white_non_hisp_lat_true_percent_B03002_003_001) + 
         # s(education_high_school_plus_true_percent_B15003_017_to_025) + 
         # s(no_health_insurance_true_percent_B27010_017_033_050_066) + 
-        # s(renter_occupy_percent_B25003_003_001) + 
+        # s(renter_occupy_true_percent_B25003_003_001) + 
         s(unemployed_true_percent_B23025_005_003) + 
         # s(income_house_median_ten_thousands_B19013_001) + 
         s(prod_count),
@@ -20223,7 +20344,7 @@ big_gam_no_rent_white_health_youth_education_income_old_water_fix_k <-
         # s(white_non_hisp_lat_true_percent_B03002_003_001) + 
         # s(education_high_school_plus_true_percent_B15003_017_to_025) + 
         # s(no_health_insurance_true_percent_B27010_017_033_050_066) + 
-        # s(renter_occupy_percent_B25003_003_001) + 
+        # s(renter_occupy_true_percent_B25003_003_001) + 
         s(unemployed_true_percent_B23025_005_003, k = 7) + 
         # s(income_house_median_ten_thousands_B19013_001) + 
         s(prod_count, k = 5),
@@ -20260,7 +20381,7 @@ big_gam_k_5 <-
         s(white_non_hisp_lat_true_percent_B03002_003_001, k = 5) + 
         s(education_high_school_plus_true_percent_B15003_017_to_025, k = 5) + 
         s(no_health_insurance_true_percent_B27010_017_033_050_066, k = 5) + 
-        s(renter_occupy_percent_B25003_003_001, k = 5) + 
+        s(renter_occupy_true_percent_B25003_003_001, k = 5) + 
         s(unemployed_true_percent_B23025_005_003, k = 5) + 
         s(income_house_median_ten_thousands_B19013_001, k = 5) + 
         s(prod_count, k = 5) +
@@ -20297,7 +20418,7 @@ big_gam_k_5_self_select <-
         s(white_non_hisp_lat_true_percent_B03002_003_001, k = 5) + 
         s(education_high_school_plus_true_percent_B15003_017_to_025, k = 5) + 
         s(no_health_insurance_true_percent_B27010_017_033_050_066, k = 5) + 
-        s(renter_occupy_percent_B25003_003_001, k = 5) + 
+        s(renter_occupy_true_percent_B25003_003_001, k = 5) + 
         s(unemployed_true_percent_B23025_005_003, k = 5) + 
         s(income_house_median_ten_thousands_B19013_001, k = 5) + 
         s(prod_count, k = 5) +
@@ -20335,7 +20456,7 @@ big_gam_k_10_self_select <-
         s(white_non_hisp_lat_true_percent_B03002_003_001) + 
         s(education_high_school_plus_true_percent_B15003_017_to_025) + 
         s(no_health_insurance_true_percent_B27010_017_033_050_066) + 
-        s(renter_occupy_percent_B25003_003_001) + 
+        s(renter_occupy_true_percent_B25003_003_001) + 
         s(unemployed_true_percent_B23025_005_003) + 
         s(income_house_median_ten_thousands_B19013_001) + 
         s(prod_count) +
@@ -20373,7 +20494,7 @@ big_gam_k_5_some_fixed_self_select <-
         s(white_non_hisp_lat_true_percent_B03002_003_001, k = 5) + 
         s(education_high_school_plus_true_percent_B15003_017_to_025, k = 5) + 
         s(no_health_insurance_true_percent_B27010_017_033_050_066, k = 5) + 
-        s(renter_occupy_percent_B25003_003_001, k = 5) + 
+        s(renter_occupy_true_percent_B25003_003_001, k = 5) + 
         s(unemployed_true_percent_B23025_005_003, k = 5) + 
         s(income_house_median_ten_thousands_B19013_001, k = 5) + 
         s(prod_count, k = 5) +
@@ -20416,7 +20537,7 @@ big_gam_k_20_self_select <-
         s(white_non_hisp_lat_true_percent_B03002_003_001, k = 20) + 
         s(education_high_school_plus_true_percent_B15003_017_to_025, k = 20) + 
         s(no_health_insurance_true_percent_B27010_017_033_050_066, k = 20) + 
-        s(renter_occupy_percent_B25003_003_001, k = 20) + 
+        s(renter_occupy_true_percent_B25003_003_001, k = 20) + 
         s(unemployed_true_percent_B23025_005_003, k = 20) + 
         s(income_house_median_ten_thousands_B19013_001, k = 20) + 
         s(prod_count, k = 20) +
@@ -20457,7 +20578,7 @@ big_gam_k_20_select_adapt <-
         s(white_non_hisp_lat_true_percent_B03002_003_001, k = 20, bs = "ad") + 
         s(education_high_school_plus_true_percent_B15003_017_to_025, k = 20, bs = "ad") + 
         s(no_health_insurance_true_percent_B27010_017_033_050_066, k = 20, bs = "ad") + 
-        s(renter_occupy_percent_B25003_003_001, k = 20, bs = "ad") + 
+        s(renter_occupy_true_percent_B25003_003_001, k = 20, bs = "ad") + 
         s(unemployed_true_percent_B23025_005_003, k = 20, bs = "ad") + 
         s(income_house_median_ten_thousands_B19013_001, k = 20, bs = "ad") + 
         s(prod_count, k = 20, bs = "ad") +
@@ -20495,7 +20616,7 @@ big_gam_k_5_self_select <-
         s(white_non_hisp_lat_true_percent_B03002_003_001, k = 5) + 
         s(education_high_school_plus_true_percent_B15003_017_to_025, k = 5) + 
         s(no_health_insurance_true_percent_B27010_017_033_050_066, k = 5) + 
-        s(renter_occupy_percent_B25003_003_001, k = 5) + 
+        s(renter_occupy_true_percent_B25003_003_001, k = 5) + 
         s(unemployed_true_percent_B23025_005_003, k = 5) + 
         s(income_house_median_ten_thousands_B19013_001, k = 5) + 
         s(prod_count, k = 5) +
@@ -20533,7 +20654,7 @@ big_gam_k_20_self_select <-
         s(white_non_hisp_lat_true_percent_B03002_003_001, k = 20) + 
         s(education_high_school_plus_true_percent_B15003_017_to_025, k = 20) + 
         s(no_health_insurance_true_percent_B27010_017_033_050_066, k = 20) + 
-        s(renter_occupy_percent_B25003_003_001, k = 20) + 
+        s(renter_occupy_true_percent_B25003_003_001, k = 20) + 
         s(unemployed_true_percent_B23025_005_003, k = 20) + 
         s(income_house_median_ten_thousands_B19013_001, k = 20) + 
         s(prod_count, k = 20) +
@@ -20572,7 +20693,7 @@ big_gam_k_5 <-
         s(white_non_hisp_lat_true_percent_B03002_003_001, k = 5) + 
         s(education_high_school_plus_true_percent_B15003_017_to_025, k = 5) + 
         s(no_health_insurance_true_percent_B27010_017_033_050_066, k = 5) + 
-        s(renter_occupy_percent_B25003_003_001, k = 5) + 
+        s(renter_occupy_true_percent_B25003_003_001, k = 5) + 
         s(unemployed_true_percent_B23025_005_003, k = 5) + 
         s(income_house_median_ten_thousands_B19013_001, k = 5) + 
         s(prod_count, k = 5) +
@@ -20610,7 +20731,7 @@ big_gam_k_5_ml <-
         s(white_non_hisp_lat_true_percent_B03002_003_001, k = 5) + 
         s(education_high_school_plus_true_percent_B15003_017_to_025, k = 5) + 
         s(no_health_insurance_true_percent_B27010_017_033_050_066, k = 5) + 
-        s(renter_occupy_percent_B25003_003_001, k = 5) + 
+        s(renter_occupy_true_percent_B25003_003_001, k = 5) + 
         s(unemployed_true_percent_B23025_005_003, k = 5) + 
         s(income_house_median_ten_thousands_B19013_001, k = 5) + 
         s(prod_count, k = 5) +
@@ -20629,7 +20750,7 @@ big_gam_k_20_ml <-
         s(white_non_hisp_lat_true_percent_B03002_003_001, k = 20) + 
         s(education_high_school_plus_true_percent_B15003_017_to_025, k = 20) + 
         s(no_health_insurance_true_percent_B27010_017_033_050_066, k = 20) + 
-        s(renter_occupy_percent_B25003_003_001, k = 20) + 
+        s(renter_occupy_true_percent_B25003_003_001, k = 20) + 
         s(unemployed_true_percent_B23025_005_003, k = 20) + 
         s(income_house_median_ten_thousands_B19013_001, k = 20) + 
         s(prod_count, k = 20) +
@@ -20680,7 +20801,7 @@ AIC_list_gams["big_gam_k_20_ml"] <-
 #         s(white_non_hisp_lat_true_percent_B03002_003_001, k = 5) + 
 #         s(education_high_school_plus_true_percent_B15003_017_to_025, k = 5) + 
 #         s(no_health_insurance_true_percent_B27010_017_033_050_066, k = 5) + 
-#         s(renter_occupy_percent_B25003_003_001, k = 5) + 
+#         s(renter_occupy_true_percent_B25003_003_001, k = 5) + 
 #         s(unemployed_true_percent_B23025_005_003, k = 5) + 
 #         s(income_house_median_ten_thousands_B19013_001, k = 5) + 
 #         s(prod_count, k = 100) +
@@ -20718,7 +20839,7 @@ big_gam_linear_reml <-
         white_non_hisp_lat_true_percent_B03002_003_001 + 
         education_high_school_plus_true_percent_B15003_017_to_025 + 
         no_health_insurance_true_percent_B27010_017_033_050_066 + 
-        renter_occupy_percent_B25003_003_001 + 
+        renter_occupy_true_percent_B25003_003_001 + 
         unemployed_true_percent_B23025_005_003 + 
         income_house_median_ten_thousands_B19013_001 + 
         prod_count +
@@ -20756,7 +20877,7 @@ big_gam_k_20 <-
         s(white_non_hisp_lat_true_percent_B03002_003_001, k = 20) + 
         s(education_high_school_plus_true_percent_B15003_017_to_025, k = 20) + 
         s(no_health_insurance_true_percent_B27010_017_033_050_066, k = 20) + 
-        s(renter_occupy_percent_B25003_003_001, k = 20) + 
+        s(renter_occupy_true_percent_B25003_003_001, k = 20) + 
         s(unemployed_true_percent_B23025_005_003, k = 20) + 
         s(income_house_median_ten_thousands_B19013_001, k = 20) + 
         s(prod_count, k = 20) +
@@ -20789,7 +20910,7 @@ big_gam_k_7 <-
         s(white_non_hisp_lat_true_percent_B03002_003_001, k = 7) + 
         s(education_high_school_plus_true_percent_B15003_017_to_025, k = 7) + 
         s(no_health_insurance_true_percent_B27010_017_033_050_066, k = 7) + 
-        s(renter_occupy_percent_B25003_003_001, k = 7) + 
+        s(renter_occupy_true_percent_B25003_003_001, k = 7) + 
         s(unemployed_true_percent_B23025_005_003, k = 7) + 
         s(income_house_median_ten_thousands_B19013_001, k = 7) + 
         s(prod_count, k = 7) +
@@ -20973,7 +21094,7 @@ predictions_from_gam <-
 #         s(white_non_hisp_lat_true_percent_B03002_003_001, k = -1) + 
 #         s(education_high_school_plus_true_percent_B15003_017_to_025, k = -1) +         
 #         s(no_health_insurance_true_percent_B27010_017_033_050_066, k = -1) + 
-#         s(renter_occupy_percent_B25003_003_001, k = -1) + 
+#         s(renter_occupy_true_percent_B25003_003_001, k = -1) + 
 #         s(unemployed_true_percent_B23025_005_003, k = -1) + 
 #         s(income_house_median_ten_thousands_B19013_001, k = -1) + 
 #         s(prod_count, k = -1) +
@@ -21019,7 +21140,7 @@ predictions_from_gam <-
 #         s(white_non_hisp_lat_true_percent_B03002_003_001) + 
 #         s(education_high_school_plus_true_percent_B15003_017_to_025) +         
 #         s(no_health_insurance_true_percent_B27010_017_033_050_066) + 
-#         s(renter_occupy_percent_B25003_003_001) + 
+#         s(renter_occupy_true_percent_B25003_003_001) + 
 #         s(unemployed_true_percent_B23025_005_003) + 
 #         s(income_house_median_ten_thousands_B19013_001) + 
 #         s(prod_count) +
@@ -21069,7 +21190,7 @@ predictions_from_gam <-
 #         s(white_non_hisp_lat_true_percent_B03002_003_001, k = 5) + 
 #         s(education_high_school_plus_true_percent_B15003_017_to_025, k = 5) +         
 #         s(no_health_insurance_true_percent_B27010_017_033_050_066, k = 5) + 
-#         s(renter_occupy_percent_B25003_003_001, k = 5) + 
+#         s(renter_occupy_true_percent_B25003_003_001, k = 5) + 
 #         s(unemployed_true_percent_B23025_005_003, k = 5) + 
 #         s(income_house_median_ten_thousands_B19013_001, k = 5) + 
 #         s(prod_count, k = 5) +
@@ -21149,7 +21270,7 @@ predictions_from_gam <-
 #         s(white_non_hisp_lat_true_percent_B03002_003_001) + 
 #         s(education_high_school_plus_true_percent_B15003_017_to_025) + 
 #         s(no_health_insurance_true_percent_B27010_017_033_050_066) + 
-#         s(renter_occupy_percent_B25003_003_001) + 
+#         s(renter_occupy_true_percent_B25003_003_001) + 
 #         s(unemployed_true_percent_B23025_005_003, k = 50) + 
 #         s(income_house_median_ten_thousands_B19013_001) + 
 #         s(prod_count, k = 12) + 
@@ -21189,7 +21310,7 @@ predictions_from_gam <-
 #   left_join(ks_all_planar_coordinates_by_GEOID, 
 #             by = "GEOID")
 # save(ks_income_specific, 
-#      file = "ks_income_specfic.rdata")
+#      file = "ks_income_specific.rdata")
 # 
 # ks_ice_specific <- 
 #   ks_analysis_all %>% 
@@ -21197,7 +21318,7 @@ predictions_from_gam <-
 #   left_join(ks_all_planar_coordinates_by_GEOID, 
 #             by = "GEOID")
 # save(ks_ice_specific, 
-#      file = "ks_ice_specfic.rdata")
+#      file = "ks_ice_specific.rdata")
 # 
 # ks_house_specific <- 
 #   ks_analysis_all %>% 
@@ -21205,7 +21326,7 @@ predictions_from_gam <-
 #   left_join(ks_all_planar_coordinates_by_GEOID, 
 #             by = "GEOID")
 # save(ks_house_specific, 
-#      file = "ks_house_specfic.rdata")
+#      file = "ks_house_specific.rdata")
 # 
 # ks_poverty_specific <- 
 #   ks_analysis_all %>% 
@@ -21213,7 +21334,7 @@ predictions_from_gam <-
 #   left_join(ks_all_planar_coordinates_by_GEOID, 
 #             by = "GEOID")
 # save(ks_poverty_specific, 
-#      file = "ks_poverty_specfic.rdata")
+#      file = "ks_poverty_specific.rdata")
 # 
 # ks_earnings_specific <- 
 #   ks_analysis_all %>% 
@@ -21221,7 +21342,7 @@ predictions_from_gam <-
 #   left_join(ks_all_planar_coordinates_by_GEOID, 
 #             by = "GEOID")
 # save(ks_earnings_specific, 
-#      file = "ks_earnings_specfic.rdata")
+#      file = "ks_earnings_specific.rdata")
 
 # # make dataset of complete income cases with only main analysis variables
 # ks_income_specific <- 
@@ -21401,7 +21522,7 @@ predictions_from_gam <-
 #         aian_percent_any_race_B02010_001 +  
 #         white_non_hisp_lat_percent_B03002_003_001 +  
 #         education_high_school_plus_percent_B15003_017_to_025 + 
-#         renter_occupy_percent_B25003_003_001 +  
+#         renter_occupy_true_percent_B25003_003_001 +  
 #         unemployed_percent_B23025_005_003 +  
 #         income_house_median_B19013_001 +  
 #         shale_presence + 
@@ -21417,7 +21538,7 @@ predictions_from_gam <-
 #                             aian_percent_any_race_B02010_001 +  
 #                             white_non_hisp_lat_percent_B03002_003_001 +  
 #                             education_high_school_plus_percent_B15003_017_to_025 + 
-#                             renter_occupy_percent_B25003_003_001 +  
+#                             renter_occupy_true_percent_B25003_003_001 +  
 #                             unemployed_percent_B23025_005_003 +  
 #                             income_house_median_B19013_001 +  
 #                             shale_presence + 
@@ -21432,7 +21553,7 @@ predictions_from_gam <-
 #         pop_dense_B01001_001_ALAND + 
 #         white_non_hisp_lat_percent_B03002_003_001 +  
 #         education_high_school_plus_percent_B15003_017_to_025 + 
-#         renter_occupy_percent_B25003_003_001 +  
+#         renter_occupy_true_percent_B25003_003_001 +  
 #         unemployed_percent_B23025_005_003 +  
 #         income_house_median_B19013_001 +  
 #         shale_presence + 
