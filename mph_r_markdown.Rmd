@@ -18760,8 +18760,6 @@ BIC(rural_logistic_model_income_revised_full,
     rural_income_linear_bic_xy_gam, 
     rural_income_gam)
 
-
-
 AIC(logistic_model_house_revised_full, 
     house_bestAIC$BestModel, 
     house_bestBIC$BestModel, 
@@ -18777,8 +18775,6 @@ BIC(logistic_model_house_revised_full,
     house_linear_aic_xy_gam, 
     house_linear_bic_xy_gam, 
     house_gam)
-
-
 
 AIC(logistic_model_ice_revised_full, 
     ice_bestAIC$BestModel, 
@@ -18796,7 +18792,6 @@ BIC(logistic_model_ice_revised_full,
     ice_linear_bic_xy_gam, 
     ice_gam)
 
-
 AIC(logistic_model_poverty_revised_full, 
     poverty_bestAIC$BestModel, 
     poverty_bestBIC$BestModel, 
@@ -18812,7 +18807,6 @@ BIC(logistic_model_poverty_revised_full,
     poverty_linear_aic_xy_gam, 
     poverty_linear_bic_xy_gam, 
     poverty_gam)
-
 
 AIC(logistic_model_earnings_revised_full, 
     earnings_bestAIC$BestModel, 
@@ -18846,8 +18840,6 @@ BIC(rural_logistic_model_house_revised_full,
     rural_house_linear_bic_xy_gam, 
     rural_house_gam)
 
-
-
 AIC(rural_logistic_model_ice_revised_full, 
     rural_ice_bestAIC$BestModel, 
     rural_ice_bestBIC$BestModel, 
@@ -18864,7 +18856,6 @@ BIC(rural_logistic_model_ice_revised_full,
     rural_ice_linear_bic_xy_gam, 
     rural_ice_gam)
 
-    
 # aic
 moran_i_inator(bestAIC$BestModel, 
                ks_income_specific)
