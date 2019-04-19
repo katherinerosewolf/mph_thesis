@@ -17288,7 +17288,7 @@ write_csv(rural_ice_linear_bic_xy_gam_tibble_paper,
 
 ```{r rural poverty linear gam with spatial xy term}
 
-# make rural  model poverty linear xy gam
+# make rural model poverty linear xy gam
 rural_poverty_linear_xy_gam <- 
   gam(extant_swd_binary ~ 
         pop_dense_hundreds_B01001_001_ALAND + 
@@ -17756,7 +17756,7 @@ house_gam <-
         s(unemployed_true_percent_B23025_005_003, k = 5) + 
         s(house_value_median_ten_thousands_B25077_001, k = 5) + 
         s(prod_count, k = 5) +
-        s(planar_long, planar_lat, k = 50), 
+        s(planar_long, planar_lat, k = 51), 
       select = TRUE,
       data = ks_house_specific, 
       family = binomial, 
@@ -17779,9 +17779,9 @@ house_gam_results <-
 write_csv(house_gam_results, 
           path = "house_gam_results.csv")
 
-plot(house_gam, 
+plot_thing <- plot(house_gam,
      pages = 1,
-     all.terms = TRUE, 
+     all.terms = TRUE,
      trans = plogis,
      shift = coef(house_gam)[1],
      rug = TRUE,
@@ -17793,6 +17793,7 @@ plot(house_gam,
      scheme = 3,
      contour.col = "purple", 
      ylab = "Probability of disposal well presence")
+
 
 # get estimate and confidence intervals in pretty form for tables
 house_gam_tibble_paper <- 
@@ -18580,6 +18581,8 @@ moran_i_inator(rural_poverty_linear_aic_xy_gam,
 # bic
 moran_i_inator(rural_poverty_linear_bic_xy_gam, 
                ks_rural_poverty_specific)
+summary(rural_earnings_linear_xy_gam)
+
 
 ## earnings
 
@@ -18744,6 +18747,9 @@ moran_i_inator(rural_earnings_gam,
 
 ```{r aics and bics}
 
+
+
+
 AIC(rural_logistic_model_income_revised_full, 
     rural_income_bestAIC$BestModel, 
     rural_income_bestBIC$BestModel, 
@@ -18855,6 +18861,38 @@ BIC(rural_logistic_model_ice_revised_full,
     rural_ice_linear_aic_xy_gam, 
     rural_ice_linear_bic_xy_gam, 
     rural_ice_gam)
+
+AIC(rural_logistic_model_poverty_revised_full, 
+    rural_poverty_bestAIC$BestModel, 
+    rural_poverty_bestBIC$BestModel, 
+    rural_poverty_linear_xy_gam, 
+    rural_poverty_linear_aic_xy_gam, 
+    rural_poverty_linear_bic_xy_gam, 
+    rural_poverty_gam)
+
+BIC(rural_logistic_model_poverty_revised_full, 
+    rural_poverty_bestAIC$BestModel, 
+    rural_poverty_bestBIC$BestModel, 
+    rural_poverty_linear_xy_gam, 
+    rural_poverty_linear_aic_xy_gam, 
+    rural_poverty_linear_bic_xy_gam, 
+    rural_poverty_gam)
+
+AIC(rural_logistic_model_earnings_revised_full, 
+    rural_earnings_bestAIC$BestModel, 
+    rural_earnings_bestBIC$BestModel, 
+    rural_earnings_linear_xy_gam, 
+    rural_earnings_linear_aic_xy_gam, 
+    rural_earnings_linear_bic_xy_gam, 
+    rural_earnings_gam)
+
+BIC(rural_logistic_model_earnings_revised_full, 
+    rural_earnings_bestAIC$BestModel, 
+    rural_earnings_bestBIC$BestModel, 
+    rural_earnings_linear_xy_gam, 
+    rural_earnings_linear_aic_xy_gam, 
+    rural_earnings_linear_bic_xy_gam, 
+    rural_earnings_gam)
 
 # aic
 moran_i_inator(bestAIC$BestModel, 
@@ -18985,7 +19023,7 @@ BIC(income_linear_bic_xy_gam,
 
 
 
-```{r map residuals}
+```{r map residuals, eval=FALSE, include=FALSE}
 
 #### main non-spatial models
 
@@ -19432,7 +19470,7 @@ residual_mapper(rural_income_gam,
 ## Poissons
 
 
-```{r histogram for counts}
+```{r histogram for counts, eval=FALSE, include=FALSE}
 range(ks_analysis_populated$extant_swd_count)
 
 ggplot(ks_analysis_populated, 
@@ -19449,7 +19487,7 @@ ggplot(ks_analysis_populated,
 ```
 
 
-```{r scatterplots for counts}
+```{r scatterplots for counts, eval=FALSE, include=FALSE}
 
 ggplot(ks_analysis_populated, 
        aes(x = extant_swd_count, y =   pop_dense_hundreds_B01001_001_ALAND)) + 
@@ -19980,13 +20018,13 @@ univariable_poisson_table_tibble <-
 ```
 
 
-```{r univariable zero-inflated poisson}
+```{r univariable zero-inflated poisson, eval=FALSE, include=FALSE}
 
 
 ```
 
 
-```{r univariable zero-inflated binomial}
+```{r univariable zero-inflated binomial, eval=FALSE, include=FALSE}
 
 ```
 
