@@ -15106,7 +15106,7 @@ write_csv(single_column_magic_univariable_rural_tibble,
 ```
 
 
-```{r rural logistic regression income full model, eval=FALSE, include=FALSE}
+```{r rural logistic regression income full model}
 
 # make list of dependent variable names
 rural_income_dep_names <- 
@@ -15328,7 +15328,7 @@ write_csv(rural_income_bic_final_tibble,
 ```
 
 
-```{r rural logistic regression ice full model, eval=FALSE, include=FALSE}
+```{r rural logistic regression ice full model}
 
 # make list of dependent variable names
 rural_ice_dep_names <- 
@@ -15772,7 +15772,7 @@ write_csv(rural_house_bic_final_tibble,
 ```
 
 
-```{r rural logistic regression poverty full model, eval=FALSE, include=FALSE}
+```{r rural logistic regression poverty full model}
 
 # make list of dependent variable names
 rural_poverty_dep_names <- 
@@ -15994,7 +15994,7 @@ write_csv(rural_poverty_bic_final_tibble,
 ```
 
 
-```{r rural logistic regression earnings full model, eval=FALSE, include=FALSE}
+```{r rural logistic regression earnings full model}
 
 # make list of dependent variable names
 rural_earnings_dep_names <- 
@@ -19072,7 +19072,6 @@ residual_mapper(ice_bestBIC$BestModel,
                ks_ice_specific)
 
 ## poverty
-logistic_model_poverty_revised_full
 
 # full
 residual_mapper(logistic_model_poverty_revised_full, 
@@ -19107,43 +19106,46 @@ residual_mapper(earnings_bestBIC$BestModel,
 
 # full
 residual_mapper(rural_logistic_model_income_revised_full, 
-               ks_rural_income_specific)
+                ks_rural_income_specific)
                
 # aic
 residual_mapper(rural_income_bestAIC$BestModel, 
-               ks_rural_income_specific)
+                ks_rural_income_specific)
 
 # bic
 residual_mapper(rural_income_bestBIC$BestModel, 
-               ks_rural_income_specific)
+                ks_rural_income_specific)
+
 
 ## house
 
 # full
 residual_mapper(rural_logistic_model_house_revised_full, 
-               ks_rural_house_specific)
+                ks_rural_house_specific)
 
 # aic
 residual_mapper(rural_house_bestAIC$BestModel, 
-               ks_rural_house_specific)
+                ks_rural_house_specific)
 
 # bic
 residual_mapper(rural_house_bestBIC$BestModel, 
-               ks_rural_house_specific)
+                ks_rural_house_specific)
+
 
 ## ice
 
 # full
 residual_mapper(rural_logistic_model_ice_revised_full, 
-               ks_rural_ice_specific)
+                ks_rural_ice_specific)
 
 # aic
 residual_mapper(rural_ice_bestAIC$BestModel, 
-               ks_rural_ice_specific)
+                ks_rural_ice_specific)
 
 # bic
 residual_mapper(rural_ice_bestBIC$BestModel, 
-               ks_rural_ice_specific)
+                ks_rural_ice_specific)
+
 
 ## poverty
 
@@ -19158,6 +19160,7 @@ residual_mapper(rural_poverty_bestAIC$BestModel,
 # bic
 residual_mapper(rural_poverty_bestBIC$BestModel, 
                ks_rural_poverty_specific)
+
 
 ## earnings
 
@@ -19412,58 +19415,58 @@ residual_mapper(rural_income_gam,
 ## house
 
 # full
-residual_mapper(rural_income_gam, 
-               ks_rural_income_specific)
+residual_mapper(rural_house_gam, 
+               ks_rural_house_specific)
 
 # # aic
-# residual_mapper(rural_income_aic_gam, 
-#                ks_rural_income_specific)
+# residual_mapper(rural_house_aic_gam, 
+#                ks_rural_house_specific)
 # 
 # # bic
-# residual_mapper(rural_income_bic_gam, 
-#                ks_rural_income_specific)
+# residual_mapper(rural_house_bic_gam, 
+#                ks_rural_house_specific)
 
 ## ice
 
 # full
-residual_mapper(rural_income_gam, 
-               ks_rural_income_specific)
+residual_mapper(rural_ice_gam, 
+               ks_rural_ice_specific)
 
 # # aic
-# residual_mapper(rural_income_aic_gam, 
-#                ks_rural_income_specific)
+# residual_mapper(rural_ice_aic_gam, 
+#                ks_rural_ice_specific)
 # 
 # # bic
-# residual_mapper(rural_income_bic_gam, 
-#                ks_rural_income_specific)
+# residual_mapper(rural_ice_bic_gam, 
+#                ks_rural_ice_specific)
 
 ## poverty
 
 # full
-residual_mapper(rural_income_gam, 
-               ks_rural_income_specific)
+residual_mapper(rural_poverty_gam, 
+               ks_rural_poverty_specific)
 
 # # aic
-# residual_mapper(rural_income_aic_gam, 
-#                ks_rural_income_specific)
+# residual_mapper(rural_poverty_aic_gam, 
+#                ks_rural_poverty_specific)
 # 
 # # bic
-# residual_mapper(rural_income_bic_gam, 
-#                ks_rural_income_specific)
+# residual_mapper(rural_poverty_bic_gam, 
+#                ks_rural_poverty_specific)
 
 ## earnings
 
 # full
-residual_mapper(rural_income_gam, 
-               ks_rural_income_specific)
+residual_mapper(rural_earnings_gam, 
+               ks_rural_earnings_specific)
 
 # # aic
-# residual_mapper(rural_income_aic_gam, 
-#                ks_rural_income_specific)
+# residual_mapper(rural_earnings_aic_gam, 
+#                ks_rural_earnings_specific)
 # 
 # # bic
-# residual_mapper(rural_income_bic_gam, 
-#                ks_rural_income_specific)
+# residual_mapper(rural_earnings_bic_gam, 
+#                ks_rural_earnings_specific)
 ```
 
 
@@ -20966,10 +20969,6 @@ plot(big_gam_k_7,
      residuals = TRUE)
 
 
-
-
-
-
 AIC_list_gams <- list()
 AIC_list_gams["big_gam_k_20"] <- AIC(big_gam_k_20)
 AIC_list_gams["gam_k_5"] <- AIC(big_gam_k_5)
@@ -20982,14 +20981,7 @@ AIC_list_gams["gam_k_20"] <- AIC(big_gam_k_20_self_select)
 AIC_list_gams["big_gam_k_5_ml"] <- AIC(big_gam_k_5_ml)
 
 
-
 # table for big_gam_5
-
-
-
-
-
-
 # generalized additive models; 
 # plants: explained deviance=77%, 
 # estimated degrees of freedom (edf)=1, 
